@@ -1,19 +1,37 @@
+import hotel1 from "@/assets/hotels/hotel-1.jpg";
+import hotel2 from "@/assets/hotels/hotel-2.jpg";
+import hotel3 from "@/assets/hotels/hotel-3.jpg";
+import hotel4 from "@/assets/hotels/hotel-4.jpg";
 import heroImage from "@/assets/hero-hotel.jpg";
 import SearchBar from "./SearchBar";
+
+const collageImages = [hotel1, hotel2, hotel3, hotel4, heroImage];
 
 const HeroSection = () => {
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
-      {/* Background Image with Overlay */}
-      <div className="absolute inset-0">
-        <img
-          src={heroImage}
-          alt="Luxury hotel lobby"
-          className="w-full h-full object-cover"
-        />
-        <div className="absolute inset-0 bg-gradient-to-b from-background/80 via-background/60 to-background" />
-        <div className="absolute inset-0 bg-gradient-to-r from-background/50 via-transparent to-background/50" />
+      {/* Photo Collage Background */}
+      <div className="absolute inset-0 grid grid-cols-5 gap-1">
+        {collageImages.map((image, index) => (
+          <div
+            key={index}
+            className="relative overflow-hidden animate-fade-in"
+            style={{ animationDelay: `${index * 150}ms` }}
+          >
+            <img
+              src={image}
+              alt={`Collage image ${index + 1}`}
+              className="w-full h-full object-cover scale-105 hover:scale-110 transition-transform duration-700"
+            />
+            {/* Individual image overlay for depth */}
+            <div className="absolute inset-0 bg-gradient-to-t from-background/60 via-background/30 to-transparent" />
+          </div>
+        ))}
       </div>
+
+      {/* Main Overlay Gradients */}
+      <div className="absolute inset-0 bg-gradient-to-b from-background/90 via-background/70 to-background" />
+      <div className="absolute inset-0 bg-gradient-to-r from-background/60 via-transparent to-background/60" />
 
       {/* Animated decorative elements */}
       <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/20 rounded-full blur-3xl animate-float opacity-30" />

@@ -1,56 +1,11 @@
 import { useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Star, Heart, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
-
-import hotel1 from "@/assets/hotels/hotel-1.jpg";
-import hotel2 from "@/assets/hotels/hotel-2.jpg";
-import hotel3 from "@/assets/hotels/hotel-3.jpg";
-import hotel4 from "@/assets/hotels/hotel-4.jpg";
-
-const hotels = [
-  {
-    id: 1,
-    name: "The Grand Palace Hotel",
-    location: "London, UK",
-    image: hotel1,
-    price: 280,
-    rating: 9.8,
-    reviews: 2341,
-    tags: ["Luxury", "Spa"],
-  },
-  {
-    id: 2,
-    name: "Ocean View Resort",
-    location: "Barcelona, Spain",
-    image: hotel2,
-    price: 195,
-    rating: 9.5,
-    reviews: 1856,
-    tags: ["Beach", "Pool"],
-  },
-  {
-    id: 3,
-    name: "Nordic Forest Lodge",
-    location: "Stockholm, Sweden",
-    image: hotel3,
-    price: 165,
-    rating: 9.6,
-    reviews: 1234,
-    tags: ["Nature", "Cozy"],
-  },
-  {
-    id: 4,
-    name: "Tropical Paradise Villa",
-    location: "Bali, Indonesia",
-    image: hotel4,
-    price: 320,
-    rating: 9.9,
-    reviews: 987,
-    tags: ["Villa", "Private Pool"],
-  },
-];
+import { hotels } from "@/data/hotels";
 
 const FeaturedHotels = () => {
+  const navigate = useNavigate();
   const [isVisible, setIsVisible] = useState(false);
   const [likedHotels, setLikedHotels] = useState<number[]>([]);
   const sectionRef = useRef<HTMLDivElement>(null);
@@ -72,12 +27,17 @@ const FeaturedHotels = () => {
     return () => observer.disconnect();
   }, []);
 
-  const toggleLike = (hotelId: number) => {
+  const toggleLike = (e: React.MouseEvent, hotelId: number) => {
+    e.stopPropagation();
     setLikedHotels((prev) =>
       prev.includes(hotelId)
         ? prev.filter((id) => id !== hotelId)
         : [...prev, hotelId]
     );
+  };
+
+  const handleCardClick = (hotelId: number) => {
+    navigate(`/hotel/${hotelId}`);
   };
 
   return (
@@ -111,7 +71,8 @@ const FeaturedHotels = () => {
           {hotels.map((hotel, index) => (
             <div
               key={hotel.id}
-              className={`group relative rounded-2xl overflow-hidden bg-card border border-border hover:border-primary/30 transition-all duration-500 hover-lift ${
+              onClick={() => handleCardClick(hotel.id)}
+              className={`group relative rounded-2xl overflow-hidden bg-card border border-border hover:border-primary/30 transition-all duration-500 hover-lift cursor-pointer ${
                 isVisible ? "animate-fade-in-up" : "opacity-0"
               }`}
               style={{ animationDelay: `${(index + 2) * 100}ms` }}
@@ -126,7 +87,7 @@ const FeaturedHotels = () => {
                 
                 {/* Like Button */}
                 <button
-                  onClick={() => toggleLike(hotel.id)}
+                  onClick={(e) => toggleLike(e, hotel.id)}
                   className="absolute top-4 right-4 p-2.5 rounded-full glass transition-all duration-300 hover:scale-110"
                 >
                   <Heart
@@ -177,6 +138,13 @@ const FeaturedHotels = () => {
                     {hotel.reviews.toLocaleString()} reviews
                   </span>
                 </div>
+              </div>
+
+              {/* View Details Overlay */}
+              <div className="absolute inset-0 flex items-center justify-center bg-background/80 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                <Button variant="hero" size="lg">
+                  View Details
+                </Button>
               </div>
 
               {/* Hover overlay */}

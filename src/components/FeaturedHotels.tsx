@@ -144,8 +144,8 @@ const FeaturedHotels = () => {
                 </div>
               </div>
 
-              {/* View Details Overlay - exclude rating and like button areas */}
-              <div className="absolute inset-0 top-[60px] flex items-center justify-center bg-background/80 opacity-0 group-hover:opacity-100 transition-all duration-300 backdrop-blur-sm pointer-events-none">
+              {/* View Details Overlay - no blur, keeps zoom visible */}
+              <div className="absolute inset-0 flex items-center justify-center bg-background/70 opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none">
                 <Button variant="hero" size="lg" className="scale-90 group-hover:scale-100 transition-transform duration-300 shadow-xl pointer-events-auto">
                   View Details
                 </Button>

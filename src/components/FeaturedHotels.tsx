@@ -91,7 +91,7 @@ const FeaturedHotels = () => {
                 {/* Like Button */}
                 <button
                   onClick={(e) => toggleLike(e, hotel.id)}
-                  className="absolute top-4 right-4 p-2.5 rounded-full glass transition-all duration-300 hover:scale-125 active:scale-95"
+                  className="absolute top-4 right-4 p-2.5 rounded-full glass transition-all duration-300 hover:scale-125 active:scale-95 z-10"
                 >
                   <Heart
                     className={`h-5 w-5 transition-all duration-300 ${
@@ -103,7 +103,7 @@ const FeaturedHotels = () => {
                 </button>
 
                 {/* Rating Badge */}
-                <div className="absolute top-4 left-4 flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary/90 backdrop-blur-sm group-hover:scale-105 transition-transform">
+                <div className="absolute top-4 left-4 flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary/90 backdrop-blur-sm group-hover:scale-105 transition-transform z-10">
                   <Star className="h-4 w-4 fill-primary-foreground text-primary-foreground animate-pulse" />
                   <span className="text-sm font-semibold text-primary-foreground">
                     {hotel.rating}
@@ -144,9 +144,9 @@ const FeaturedHotels = () => {
                 </div>
               </div>
 
-              {/* View Details Overlay */}
-              <div className="absolute inset-0 flex items-center justify-center bg-background/80 opacity-0 group-hover:opacity-100 transition-all duration-300 backdrop-blur-sm">
-                <Button variant="hero" size="lg" className="scale-90 group-hover:scale-100 transition-transform duration-300 shadow-xl">
+              {/* View Details Overlay - exclude rating and like button areas */}
+              <div className="absolute inset-0 top-[60px] flex items-center justify-center bg-background/80 opacity-0 group-hover:opacity-100 transition-all duration-300 backdrop-blur-sm pointer-events-none">
+                <Button variant="hero" size="lg" className="scale-90 group-hover:scale-100 transition-transform duration-300 shadow-xl pointer-events-auto">
                   View Details
                 </Button>
               </div>

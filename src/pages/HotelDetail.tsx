@@ -89,8 +89,7 @@ const HotelDetail = () => {
 
   const handleBookNow = () => {
     if (!selectedRoom) {
-      // Auto-select first room if none selected
-      setSelectedRoom(hotel.rooms[0]);
+      return; // Don't open modal without a room selected
     }
     setShowBookingModal(true);
   };
@@ -135,7 +134,7 @@ const HotelDetail = () => {
           </div>
 
           {/* Image Gallery */}
-          <div className="grid grid-cols-4 gap-2 mb-8 rounded-3xl overflow-hidden animate-fade-in">
+          <div className="grid grid-cols-4 grid-rows-2 gap-2 mb-8 rounded-3xl overflow-hidden animate-fade-in h-[500px]">
             <div className="col-span-2 row-span-2 relative group cursor-pointer" onClick={() => setActiveImageIndex(0)}>
               <img
                 src={galleryImages[0]}
@@ -147,7 +146,7 @@ const HotelDetail = () => {
             {galleryImages.slice(1).map((img, idx) => (
               <div
                 key={idx}
-                className="relative aspect-[4/3] group cursor-pointer overflow-hidden"
+                className="relative group cursor-pointer overflow-hidden"
                 onClick={() => setActiveImageIndex(idx + 1)}
               >
                 <img
@@ -496,11 +495,18 @@ const HotelDetail = () => {
                       </div>
                     )}
 
+                    {!selectedRoom && (
+                      <div className="p-3 rounded-xl bg-accent/10 border border-accent/20 text-center animate-fade-in">
+                        <p className="text-sm text-accent font-medium">Please select a room to book</p>
+                      </div>
+                    )}
+
                     <Button
                       variant="hero"
                       size="xl"
                       className="w-full group"
                       onClick={handleBookNow}
+                      disabled={!selectedRoom}
                     >
                       <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
                       {selectedRoom ? `Reserve for $${totalPrice + Math.round(totalPrice * 0.12)}` : "Select a room to book"}

@@ -13,6 +13,8 @@ import Attractions from "./pages/Attractions";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import NotFound from "./pages/NotFound";
+import ExploreHotels from "./pages/ExploreHotels";
+import SearchHotels from "./pages/SearchHotels";
 
 // Admin
 import AdminLayout from "./components/admin/AdminLayout";
@@ -56,6 +58,8 @@ const App = () => (
             <Route path="/attractions" element={<Attractions />} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
+            <Route path="/explore" element={<ExploreHotels />} />
+            <Route path="/search" element={<SearchHotels />} />
 
             {/* Admin Routes */}
             <Route path="/admin" element={<AdminLayout />}>

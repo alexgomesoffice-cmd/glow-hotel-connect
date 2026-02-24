@@ -1,18 +1,42 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, MapPin, Calendar, Users } from "lucide-react";
+import { Search, MapPin, Calendar, Users, Minus, Plus } from "lucide-react";
 
 const SearchBar = () => {
+  const navigate = useNavigate();
   const [location, setLocation] = useState("");
   const [checkIn, setCheckIn] = useState("");
   const [checkOut, setCheckOut] = useState("");
-  const [guests, setGuests] = useState("");
+  const [guests, setGuests] = useState(1);
+  const [rooms, setRooms] = useState(1);
+  const [isGuestOpen, setIsGuestOpen] = useState(false);
+  const guestRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClick = (e: MouseEvent) => {
+      if (guestRef.current && !guestRef.current.contains(e.target as Node)) {
+        setIsGuestOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, []);
+
+  const handleSearch = () => {
+    const params = new URLSearchParams();
+    if (location) params.set("location", location);
+    if (checkIn) params.set("checkIn", checkIn);
+    if (checkOut) params.set("checkOut", checkOut);
+    params.set("guests", String(guests));
+    params.set("rooms", String(rooms));
+    navigate(`/search?${params.toString()}`);
+  };
 
   return (
     <div className="w-full max-w-5xl mx-auto animate-fade-in-up" style={{ animationDelay: "400ms" }}>
       <div className="glass rounded-2xl p-3 sm:p-4 shadow-2xl shadow-primary/10 hover:shadow-primary/20 transition-shadow duration-500 group/bar">
-        {/* Animated border glow */}
         <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-primary/20 via-accent/20 to-primary/20 opacity-0 group-hover/bar:opacity-100 blur-xl transition-opacity duration-500 -z-10" />
         
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4">
@@ -66,25 +90,73 @@ const SearchBar = () => {
             </div>
           </div>
 
-          {/* Guests + Search Button */}
+          {/* Guests Dropdown + Search */}
           <div className="flex gap-3 items-end">
-            <div className="flex-1 relative group">
-              <label className="text-xs font-medium text-muted-foreground mb-1.5 block pl-1 group-focus-within:text-primary transition-colors">
-                Guests
+            <div className="flex-1 relative" ref={guestRef}>
+              <label className="text-xs font-medium text-muted-foreground mb-1.5 block pl-1">
+                Guests & Rooms
               </label>
-              <div className="relative">
-                <Users className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground group-focus-within:text-primary transition-all duration-300 group-focus-within:scale-110" />
-                <Input
-                  type="number"
-                  placeholder="2"
-                  min={1}
-                  value={guests}
-                  onChange={(e) => setGuests(e.target.value)}
-                  className="pl-12 bg-secondary/30 border-border/50 hover:border-primary/40 focus:border-primary transition-all duration-300 hover:bg-secondary/40"
-                />
-              </div>
+              <button
+                type="button"
+                onClick={() => setIsGuestOpen(!isGuestOpen)}
+                className="flex items-center justify-between w-full h-12 rounded-xl border border-border/50 bg-secondary/30 px-4 text-sm hover:border-primary/40 transition-all duration-300 hover:bg-secondary/40"
+              >
+                <Users className="h-5 w-5 text-muted-foreground mr-2 shrink-0" />
+                <span className="truncate">{guests}G · {rooms}R</span>
+              </button>
+
+              {isGuestOpen && (
+                <div className="absolute top-full left-0 right-0 mt-2 rounded-xl border border-border bg-card p-4 shadow-xl z-50 space-y-4 animate-fade-in-down">
+                  {/* Guests row */}
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium">Guests</span>
+                    <div className="flex items-center gap-3">
+                      <button
+                        type="button"
+                        onClick={() => setGuests(Math.max(1, guests - 1))}
+                        className="w-8 h-8 rounded-full border border-border flex items-center justify-center hover:bg-secondary transition-colors disabled:opacity-40"
+                        disabled={guests <= 1}
+                      >
+                        <Minus className="h-4 w-4" />
+                      </button>
+                      <span className="w-6 text-center font-semibold">{guests}</span>
+                      <button
+                        type="button"
+                        onClick={() => setGuests(Math.min(6, guests + 1))}
+                        className="w-8 h-8 rounded-full border border-border flex items-center justify-center hover:bg-secondary transition-colors disabled:opacity-40"
+                        disabled={guests >= 6}
+                      >
+                        <Plus className="h-4 w-4" />
+                      </button>
+                    </div>
+                  </div>
+                  {/* Rooms row */}
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium">Rooms</span>
+                    <div className="flex items-center gap-3">
+                      <button
+                        type="button"
+                        onClick={() => setRooms(Math.max(1, rooms - 1))}
+                        className="w-8 h-8 rounded-full border border-border flex items-center justify-center hover:bg-secondary transition-colors disabled:opacity-40"
+                        disabled={rooms <= 1}
+                      >
+                        <Minus className="h-4 w-4" />
+                      </button>
+                      <span className="w-6 text-center font-semibold">{rooms}</span>
+                      <button
+                        type="button"
+                        onClick={() => setRooms(Math.min(8, rooms + 1))}
+                        className="w-8 h-8 rounded-full border border-border flex items-center justify-center hover:bg-secondary transition-colors disabled:opacity-40"
+                        disabled={rooms >= 8}
+                      >
+                        <Plus className="h-4 w-4" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
-            <Button variant="hero" size="lg" className="h-12 px-6 group/btn relative overflow-hidden">
+            <Button onClick={handleSearch} variant="hero" size="lg" className="h-12 px-6 group/btn relative overflow-hidden">
               <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover/btn:translate-x-full transition-transform duration-700" />
               <Search className="h-5 w-5 transition-transform group-hover/btn:scale-110 group-hover/btn:rotate-12" />
               <span className="hidden sm:inline">Search</span>

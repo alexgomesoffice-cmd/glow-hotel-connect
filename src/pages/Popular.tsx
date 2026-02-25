@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Star, Heart, MapPin, Flame, Award, ThumbsUp, Filter, Grid, List } from "lucide-react";
+import { Star, Heart, MapPin, Flame, Award, ThumbsUp, Grid, List } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -10,8 +10,11 @@ const Popular = () => {
   const navigate = useNavigate();
   const [likedHotels, setLikedHotels] = useState<number[]>([]);
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
-  const [sortBy, setSortBy] = useState<"rating" | "price" | "reviews">("rating");
+  const [sortBy] = useState<"rating" | "price" | "reviews">("rating");
   const [activeFilter, setActiveFilter] = useState<string>("all");
+  const [locationFilter, setLocationFilter] = useState<string>("all");
+
+  const uniqueLocations = [...new Set(hotels.map((h) => h.location))];
 
   const filters = [
     { id: "all", label: "All", icon: Grid },
@@ -41,11 +44,13 @@ const Popular = () => {
   });
 
   const filteredHotels = sortedHotels.filter((hotel) => {
-    if (activeFilter === "all") return true;
-    if (activeFilter === "luxury") return hotel.tags.includes("Luxury");
-    if (activeFilter === "trending") return hotel.tags.includes("Trending");
-    if (activeFilter === "top-rated") return hotel.rating >= 4.8;
-    return true;
+    const passesTag = activeFilter === "all" ? true
+      : activeFilter === "luxury" ? hotel.tags.includes("Luxury")
+      : activeFilter === "trending" ? hotel.tags.includes("Trending")
+      : activeFilter === "top-rated" ? hotel.rating >= 4.8
+      : true;
+    const passesLocation = locationFilter === "all" || hotel.location === locationFilter;
+    return passesTag && passesLocation;
   });
 
   return (
@@ -105,15 +110,17 @@ const Popular = () => {
           {/* Controls */}
           <div className="flex items-center justify-between mb-8 animate-fade-in-up" style={{ animationDelay: "300ms" }}>
             <div className="flex items-center gap-2">
-              <span className="text-muted-foreground">Sort by:</span>
+              <MapPin className="h-4 w-4 text-muted-foreground" />
+              <span className="text-muted-foreground">Location:</span>
               <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value as "rating" | "price" | "reviews")}
+                value={locationFilter}
+                onChange={(e) => setLocationFilter(e.target.value)}
                 className="bg-card border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary transition-all"
               >
-                <option value="rating">Rating</option>
-                <option value="price">Price</option>
-                <option value="reviews">Reviews</option>
+                <option value="all">All Locations</option>
+                {uniqueLocations.map((loc) => (
+                  <option key={loc} value={loc}>{loc}</option>
+                ))}
               </select>
             </div>
             <div className="flex items-center gap-2">

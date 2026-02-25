@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Star, Heart, MapPin } from "lucide-react";
+import { Star, Heart, MapPin, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { hotels } from "@/data/hotels";
 
@@ -48,22 +48,34 @@ const FeaturedHotels = () => {
 
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
-        <div className="text-center mb-12">
-          <h2
-            className={`text-3xl sm:text-4xl font-bold mb-3 ${
+        <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-4 mb-12">
+          <div>
+            <h2
+              className={`text-3xl sm:text-4xl font-bold mb-3 ${
+                isVisible ? "animate-fade-in-up" : "opacity-0"
+              }`}
+            >
+              Hotels loved by <span className="text-gradient">guests</span>
+            </h2>
+            <p
+              className={`text-muted-foreground max-w-lg ${
+                isVisible ? "animate-fade-in-up" : "opacity-0"
+              }`}
+              style={{ animationDelay: "100ms" }}
+            >
+              Top-rated stays with exceptional reviews and unforgettable experiences
+            </p>
+          </div>
+          <button
+            onClick={() => navigate("/explore")}
+            className={`group flex items-center gap-2 text-primary font-medium hover:gap-3 transition-all ${
               isVisible ? "animate-fade-in-up" : "opacity-0"
             }`}
+            style={{ animationDelay: "200ms" }}
           >
-            Hotels loved by <span className="text-gradient">guests</span>
-          </h2>
-          <p
-            className={`text-muted-foreground max-w-lg mx-auto ${
-              isVisible ? "animate-fade-in-up" : "opacity-0"
-            }`}
-            style={{ animationDelay: "100ms" }}
-          >
-            Top-rated stays with exceptional reviews and unforgettable experiences
-          </p>
+            View all loved hotels
+            <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+          </button>
         </div>
 
         {/* Hotels Grid */}

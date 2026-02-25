@@ -43,9 +43,9 @@ const SearchBar = () => {
       <div className="glass rounded-2xl p-3 sm:p-4 shadow-2xl shadow-primary/10 hover:shadow-primary/20 transition-shadow duration-500 group/bar">
         <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-primary/20 via-accent/20 to-primary/20 opacity-0 group-hover/bar:opacity-100 blur-xl transition-opacity duration-500 -z-10" />
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-[2fr_1.2fr_1.2fr_1.3fr_auto] gap-3 sm:gap-4">
           {/* Location */}
-          <div className="lg:col-span-1 relative group">
+          <div className="relative group">
             <label className="text-xs font-medium text-muted-foreground mb-1.5 block pl-1 group-focus-within:text-primary transition-colors">
               Location
             </label>
@@ -192,9 +192,9 @@ const SearchBar = () => {
 
           {/* Search Button */}
           <div className="flex items-end">
-            <Button onClick={handleSearch} variant="hero" size="lg" className="w-full h-12 gap-2 group/btn relative overflow-hidden">
+            <Button onClick={handleSearch} variant="hero" className="w-full h-12 gap-2 group/btn relative overflow-hidden px-5">
               <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover/btn:translate-x-full transition-transform duration-700" />
-              <Search className="h-5 w-5 transition-transform group-hover/btn:scale-110 group-hover/btn:rotate-12" />
+              <Search className="h-4 w-4 transition-transform group-hover/btn:scale-110 group-hover/btn:rotate-12" />
               <span>Search</span>
             </Button>
           </div>

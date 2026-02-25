@@ -67,7 +67,7 @@ const FeaturedHotels = () => {
             </p>
           </div>
           <button
-            onClick={() => navigate("/explore")}
+            onClick={() => navigate("/popular")}
             className={`group flex items-center gap-2 text-primary font-medium hover:gap-3 transition-all ${
               isVisible ? "animate-fade-in-up" : "opacity-0"
             }`}
@@ -177,7 +177,7 @@ const FeaturedHotels = () => {
           }`}
           style={{ animationDelay: "700ms" }}
         >
-          <Button variant="hero" size="lg" onClick={() => navigate("/explore")}>
+          <Button variant="hero" size="lg" onClick={() => navigate("/popular")}>
             Explore all hotels
           </Button>
         </div>

@@ -177,7 +177,7 @@ const FeaturedHotels = () => {
           }`}
           style={{ animationDelay: "700ms" }}
         >
-          <Button variant="hero" size="lg" onClick={() => navigate("/popular")}>
+          <Button variant="hero" size="lg" onClick={() => navigate("/explore")}>
             Explore all hotels
           </Button>
         </div>

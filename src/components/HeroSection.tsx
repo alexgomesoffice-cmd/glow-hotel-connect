@@ -11,7 +11,7 @@ const HeroSection = () => {
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
       {/* Photo Collage Background */}
-      <div className="absolute inset-0 grid grid-cols-5 gap-1">
+      <div className="absolute inset-0 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-1">
         {collageImages.map((image, index) => (
           <div
             key={index}

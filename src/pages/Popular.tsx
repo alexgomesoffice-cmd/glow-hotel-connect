@@ -108,10 +108,10 @@ const Popular = () => {
           </div>
 
           {/* Controls */}
-          <div className="flex items-center justify-between mb-8 animate-fade-in-up" style={{ animationDelay: "300ms" }}>
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8 animate-fade-in-up" style={{ animationDelay: "300ms" }}>
             <div className="flex items-center gap-2">
               <MapPin className="h-4 w-4 text-muted-foreground" />
-              <span className="text-muted-foreground">Location:</span>
+              <span className="text-muted-foreground hidden sm:inline">Location:</span>
               <select
                 value={locationFilter}
                 onChange={(e) => setLocationFilter(e.target.value)}
@@ -155,12 +155,12 @@ const Popular = () => {
                 key={hotel.id}
                 onClick={() => navigate(`/hotel/${hotel.id}`)}
                 className={`group relative rounded-2xl overflow-hidden bg-card border border-border transition-all duration-500 cursor-pointer animate-fade-in-up hover:border-primary/30 ${
-                  viewMode === "grid" ? "hover-lift" : "flex flex-row hover:bg-card/80"
+                  viewMode === "grid" ? "hover-lift" : "flex flex-col sm:flex-row hover:bg-card/80"
                 }`}
                 style={{ animationDelay: `${index * 100}ms` }}
               >
                 {/* Image */}
-                <div className={`relative overflow-hidden ${viewMode === "grid" ? "aspect-[4/3]" : "w-72 h-48 flex-shrink-0"}`}>
+                <div className={`relative overflow-hidden ${viewMode === "grid" ? "aspect-[4/3]" : "w-full sm:w-72 h-48 flex-shrink-0"}`}>
                   <img
                     src={hotel.image}
                     alt={hotel.name}

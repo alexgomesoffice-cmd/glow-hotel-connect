@@ -134,7 +134,23 @@ const HotelDetail = () => {
           </div>
 
           {/* Image Gallery */}
-          <div className="grid grid-cols-4 grid-rows-2 gap-2 mb-8 rounded-3xl overflow-hidden animate-fade-in h-[500px]">
+          {/* Mobile: single image, Desktop: gallery grid */}
+          <div className="block sm:hidden mb-8 rounded-2xl overflow-hidden animate-fade-in relative aspect-[16/10]">
+            <img
+              src={galleryImages[0]}
+              alt={hotel.name}
+              className="w-full h-full object-cover"
+            />
+            <Button
+              variant="glass"
+              size="sm"
+              className="absolute bottom-4 right-4 gap-2"
+            >
+              <ImageIcon className="h-4 w-4" />
+              Show all photos
+            </Button>
+          </div>
+          <div className="hidden sm:grid grid-cols-4 grid-rows-2 gap-2 mb-8 rounded-3xl overflow-hidden animate-fade-in h-[400px] lg:h-[500px] relative">
             <div className="col-span-2 row-span-2 relative group cursor-pointer" onClick={() => setActiveImageIndex(0)}>
               <img
                 src={galleryImages[0]}

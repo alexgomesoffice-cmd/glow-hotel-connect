@@ -39,11 +39,11 @@ const ExploreHotels = () => {
           {/* Main content */}
           <div className="flex-1">
             {/* Toolbar */}
-            <div className={`flex items-center justify-between mb-6 ${isLoaded ? "animate-fade-in-up" : "opacity-0"}`} style={{ animationDelay: "150ms" }}>
+            <div className={`flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-6 ${isLoaded ? "animate-fade-in-up" : "opacity-0"}`} style={{ animationDelay: "150ms" }}>
               <span className="text-sm text-muted-foreground">{hotels.length} hotels found</span>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
                 <Button variant="outline" size="sm" className="gap-2">
-                  <MapPinned className="h-4 w-4" /> See Location
+                  <MapPinned className="h-4 w-4" /> <span className="hidden sm:inline">See Location</span>
                 </Button>
                 <Button variant={view === "grid" ? "default" : "outline"} size="icon" className="h-9 w-9" onClick={() => setView("grid")}>
                   <LayoutGrid className="h-4 w-4" />
@@ -52,7 +52,7 @@ const ExploreHotels = () => {
                   <List className="h-4 w-4" />
                 </Button>
                 <Button variant="outline" size="sm" className="gap-2">
-                  <ArrowUpDown className="h-4 w-4" /> Sort by
+                  <ArrowUpDown className="h-4 w-4" /> <span className="hidden sm:inline">Sort by</span>
                 </Button>
               </div>
             </div>
@@ -63,10 +63,10 @@ const ExploreHotels = () => {
                 <div
                   key={hotel.id}
                   onClick={() => navigate(`/hotel/${hotel.id}`)}
-                  className={`group relative rounded-2xl overflow-hidden bg-card border border-border hover:border-primary/30 transition-all duration-500 cursor-pointer hover:scale-[1.02] hover:-translate-y-2 ${isLoaded ? "animate-fade-in-up" : "opacity-0"} ${view === "list" ? "flex" : ""}`}
+                  className={`group relative rounded-2xl overflow-hidden bg-card border border-border hover:border-primary/30 transition-all duration-500 cursor-pointer hover:scale-[1.02] hover:-translate-y-2 ${isLoaded ? "animate-fade-in-up" : "opacity-0"} ${view === "list" ? "flex flex-col sm:flex-row" : ""}`}
                   style={{ animationDelay: `${(index + 2) * 80}ms` }}
                 >
-                  <div className={`relative overflow-hidden ${view === "list" ? "w-72 shrink-0" : "aspect-[4/3]"}`}>
+                  <div className={`relative overflow-hidden ${view === "list" ? "w-full sm:w-72 shrink-0 aspect-[16/10] sm:aspect-auto sm:h-auto" : "aspect-[4/3]"}`}>
                     <img src={hotel.image} alt={hotel.name} className="w-full h-full object-cover transition-all duration-700 group-hover:scale-110" />
                     <button onClick={(e) => toggleLike(e, hotel.id)} className="absolute top-4 right-4 p-2.5 rounded-full glass transition-all duration-300 hover:scale-125 z-10">
                       <Heart className={`h-5 w-5 transition-all ${likedHotels.includes(hotel.id) ? "fill-destructive text-destructive" : "text-foreground hover:text-destructive"}`} />

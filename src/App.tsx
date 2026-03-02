@@ -30,15 +30,15 @@ import AdminBookings from "./pages/admin/AdminBookings";
 import AdminAnalytics from "./pages/admin/AdminAnalytics";
 import AdminSettings from "./pages/admin/AdminSettings";
 
-// Manager
-import ManagerLayout from "./components/manager/ManagerLayout";
-import ManagerOverview from "./pages/manager/ManagerOverview";
-import ManagerRooms from "./pages/manager/ManagerRooms";
-import ManagerAddRoom from "./pages/manager/ManagerAddRoom";
-import ManagerReservations from "./pages/manager/ManagerReservations";
-import ManagerRevenue from "./pages/manager/ManagerRevenue";
-import ManagerReviews from "./pages/manager/ManagerReviews";
-import ManagerSettings from "./pages/manager/ManagerSettings";
+// Hotel Admin
+import HotelAdminLayout from "./components/hotel-admin/HotelAdminLayout";
+import HotelAdminOverview from "./pages/hotel-admin/HotelAdminOverview";
+import HotelAdminRooms from "./pages/hotel-admin/HotelAdminRooms";
+import HotelAdminAddRoom from "./pages/hotel-admin/HotelAdminAddRoom";
+import HotelAdminReservations from "./pages/hotel-admin/HotelAdminReservations";
+import HotelAdminRevenue from "./pages/hotel-admin/HotelAdminRevenue";
+import HotelAdminReviews from "./pages/hotel-admin/HotelAdminReviews";
+import HotelAdminSettings from "./pages/hotel-admin/HotelAdminSettings";
 
 const queryClient = new QueryClient();
 
@@ -76,15 +76,15 @@ const App = () => (
               <Route path="settings" element={<AdminSettings />} />
             </Route>
 
-            {/* Manager Routes */}
-            <Route path="/manager" element={<ManagerLayout />}>
-              <Route index element={<ManagerOverview />} />
-              <Route path="rooms" element={<ManagerRooms />} />
-              <Route path="add-room" element={<ManagerAddRoom />} />
-              <Route path="reservations" element={<ManagerReservations />} />
-              <Route path="revenue" element={<ManagerRevenue />} />
-              <Route path="reviews" element={<ManagerReviews />} />
-              <Route path="settings" element={<ManagerSettings />} />
+            {/* Hotel Admin Routes */}
+            <Route path="/hotel-admin" element={<HotelAdminLayout />}>
+              <Route index element={<HotelAdminOverview />} />
+              <Route path="rooms" element={<HotelAdminRooms />} />
+              <Route path="add-room" element={<HotelAdminAddRoom />} />
+              <Route path="reservations" element={<HotelAdminReservations />} />
+              <Route path="revenue" element={<HotelAdminRevenue />} />
+              <Route path="reviews" element={<HotelAdminReviews />} />
+              <Route path="settings" element={<HotelAdminSettings />} />
             </Route>
 
             <Route path="*" element={<NotFound />} />

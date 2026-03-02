@@ -27,7 +27,7 @@ const todayReservations = [
   { guest: "James Wilson", room: "Suite 402", checkIn: "16:00", status: "arriving" },
 ];
 
-const ManagerOverview = () => {
+const HotelAdminOverview = () => {
   const [selectedHotel, setSelectedHotel] = useState(hotels[0].id);
 
   return (
@@ -53,7 +53,7 @@ const ManagerOverview = () => {
         </div>
         <div className="flex gap-3">
           <Button variant="hero" asChild>
-            <Link to="/manager/add-room"><Plus className="h-4 w-4 mr-2" /> Add Room</Link>
+            <Link to="/hotel-admin/add-room"><Plus className="h-4 w-4 mr-2" /> Add Room</Link>
           </Button>
         </div>
       </div>
@@ -122,4 +122,4 @@ const ManagerOverview = () => {
   );
 };
 
-export default ManagerOverview;
+export default HotelAdminOverview;

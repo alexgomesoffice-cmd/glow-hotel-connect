@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "@/hooks/use-toast";
 
-const ManagerSettings = () => {
+const HotelAdminSettings = () => {
   const handleSave = () => toast({ title: "Settings Saved", description: "Your preferences have been updated." });
 
   return (
@@ -47,4 +47,4 @@ const ManagerSettings = () => {
   );
 };
 
-export default ManagerSettings;
+export default HotelAdminSettings;

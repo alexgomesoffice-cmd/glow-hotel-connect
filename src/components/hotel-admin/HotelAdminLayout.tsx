@@ -9,15 +9,15 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 const sidebarItems = [
-  { icon: LayoutDashboard, label: "Overview", path: "/manager" },
-  { icon: BedDouble, label: "Rooms", path: "/manager/rooms" },
-  { icon: Calendar, label: "Reservations", path: "/manager/reservations" },
-  { icon: DollarSign, label: "Revenue", path: "/manager/revenue" },
-  { icon: MessageSquare, label: "Reviews", path: "/manager/reviews" },
-  { icon: Settings, label: "Settings", path: "/manager/settings" },
+  { icon: LayoutDashboard, label: "Overview", path: "/hotel-admin" },
+  { icon: BedDouble, label: "Rooms", path: "/hotel-admin/rooms" },
+  { icon: Calendar, label: "Reservations", path: "/hotel-admin/reservations" },
+  { icon: DollarSign, label: "Revenue", path: "/hotel-admin/revenue" },
+  { icon: MessageSquare, label: "Reviews", path: "/hotel-admin/reviews" },
+  { icon: Settings, label: "Settings", path: "/hotel-admin/settings" },
 ];
 
-const ManagerLayout = () => {
+const HotelAdminLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const location = useLocation();
@@ -35,7 +35,7 @@ const ManagerLayout = () => {
         mobileSidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
       )}>
         <div className="h-20 flex items-center justify-between px-4 border-b border-border">
-          <Link to="/manager" className="flex items-center gap-3">
+          <Link to="/hotel-admin" className="flex items-center gap-3">
             <div className="bg-gradient-to-r from-green-500 to-emerald-500 p-2 rounded-xl shrink-0">
               <Hotel className="h-5 w-5 text-primary-foreground" />
             </div>
@@ -113,4 +113,4 @@ const ManagerLayout = () => {
   );
 };
 
-export default ManagerLayout;
+export default HotelAdminLayout;

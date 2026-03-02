@@ -19,7 +19,7 @@ const statusColors: Record<string, string> = {
   maintenance: "bg-amber-500/10 text-amber-500",
 };
 
-const ManagerRooms = () => (
+const HotelAdminRooms = () => (
   <div className="space-y-6">
     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
       <div>
@@ -27,7 +27,7 @@ const ManagerRooms = () => (
         <p className="text-muted-foreground">Manage rooms for your selected hotel</p>
       </div>
       <Button variant="hero" asChild>
-        <Link to="/manager/add-room"><Plus className="h-4 w-4 mr-2" /> Add Room</Link>
+        <Link to="/hotel-admin/add-room"><Plus className="h-4 w-4 mr-2" /> Add Room</Link>
       </Button>
     </div>
 
@@ -55,4 +55,4 @@ const ManagerRooms = () => (
   </div>
 );
 
-export default ManagerRooms;
+export default HotelAdminRooms;

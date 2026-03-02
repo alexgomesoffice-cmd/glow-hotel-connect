@@ -17,7 +17,7 @@ const recentTransactions = [
   { date: "Feb 19", description: "Supplies restock", amount: "-$320", type: "expense" },
 ];
 
-const ManagerRevenue = () => (
+const HotelAdminRevenue = () => (
   <div className="space-y-6">
     <div>
       <h1 className="text-2xl sm:text-3xl font-bold">Revenue</h1>
@@ -61,4 +61,4 @@ const ManagerRevenue = () => (
   </div>
 );
 
-export default ManagerRevenue;
+export default HotelAdminRevenue;

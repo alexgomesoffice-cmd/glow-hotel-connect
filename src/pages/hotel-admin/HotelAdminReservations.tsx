@@ -19,7 +19,7 @@ const statusColors: Record<string, string> = {
   pending: "bg-amber-500/10 text-amber-500",
 };
 
-const ManagerReservations = () => (
+const HotelAdminReservations = () => (
   <div className="space-y-6">
     <div>
       <h1 className="text-2xl sm:text-3xl font-bold">Reservations</h1>
@@ -65,4 +65,4 @@ const ManagerReservations = () => (
   </div>
 );
 
-export default ManagerReservations;
+export default HotelAdminReservations;

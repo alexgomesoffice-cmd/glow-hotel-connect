@@ -12,7 +12,7 @@ import { toast } from "@/hooks/use-toast";
 
 const amenitiesList = ["WiFi", "TV", "Mini Bar", "Air Conditioning", "Safe", "Balcony", "Ocean View", "Room Service"];
 
-const ManagerAddRoom = () => {
+const HotelAdminAddRoom = () => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({ name: "", type: "", price: "", capacity: "", beds: "", size: "", description: "" });
   const [amenities, setAmenities] = useState<string[]>([]);
@@ -26,13 +26,13 @@ const ManagerAddRoom = () => {
       return;
     }
     toast({ title: "Room Added!", description: `${formData.name} has been added successfully.` });
-    navigate("/manager/rooms");
+    navigate("/hotel-admin/rooms");
   };
 
   return (
     <div className="space-y-6 max-w-3xl">
       <div className="flex items-center gap-4">
-        <Button variant="outline" size="icon" onClick={() => navigate("/manager/rooms")}>
+        <Button variant="outline" size="icon" onClick={() => navigate("/hotel-admin/rooms")}>
           <ArrowLeft className="h-4 w-4" />
         </Button>
         <div>
@@ -109,7 +109,7 @@ const ManagerAddRoom = () => {
         </Card>
 
         <div className="flex gap-3 justify-end">
-          <Button variant="outline" type="button" onClick={() => navigate("/manager/rooms")}>Cancel</Button>
+          <Button variant="outline" type="button" onClick={() => navigate("/hotel-admin/rooms")}>Cancel</Button>
           <Button variant="hero" type="submit">Add Room</Button>
         </div>
       </form>
@@ -117,4 +117,4 @@ const ManagerAddRoom = () => {
   );
 };
 
-export default ManagerAddRoom;
+export default HotelAdminAddRoom;

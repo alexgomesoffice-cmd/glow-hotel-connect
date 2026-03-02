@@ -9,7 +9,7 @@ const reviews = [
   { id: 4, guest: "James Wilson", rating: 3, date: "Feb 17, 2025", comment: "Room was nice but the AC was noisy at night. Front desk resolved it quickly though.", room: "Suite 402", replied: false },
 ];
 
-const ManagerReviews = () => (
+const HotelAdminReviews = () => (
   <div className="space-y-6">
     <div>
       <h1 className="text-2xl sm:text-3xl font-bold">Reviews</h1>
@@ -50,4 +50,4 @@ const ManagerReviews = () => (
   </div>
 );
 
-export default ManagerReviews;
+export default HotelAdminReviews;

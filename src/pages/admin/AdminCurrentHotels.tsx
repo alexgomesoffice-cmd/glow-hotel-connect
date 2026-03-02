@@ -5,10 +5,10 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
 const mockHotels = [
-  { id: 1, name: "Grand Palace Hotel", location: "Paris, France", rooms: 120, rating: 4.8, occupancy: 87, manager: "Maria Garcia", image: "🏨" },
-  { id: 2, name: "Seaside Resort", location: "Dubai, UAE", rooms: 85, rating: 4.6, occupancy: 72, manager: "John Smith", image: "🏖️" },
-  { id: 3, name: "Mountain Lodge", location: "Tokyo, Japan", rooms: 45, rating: 4.9, occupancy: 91, manager: "Sarah Lee", image: "🏔️" },
-  { id: 4, name: "Urban Suites", location: "London, UK", rooms: 60, rating: 4.5, occupancy: 68, manager: "Maria Garcia", image: "🏢" },
+  { id: 1, name: "Grand Palace Hotel", location: "Paris, France", rooms: 120, rating: 4.8, occupancy: 87, hotelSystemAdmin: "Maria Garcia", image: "🏨" },
+  { id: 2, name: "Seaside Resort", location: "Dubai, UAE", rooms: 85, rating: 4.6, occupancy: 72, hotelSystemAdmin: "John Smith", image: "🏖️" },
+  { id: 3, name: "Mountain Lodge", location: "Tokyo, Japan", rooms: 45, rating: 4.9, occupancy: 91, hotelSystemAdmin: "Sarah Lee", image: "🏔️" },
+  { id: 4, name: "Urban Suites", location: "London, UK", rooms: 60, rating: 4.5, occupancy: 68, hotelSystemAdmin: "Maria Garcia", image: "🏢" },
 ];
 
 const AdminCurrentHotels = () => {
@@ -39,7 +39,7 @@ const AdminCurrentHotels = () => {
                 <MapPin className="h-4 w-4" /> {hotel.location}
               </div>
               <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                <UserCheck className="h-4 w-4" /> Manager: {hotel.manager}
+                <UserCheck className="h-4 w-4" /> Hotel System Admin: {hotel.hotelSystemAdmin}
               </div>
               <div className="flex items-center justify-between text-sm">
                 <span className="flex items-center gap-1"><BedDouble className="h-4 w-4" /> {hotel.rooms} rooms</span>

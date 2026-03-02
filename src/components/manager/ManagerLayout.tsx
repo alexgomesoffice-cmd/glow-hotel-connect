@@ -39,7 +39,7 @@ const ManagerLayout = () => {
             <div className="bg-gradient-to-r from-green-500 to-emerald-500 p-2 rounded-xl shrink-0">
               <Hotel className="h-5 w-5 text-primary-foreground" />
             </div>
-            {sidebarOpen && <span className="text-xl font-bold text-gradient animate-fade-in-left">Manager</span>}
+            {sidebarOpen && <span className="text-xl font-bold text-gradient animate-fade-in-left">Hotel Admin</span>}
           </Link>
           <button onClick={() => setMobileSidebarOpen(false)} className="lg:hidden p-2 hover:bg-secondary rounded-lg">
             <X className="h-5 w-5" />
@@ -84,7 +84,7 @@ const ManagerLayout = () => {
               <button onClick={() => setSidebarOpen(!sidebarOpen)} className="hidden lg:flex p-2 hover:bg-secondary rounded-lg">
                 <Menu className="h-5 w-5" />
               </button>
-              <h2 className="text-lg font-semibold hidden sm:block">Hotel Manager Panel</h2>
+              <h2 className="text-lg font-semibold hidden sm:block">Hotel System Admin Panel</h2>
             </div>
             <div className="flex items-center gap-3">
               <button className="relative p-2.5 hover:bg-secondary rounded-xl transition-colors">
@@ -97,7 +97,7 @@ const ManagerLayout = () => {
                 </div>
                 <div className="hidden sm:block">
                   <p className="text-sm font-medium">Maria Garcia</p>
-                  <p className="text-xs text-muted-foreground">Hotel Manager</p>
+                  <p className="text-xs text-muted-foreground">Hotel System Admin</p>
                 </div>
                 <ChevronDown className="h-4 w-4 text-muted-foreground" />
               </div>

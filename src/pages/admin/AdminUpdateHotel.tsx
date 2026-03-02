@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "@/hooks/use-toast";
 
-const managers = [
+const hotelSystemAdmins = [
   { id: "m1", name: "Maria Garcia" },
   { id: "m2", name: "John Smith" },
   { id: "m3", name: "Sarah Lee" },
@@ -19,7 +19,7 @@ const AdminUpdateHotel = () => {
   const navigate = useNavigate();
   const [isLoaded, setIsLoaded] = useState(false);
   const [formData, setFormData] = useState({
-    name: "Grand Palace Hotel", location: "Paris, France", description: "A luxurious hotel in the heart of Paris.", type: "hotel", stars: "5", email: "info@grandpalace.com", phone: "+33 1 23 45 67", assignedManager: "m1",
+    name: "Grand Palace Hotel", location: "Paris, France", description: "A luxurious hotel in the heart of Paris.", type: "hotel", stars: "5", email: "info@grandpalace.com", phone: "+33 1 23 45 67", assignedAdmin: "m1",
   });
 
   useEffect(() => { setIsLoaded(true); }, []);
@@ -38,7 +38,7 @@ const AdminUpdateHotel = () => {
         </Button>
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold">Update Hotel Info</h1>
-          <p className="text-muted-foreground">Edit property details and manager assignment</p>
+          <p className="text-muted-foreground">Edit property details and hotel system admin assignment</p>
         </div>
       </div>
 
@@ -87,12 +87,12 @@ const AdminUpdateHotel = () => {
         </Card>
 
         <Card className={`${isLoaded ? "animate-fade-in-up" : "opacity-0"}`} style={{ animationDelay: "200ms" }}>
-          <CardHeader><CardTitle>Reassign Manager</CardTitle></CardHeader>
+          <CardHeader><CardTitle>Reassign Hotel System Admin</CardTitle></CardHeader>
           <CardContent>
-            <Select value={formData.assignedManager} onValueChange={(v) => setFormData({ ...formData, assignedManager: v })}>
+            <Select value={formData.assignedAdmin} onValueChange={(v) => setFormData({ ...formData, assignedAdmin: v })}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
-                {managers.map((m) => (<SelectItem key={m.id} value={m.id}>{m.name}</SelectItem>))}
+                {hotelSystemAdmins.map((m) => (<SelectItem key={m.id} value={m.id}>{m.name}</SelectItem>))}
               </SelectContent>
             </Select>
           </CardContent>

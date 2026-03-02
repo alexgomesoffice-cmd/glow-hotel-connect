@@ -408,7 +408,7 @@ const HotelDetail = () => {
                             {checkIn ? format(checkIn, "EEE, MMM d, yyyy") : "Select date"}
                           </Button>
                         </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="start">
+                        <PopoverContent className="w-auto p-0" align="center" side="bottom" sideOffset={4}>
                           <CalendarComponent
                             mode="single"
                             selected={checkIn}
@@ -439,7 +439,7 @@ const HotelDetail = () => {
                             {checkOut ? format(checkOut, "EEE, MMM d, yyyy") : "Select date"}
                           </Button>
                         </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="start">
+                        <PopoverContent className="w-auto p-0" align="center" side="bottom" sideOffset={4}>
                           <CalendarComponent
                             mode="single"
                             selected={checkOut}

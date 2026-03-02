@@ -7,9 +7,9 @@ import { Input } from "@/components/ui/input";
 import { toast } from "@/hooks/use-toast";
 
 const mockHotels = [
-  { id: 1, name: "Grand Palace Hotel", location: "Paris, France", manager: "Maria Garcia", rooms: 120 },
-  { id: 2, name: "Seaside Resort", location: "Dubai, UAE", manager: "John Smith", rooms: 85 },
-  { id: 3, name: "Mountain Lodge", location: "Tokyo, Japan", manager: "Sarah Lee", rooms: 45 },
+  { id: 1, name: "Grand Palace Hotel", location: "Paris, France", hotelSystemAdmin: "Maria Garcia", rooms: 120 },
+  { id: 2, name: "Seaside Resort", location: "Dubai, UAE", hotelSystemAdmin: "John Smith", rooms: 85 },
+  { id: 3, name: "Mountain Lodge", location: "Tokyo, Japan", hotelSystemAdmin: "Sarah Lee", rooms: 45 },
 ];
 
 const AdminEraseHotel = () => {
@@ -54,7 +54,7 @@ const AdminEraseHotel = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <h3 className="font-semibold text-lg">{hotel.name}</h3>
-                  <p className="text-sm text-muted-foreground">{hotel.location} · {hotel.rooms} rooms · Manager: {hotel.manager}</p>
+                  <p className="text-sm text-muted-foreground">{hotel.location} · {hotel.rooms} rooms · Hotel System Admin: {hotel.hotelSystemAdmin}</p>
                 </div>
                 {confirmId === hotel.id ? (
                   <div className="flex items-center gap-2">

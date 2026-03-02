@@ -34,7 +34,7 @@ const topHotels = [
 const quickActions = [
   { icon: Plus, label: "Add Property", color: "from-primary to-accent", link: "/admin/add-hotel" },
   { icon: FileText, label: "Reports", color: "from-green-500 to-emerald-500", link: "/admin/analytics" },
-  { icon: Shield, label: "Security", color: "from-orange-500 to-amber-500", link: "/admin/settings" },
+  { icon: Shield, label: "Settings", color: "from-orange-500 to-amber-500", link: "/admin/settings" },
   { icon: Globe, label: "Clients", color: "from-purple-500 to-pink-500", link: "/admin/clients" },
 ];
 
@@ -173,7 +173,7 @@ const AdminDashboardHome = () => {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
             <div className="text-center p-6 rounded-xl glass">
               <p className="text-3xl font-bold text-gradient mb-1">156</p>
-              <p className="text-sm text-muted-foreground">Hotel Managers</p>
+              <p className="text-sm text-muted-foreground">Hotel System Admins</p>
             </div>
             <div className="text-center p-6 rounded-xl glass">
               <p className="text-3xl font-bold text-gradient mb-1">12</p>

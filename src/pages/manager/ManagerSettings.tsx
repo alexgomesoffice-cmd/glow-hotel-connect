@@ -25,7 +25,7 @@ const ManagerSettings = () => {
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2"><Label>Phone</Label><Input defaultValue="+1 234 567 890" /></div>
-            <div className="space-y-2"><Label>Role</Label><Input defaultValue="Hotel Manager" disabled /></div>
+            <div className="space-y-2"><Label>Role</Label><Input defaultValue="Hotel System Admin" disabled /></div>
           </div>
         </CardContent>
       </Card>

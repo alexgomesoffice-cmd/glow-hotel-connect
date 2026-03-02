@@ -78,7 +78,7 @@ const SearchBar = () => {
                   <span className="truncate">{checkIn ? format(checkIn, "MMM dd, yyyy") : "Add date"}</span>
                 </button>
               </PopoverTrigger>
-              <PopoverContent className="w-auto p-0 z-50" align="start">
+              <PopoverContent className="w-auto p-0 z-50" align="center">
                 <Calendar
                   mode="single"
                   selected={checkIn}
@@ -109,7 +109,7 @@ const SearchBar = () => {
                   <span className="truncate">{checkOut ? format(checkOut, "MMM dd, yyyy") : "Add date"}</span>
                 </button>
               </PopoverTrigger>
-              <PopoverContent className="w-auto p-0 z-50" align="start">
+              <PopoverContent className="w-auto p-0 z-50" align="center">
                 <Calendar
                   mode="single"
                   selected={checkOut}

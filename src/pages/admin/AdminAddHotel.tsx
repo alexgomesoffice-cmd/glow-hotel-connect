@@ -6,14 +6,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "@/hooks/use-toast";
-
-const hotelSystemAdmins = [
-  { id: "m1", name: "Maria Garcia" },
-  { id: "m2", name: "John Smith" },
-  { id: "m3", name: "Sarah Lee" },
-];
 
 const bangladeshCities = [
   "Dhaka", "Chittagong", "Khulna", "Rajshahi", "Sylhet",
@@ -22,24 +17,40 @@ const bangladeshCities = [
   "Brahmanbaria", "Savar", "Tongi", "Narsingdi", "Tangail",
 ];
 
+const hotelAmenities = [
+  "Swimming Pool", "Gym / Fitness Center", "Free Wi-Fi", "Parking",
+  "Restaurant", "Bar / Lounge", "Spa & Wellness", "Conference Room",
+  "24/7 Front Desk", "Room Service", "Laundry Service", "Airport Shuttle",
+  "Garden / Terrace", "Elevator", "CCTV Security", "Power Backup",
+  "Wheelchair Accessible", "Pet Friendly", "Kids Play Area", "Business Center",
+];
+
 const AdminAddHotel = () => {
   const navigate = useNavigate();
   const [isLoaded, setIsLoaded] = useState(false);
   const [formData, setFormData] = useState({
     name: "", location: "", address: "", zipCode: "", description: "", type: "", stars: "",
     email: "", eContact1: "", eContact2: "", receptionNumber1: "", receptionNumber2: "",
-    ownerName: "", assignedAdmin: "",
+    ownerName: "", managerName: "", managerPhone: "",
+    adminEmail: "", adminPassword: "", adminName: "", adminPhone: "", adminNID: "",
   });
+  const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
 
   useEffect(() => { setIsLoaded(true); }, []);
 
+  const toggleAmenity = (amenity: string) => {
+    setSelectedAmenities((prev) =>
+      prev.includes(amenity) ? prev.filter((a) => a !== amenity) : [...prev, amenity]
+    );
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.name || !formData.location || !formData.assignedAdmin) {
+    if (!formData.name || !formData.location || !formData.adminEmail || !formData.adminName) {
       toast({ title: "Missing fields", description: "Please fill in the required fields.", variant: "destructive" });
       return;
     }
-    toast({ title: "Hotel Created!", description: `${formData.name} has been created and assigned to a hotel system admin.` });
+    toast({ title: "Hotel Created!", description: `${formData.name} has been created and a hotel system admin account has been set up.` });
     navigate("/admin/hotels");
   };
 
@@ -51,7 +62,7 @@ const AdminAddHotel = () => {
         </Button>
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold">Add New Hotel</h1>
-          <p className="text-muted-foreground">Register a new property and assign it to a hotel system admin</p>
+          <p className="text-muted-foreground">Register a new property and set up a hotel system admin account</p>
         </div>
       </div>
 
@@ -113,19 +124,51 @@ const AdminAddHotel = () => {
                 </Select>
               </div>
             </div>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="space-y-2">
+                <Label>Owner's Name</Label>
+                <Input placeholder="e.g. Mr. Rahman" value={formData.ownerName} onChange={(e) => setFormData({ ...formData, ownerName: e.target.value })} />
+              </div>
+              <div className="space-y-2">
+                <Label>Hotel Manager Name</Label>
+                <Input placeholder="e.g. Mr. Karim" value={formData.managerName} onChange={(e) => setFormData({ ...formData, managerName: e.target.value })} />
+              </div>
+              <div className="space-y-2">
+                <Label>Manager's Phone</Label>
+                <Input type="tel" placeholder="+880 1XXX XXXXXX" value={formData.managerPhone} onChange={(e) => setFormData({ ...formData, managerPhone: e.target.value })} />
+              </div>
+            </div>
           </CardContent>
         </Card>
 
         <Card className={`${isLoaded ? "animate-fade-in-up" : "opacity-0"}`} style={{ animationDelay: "200ms" }}>
-          <CardHeader><CardTitle>Assign Hotel System Admin *</CardTitle></CardHeader>
-          <CardContent>
-            <Select value={formData.assignedAdmin} onValueChange={(v) => setFormData({ ...formData, assignedAdmin: v })}>
-              <SelectTrigger><SelectValue placeholder="Select a hotel system admin" /></SelectTrigger>
-              <SelectContent>
-                {hotelSystemAdmins.map((m) => (<SelectItem key={m.id} value={m.id}>{m.name}</SelectItem>))}
-              </SelectContent>
-            </Select>
-            <p className="text-xs text-muted-foreground mt-2">The assigned hotel system admin will be able to update hotel info, manage rooms, and handle reservations.</p>
+          <CardHeader><CardTitle>Hotel System Admin Account *</CardTitle></CardHeader>
+          <CardContent className="space-y-4">
+            <p className="text-xs text-muted-foreground">Create a hotel system admin account. This person will manage hotel info, rooms, and reservations.</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Admin Name *</Label>
+                <Input placeholder="Full name" value={formData.adminName} onChange={(e) => setFormData({ ...formData, adminName: e.target.value })} />
+              </div>
+              <div className="space-y-2">
+                <Label>Admin Email *</Label>
+                <Input type="email" placeholder="admin@example.com" value={formData.adminEmail} onChange={(e) => setFormData({ ...formData, adminEmail: e.target.value })} />
+              </div>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="space-y-2">
+                <Label>Password *</Label>
+                <Input type="password" placeholder="••••••••" value={formData.adminPassword} onChange={(e) => setFormData({ ...formData, adminPassword: e.target.value })} />
+              </div>
+              <div className="space-y-2">
+                <Label>Phone</Label>
+                <Input type="tel" placeholder="+880 1XXX XXXXXX" value={formData.adminPhone} onChange={(e) => setFormData({ ...formData, adminPhone: e.target.value })} />
+              </div>
+              <div className="space-y-2">
+                <Label>NID No.</Label>
+                <Input placeholder="National ID number" value={formData.adminNID} onChange={(e) => setFormData({ ...formData, adminNID: e.target.value })} />
+              </div>
+            </div>
           </CardContent>
         </Card>
 
@@ -136,10 +179,6 @@ const AdminAddHotel = () => {
               <div className="space-y-2">
                 <Label>Hotel Email</Label>
                 <Input type="email" placeholder="hotel@example.com" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} />
-              </div>
-              <div className="space-y-2">
-                <Label>Owner's Name</Label>
-                <Input placeholder="e.g. Mr. Rahman" value={formData.ownerName} onChange={(e) => setFormData({ ...formData, ownerName: e.target.value })} />
               </div>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -171,6 +210,23 @@ const AdminAddHotel = () => {
             <div className="border-2 border-dashed border-border rounded-xl p-8 text-center">
               <Upload className="h-10 w-10 mx-auto text-muted-foreground mb-3" />
               <p className="text-sm text-muted-foreground">Drag & drop images here, or click to browse</p>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className={`${isLoaded ? "animate-fade-in-up" : "opacity-0"}`} style={{ animationDelay: "500ms" }}>
+          <CardHeader><CardTitle>Hotel Amenities</CardTitle></CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+              {hotelAmenities.map((amenity) => (
+                <label key={amenity} className="flex items-center gap-2 text-sm cursor-pointer hover:text-primary transition-colors">
+                  <Checkbox
+                    checked={selectedAmenities.includes(amenity)}
+                    onCheckedChange={() => toggleAmenity(amenity)}
+                  />
+                  {amenity}
+                </label>
+              ))}
             </div>
           </CardContent>
         </Card>

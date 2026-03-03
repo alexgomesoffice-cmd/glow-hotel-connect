@@ -66,7 +66,7 @@ const App = () => (
               <Route index element={<AdminDashboardHome />} />
               <Route path="add-hotel" element={<AdminAddHotel />} />
               <Route path="hotels" element={<AdminCurrentHotels />} />
-              <Route path="update-hotel" element={<AdminUpdateHotel />} />
+              <Route path="update-hotel/:id" element={<AdminUpdateHotel />} />
               <Route path="erase-hotel" element={<AdminEraseHotel />} />
               <Route path="clients" element={<AdminClientList />} />
               <Route path="update-client" element={<AdminUpdateClient />} />

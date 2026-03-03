@@ -78,7 +78,7 @@ const SearchBar = () => {
                   <span className="truncate">{checkIn ? format(checkIn, "MMM dd, yyyy") : "Add date"}</span>
                 </button>
               </PopoverTrigger>
-              <PopoverContent className="w-auto p-0 z-50" align="center">
+              <PopoverContent className="w-auto p-0 z-[60]" align="start" side="bottom" sideOffset={8}>
                 <Calendar
                   mode="single"
                   selected={checkIn}
@@ -109,7 +109,7 @@ const SearchBar = () => {
                   <span className="truncate">{checkOut ? format(checkOut, "MMM dd, yyyy") : "Add date"}</span>
                 </button>
               </PopoverTrigger>
-              <PopoverContent className="w-auto p-0 z-50" align="center">
+              <PopoverContent className="w-auto p-0 z-[60]" align="start" side="bottom" sideOffset={8}>
                 <Calendar
                   mode="single"
                   selected={checkOut}
@@ -139,7 +139,7 @@ const SearchBar = () => {
             </button>
 
             {isGuestOpen && (
-              <div className="absolute top-full left-0 w-64 mt-2 rounded-xl border border-border bg-card p-4 shadow-xl z-50 space-y-4 animate-fade-in-down">
+              <div className="absolute top-full left-0 w-64 mt-2 rounded-xl border border-border bg-card p-4 shadow-xl z-[60] space-y-4 animate-fade-in-down">
                 {/* Guests row */}
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium">Guests</span>

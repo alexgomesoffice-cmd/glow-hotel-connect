@@ -94,6 +94,15 @@ const Login = () => {
             Don't have an account?{" "}
             <Link to="/signup" className="text-primary hover:underline font-medium">Sign up</Link>
           </p>
+
+          <div className="mt-4 pt-4 border-t border-border/50 space-y-3">
+            <Link to="/admin-login" className="block text-center text-sm text-muted-foreground hover:text-primary transition-colors">
+              Sign in as Admin →
+            </Link>
+            <Link to="/hotel-admin-login" className="block text-center text-sm text-muted-foreground hover:text-primary transition-colors">
+              Sign in as Hotel System Admin →
+            </Link>
+          </div>
         </div>
       </div>
     </div>

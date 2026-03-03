@@ -23,6 +23,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
+import NotificationPanel from "@/components/NotificationPanel";
 
 interface AdminLayoutProps {
   children?: React.ReactNode;
@@ -73,6 +74,7 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
     "Hotel Client Management": true,
     "Consumer Client Management": false,
   });
+  const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const location = useLocation();
 
   const toggleDropdown = (label: string) => {
@@ -233,10 +235,16 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
             </div>
 
             <div className="flex items-center gap-3">
-              <button className="relative p-2.5 hover:bg-secondary rounded-xl transition-colors">
-                <Bell className="h-5 w-5" />
-                <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-primary rounded-full" />
-              </button>
+              <div className="relative">
+                <button
+                  onClick={() => setIsNotificationOpen(!isNotificationOpen)}
+                  className="relative p-2.5 hover:bg-secondary rounded-xl transition-colors"
+                >
+                  <Bell className="h-5 w-5" />
+                  <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-primary rounded-full" />
+                </button>
+                <NotificationPanel isOpen={isNotificationOpen} onClose={() => setIsNotificationOpen(false)} />
+              </div>
               <div className="flex items-center gap-3 pl-3 border-l border-border">
                 <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center">
                   <span className="text-sm font-semibold text-primary-foreground">JD</span>

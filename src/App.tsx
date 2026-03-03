@@ -12,6 +12,8 @@ import CarRental from "./pages/CarRental";
 import Attractions from "./pages/Attractions";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
+import AdminLogin from "./pages/AdminLogin";
+import HotelAdminLogin from "./pages/HotelAdminLogin";
 import NotFound from "./pages/NotFound";
 import ExploreHotels from "./pages/ExploreHotels";
 import SearchHotels from "./pages/SearchHotels";
@@ -57,6 +59,8 @@ const App = () => (
             <Route path="/car-rental" element={<CarRental />} />
             <Route path="/attractions" element={<Attractions />} />
             <Route path="/login" element={<Login />} />
+            <Route path="/admin-login" element={<AdminLogin />} />
+            <Route path="/hotel-admin-login" element={<HotelAdminLogin />} />
             <Route path="/signup" element={<Signup />} />
             <Route path="/explore" element={<ExploreHotels />} />
             <Route path="/search" element={<SearchHotels />} />

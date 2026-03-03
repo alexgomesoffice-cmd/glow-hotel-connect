@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import NotificationPanel from "@/components/NotificationPanel";
 
 const sidebarItems = [
   { icon: LayoutDashboard, label: "Overview", path: "/hotel-admin" },
@@ -20,6 +21,7 @@ const sidebarItems = [
 const HotelAdminLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+  const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const location = useLocation();
 
   return (
@@ -87,10 +89,16 @@ const HotelAdminLayout = () => {
               <h2 className="text-lg font-semibold hidden sm:block">Hotel System Admin Panel</h2>
             </div>
             <div className="flex items-center gap-3">
-              <button className="relative p-2.5 hover:bg-secondary rounded-xl transition-colors">
-                <Bell className="h-5 w-5" />
-                <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-green-500 rounded-full" />
-              </button>
+              <div className="relative">
+                <button
+                  onClick={() => setIsNotificationOpen(!isNotificationOpen)}
+                  className="relative p-2.5 hover:bg-secondary rounded-xl transition-colors"
+                >
+                  <Bell className="h-5 w-5" />
+                  <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-green-500 rounded-full" />
+                </button>
+                <NotificationPanel isOpen={isNotificationOpen} onClose={() => setIsNotificationOpen(false)} />
+              </div>
               <div className="flex items-center gap-3 pl-3 border-l border-border">
                 <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center">
                   <span className="text-sm font-semibold text-primary-foreground">MG</span>

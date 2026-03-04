@@ -1,33 +1,15 @@
 import { useState } from "react";
 import { Link, useLocation, Outlet } from "react-router-dom";
 import {
-  LayoutDashboard,
-  Hotel,
-  Users,
-  Calendar,
-  BarChart3,
-  Settings,
-  LogOut,
-  Menu,
-  X,
-  Bell,
-  Search,
-  ChevronDown,
-  ChevronRight,
-  Plus,
-  List,
-  Edit,
-  Trash2,
-  UserCheck,
+  LayoutDashboard, Hotel, Users, Calendar, BarChart3, Settings, LogOut, Menu, X, Bell, Search,
+  ChevronDown, ChevronRight, Plus, List, Trash2, UserCheck,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import NotificationPanel from "@/components/NotificationPanel";
 
-interface AdminLayoutProps {
-  children?: React.ReactNode;
-}
+interface AdminLayoutProps { children?: React.ReactNode; }
 
 interface SidebarDropdown {
   label: string;
@@ -42,8 +24,7 @@ const sidebarDropdowns: SidebarDropdown[] = [
     items: [
       { label: "Add New Hotel", path: "/admin/add-hotel", icon: Plus },
       { label: "Current Hotels", path: "/admin/hotels", icon: List },
-      { label: "Update Hotels Info", path: "/admin/update-hotel", icon: Edit },
-      { label: "Erase Hotel Info", path: "/admin/erase-hotel", icon: Trash2 },
+      { label: "Erase Hotel", path: "/admin/erase-hotel", icon: Trash2 },
     ],
   },
   {
@@ -51,7 +32,6 @@ const sidebarDropdowns: SidebarDropdown[] = [
     icon: Users,
     items: [
       { label: "Client List", path: "/admin/clients", icon: UserCheck },
-      { label: "Update Client Info", path: "/admin/update-client", icon: Edit },
       { label: "Erase Client Info", path: "/admin/erase-client", icon: Trash2 },
     ],
   },
@@ -107,74 +87,46 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
   return (
     <div className="min-h-screen bg-background">
       {isMobileSidebarOpen && (
-        <div
-          className="fixed inset-0 bg-background/80 backdrop-blur-sm z-40 lg:hidden"
-          onClick={() => setIsMobileSidebarOpen(false)}
-        />
+        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-40 lg:hidden" onClick={() => setIsMobileSidebarOpen(false)} />
       )}
 
-      {/* Sidebar */}
-      <aside
-        className={cn(
-          "fixed left-0 top-0 h-full bg-card border-r border-border z-50 transition-all duration-300 flex flex-col",
-          isSidebarOpen ? "w-64" : "w-20",
-          isMobileSidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
-        )}
-      >
-        {/* Logo */}
+      <aside className={cn(
+        "fixed left-0 top-0 h-full bg-card border-r border-border z-50 transition-all duration-300 flex flex-col",
+        isSidebarOpen ? "w-64" : "w-20",
+        isMobileSidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
+      )}>
         <div className="h-20 flex items-center justify-between px-4 border-b border-border">
           <Link to="/admin" className="flex items-center gap-3">
             <div className="bg-gradient-to-r from-primary to-accent p-2 rounded-xl shrink-0">
               <Hotel className="h-5 w-5 text-primary-foreground" />
             </div>
-            {isSidebarOpen && (
-              <span className="text-xl font-bold text-gradient animate-fade-in-left">
-                StayVista
-              </span>
-            )}
+            {isSidebarOpen && <span className="text-xl font-bold text-gradient animate-fade-in-left">StayVista</span>}
           </Link>
-          <button
-            onClick={() => setIsMobileSidebarOpen(false)}
-            className="lg:hidden p-2 hover:bg-secondary rounded-lg"
-          >
-            <X className="h-5 w-5" />
-          </button>
+          <button onClick={() => setIsMobileSidebarOpen(false)} className="lg:hidden p-2 hover:bg-secondary rounded-lg"><X className="h-5 w-5" /></button>
         </div>
 
-        {/* Navigation */}
         <nav className="p-4 space-y-1 flex-1 overflow-y-auto pb-4">
-          {/* Dashboard link */}
           {sidebarStatic.map((item) => renderNavLink(item))}
-
-          {/* Dropdown sections */}
           {sidebarDropdowns.map((dropdown) => {
             const isOpen = openDropdowns[dropdown.label];
             const hasActiveChild = dropdown.items.some((item) => isActive(item.path));
-
             return (
               <div key={dropdown.label} className="pt-2">
                 <button
                   onClick={() => isSidebarOpen && toggleDropdown(dropdown.label)}
                   className={cn(
                     "flex items-center gap-3 px-4 py-3 w-full rounded-xl transition-all duration-300 text-left",
-                    hasActiveChild
-                      ? "text-primary bg-primary/5"
-                      : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+                    hasActiveChild ? "text-primary bg-primary/5" : "text-muted-foreground hover:bg-secondary hover:text-foreground"
                   )}
                 >
                   <dropdown.icon className={cn("h-5 w-5 shrink-0", hasActiveChild && "text-primary")} />
                   {isSidebarOpen && (
                     <>
                       <span className="font-medium text-sm flex-1">{dropdown.label}</span>
-                      {isOpen ? (
-                        <ChevronDown className="h-4 w-4 shrink-0 transition-transform" />
-                      ) : (
-                        <ChevronRight className="h-4 w-4 shrink-0 transition-transform" />
-                      )}
+                      {isOpen ? <ChevronDown className="h-4 w-4 shrink-0" /> : <ChevronRight className="h-4 w-4 shrink-0" />}
                     </>
                   )}
                 </button>
-
                 {isSidebarOpen && isOpen && (
                   <div className="ml-4 pl-4 border-l border-border/50 space-y-1 mt-1 animate-fade-in">
                     {dropdown.items.map((item) => renderNavLink(item, true))}
@@ -183,63 +135,32 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
               </div>
             );
           })}
-
-          {/* Divider */}
           <div className="border-t border-border/50 my-3" />
-
-          {/* Bottom static links */}
           {sidebarBottom.map((item) => renderNavLink(item))}
         </nav>
 
-        {/* Footer */}
         <div className="p-4 border-t border-border bg-card shrink-0">
-          <button
-            className="flex items-center gap-3 px-4 py-3 w-full rounded-xl text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"
-          >
+          <button className="flex items-center gap-3 px-4 py-3 w-full rounded-xl text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors">
             <LogOut className="h-5 w-5 shrink-0" />
             {isSidebarOpen && <span className="font-medium">Logout</span>}
           </button>
         </div>
       </aside>
 
-      {/* Main Content */}
-      <div
-        className={cn(
-          "transition-all duration-300",
-          isSidebarOpen ? "lg:ml-64" : "lg:ml-20"
-        )}
-      >
-        {/* Top Header */}
+      <div className={cn("transition-all duration-300", isSidebarOpen ? "lg:ml-64" : "lg:ml-20")}>
         <header className="h-20 border-b border-border glass-strong sticky top-0 z-30">
           <div className="h-full px-4 sm:px-6 flex items-center justify-between gap-4">
             <div className="flex items-center gap-4">
-              <button
-                onClick={() => setIsMobileSidebarOpen(true)}
-                className="lg:hidden p-2 hover:bg-secondary rounded-lg"
-              >
-                <Menu className="h-5 w-5" />
-              </button>
-              <button
-                onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-                className="hidden lg:flex p-2 hover:bg-secondary rounded-lg"
-              >
-                <Menu className="h-5 w-5" />
-              </button>
+              <button onClick={() => setIsMobileSidebarOpen(true)} className="lg:hidden p-2 hover:bg-secondary rounded-lg"><Menu className="h-5 w-5" /></button>
+              <button onClick={() => setIsSidebarOpen(!isSidebarOpen)} className="hidden lg:flex p-2 hover:bg-secondary rounded-lg"><Menu className="h-5 w-5" /></button>
               <div className="relative hidden sm:block">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search..."
-                  className="w-64 pl-10 h-10 bg-secondary/50"
-                />
+                <Input placeholder="Search..." className="w-64 pl-10 h-10 bg-secondary/50" />
               </div>
             </div>
-
             <div className="flex items-center gap-3">
               <div className="relative">
-                <button
-                  onClick={() => setIsNotificationOpen(!isNotificationOpen)}
-                  className="relative p-2.5 hover:bg-secondary rounded-xl transition-colors"
-                >
+                <button onClick={() => setIsNotificationOpen(!isNotificationOpen)} className="relative p-2.5 hover:bg-secondary rounded-xl transition-colors">
                   <Bell className="h-5 w-5" />
                   <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-primary rounded-full" />
                 </button>
@@ -258,11 +179,7 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
             </div>
           </div>
         </header>
-
-        {/* Page Content */}
-        <main className="p-4 sm:p-6 lg:p-8">
-          {children || <Outlet />}
-        </main>
+        <main className="p-4 sm:p-6 lg:p-8">{children || <Outlet />}</main>
       </div>
     </div>
   );

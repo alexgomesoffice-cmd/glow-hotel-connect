@@ -27,6 +27,7 @@ import AdminUpdateHotel from "./pages/admin/AdminUpdateHotel";
 import AdminEraseHotel from "./pages/admin/AdminEraseHotel";
 import AdminClientList from "./pages/admin/AdminClientList";
 import AdminUpdateClient from "./pages/admin/AdminUpdateClient";
+import AdminClientHistory from "./pages/admin/AdminClientHistory";
 import AdminEraseClient from "./pages/admin/AdminEraseClient";
 import AdminBookings from "./pages/admin/AdminBookings";
 import AdminAnalytics from "./pages/admin/AdminAnalytics";
@@ -73,7 +74,8 @@ const App = () => (
               <Route path="update-hotel/:id" element={<AdminUpdateHotel />} />
               <Route path="erase-hotel" element={<AdminEraseHotel />} />
               <Route path="clients" element={<AdminClientList />} />
-              <Route path="update-client" element={<AdminUpdateClient />} />
+              <Route path="update-client/:id" element={<AdminUpdateClient />} />
+              <Route path="client-history/:id" element={<AdminClientHistory />} />
               <Route path="erase-client" element={<AdminEraseClient />} />
               <Route path="bookings" element={<AdminBookings />} />
               <Route path="analytics" element={<AdminAnalytics />} />

@@ -67,18 +67,18 @@ const SearchBar = () => {
             </label>
             <Popover>
               <PopoverTrigger asChild>
-                <button
-                  type="button"
+                <Button
+                  variant="outline"
                   className={cn(
-                    "flex items-center w-full h-12 rounded-xl border border-border/50 bg-secondary/30 px-4 text-sm hover:border-primary/40 transition-all duration-300 hover:bg-secondary/40 gap-2",
+                    "flex items-center w-full h-12 rounded-xl border border-border/50 bg-secondary/30 px-4 text-sm hover:border-primary/40 transition-all duration-300 hover:bg-secondary/40 gap-2 justify-start font-normal",
                     !checkIn && "text-muted-foreground"
                   )}
                 >
                   <CalendarIcon className="h-5 w-5 text-muted-foreground shrink-0" />
                   <span className="truncate">{checkIn ? format(checkIn, "MMM dd, yyyy") : "Add date"}</span>
-                </button>
+                </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-auto p-0 z-[100]" align="center" side="top" sideOffset={8}>
+              <PopoverContent className="w-auto p-0" align="start" sideOffset={8}>
                 <Calendar
                   mode="single"
                   selected={checkIn}
@@ -98,18 +98,18 @@ const SearchBar = () => {
             </label>
             <Popover>
               <PopoverTrigger asChild>
-                <button
-                  type="button"
+                <Button
+                  variant="outline"
                   className={cn(
-                    "flex items-center w-full h-12 rounded-xl border border-border/50 bg-secondary/30 px-4 text-sm hover:border-primary/40 transition-all duration-300 hover:bg-secondary/40 gap-2",
+                    "flex items-center w-full h-12 rounded-xl border border-border/50 bg-secondary/30 px-4 text-sm hover:border-primary/40 transition-all duration-300 hover:bg-secondary/40 gap-2 justify-start font-normal",
                     !checkOut && "text-muted-foreground"
                   )}
                 >
                   <CalendarIcon className="h-5 w-5 text-muted-foreground shrink-0" />
                   <span className="truncate">{checkOut ? format(checkOut, "MMM dd, yyyy") : "Add date"}</span>
-                </button>
+                </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-auto p-0 z-[100]" align="center" side="top" sideOffset={8}>
+              <PopoverContent className="w-auto p-0" align="start" sideOffset={8}>
                 <Calendar
                   mode="single"
                   selected={checkOut}
@@ -139,7 +139,9 @@ const SearchBar = () => {
             </button>
 
             {isGuestOpen && (
-              <div className="absolute bottom-full left-0 w-64 mb-2 rounded-xl border border-border bg-card p-4 shadow-xl z-[100] space-y-4 animate-fade-in-up">
+              <div className="absolute left-0 w-64 rounded-xl border border-border bg-popover p-4 shadow-xl z-[100] space-y-4 animate-fade-in-up"
+                style={{ bottom: 'auto', top: '100%', marginTop: '8px' }}
+              >
                 {/* Guests row */}
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium">Guests</span>

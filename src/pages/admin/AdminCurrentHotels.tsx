@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Plus, MapPin, Star, BedDouble, Search, LayoutGrid, List, Filter, UserCheck } from "lucide-react";
+import { Plus, MapPin, Star, BedDouble, Search, LayoutGrid, List, Filter, UserCheck, Edit, Calendar } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -92,9 +92,8 @@ const AdminCurrentHotels = () => {
           {filtered.map((hotel, i) => (
             <Card
               key={hotel.id}
-              className={`overflow-hidden hover-lift transition-all duration-300 cursor-pointer ${isLoaded ? "animate-fade-in-up" : "opacity-0"}`}
+              className={`overflow-hidden transition-all duration-300 group relative ${isLoaded ? "animate-fade-in-up" : "opacity-0"}`}
               style={{ animationDelay: `${(i + 2) * 100}ms` }}
-              onClick={() => navigate(`/admin/update-hotel/${hotel.id}`)}
             >
               <div className="h-40 bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center text-6xl">
                 {hotel.image}
@@ -115,6 +114,15 @@ const AdminCurrentHotels = () => {
                   <span className="text-sm font-medium text-green-500">{hotel.occupancy}% occupied</span>
                 </div>
               </CardContent>
+              {/* Hover Overlay */}
+              <div className="absolute inset-0 bg-background/70 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-all duration-300 flex flex-col items-center justify-center gap-3 z-10">
+                <Button variant="hero" className="w-48" onClick={() => navigate(`/admin/update-hotel/${hotel.id}`)}>
+                  <Edit className="h-4 w-4 mr-2" /> Edit Hotel
+                </Button>
+                <Button variant="outline" className="w-48" onClick={() => navigate(`/admin/bookings?hotel=${hotel.id}`)}>
+                  <Calendar className="h-4 w-4 mr-2" /> See All Bookings
+                </Button>
+              </div>
             </Card>
           ))}
         </div>
@@ -126,9 +134,8 @@ const AdminCurrentHotels = () => {
           {filtered.map((hotel, i) => (
             <Card
               key={hotel.id}
-              className={`overflow-hidden hover-lift transition-all duration-300 cursor-pointer ${isLoaded ? "animate-fade-in-up" : "opacity-0"}`}
+              className={`overflow-hidden transition-all duration-300 group relative ${isLoaded ? "animate-fade-in-up" : "opacity-0"}`}
               style={{ animationDelay: `${(i + 2) * 100}ms` }}
-              onClick={() => navigate(`/admin/update-hotel/${hotel.id}`)}
             >
               <CardContent className="p-4 flex flex-col sm:flex-row items-start sm:items-center gap-4">
                 <div className="h-16 w-16 rounded-xl bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center text-3xl shrink-0">
@@ -143,6 +150,14 @@ const AdminCurrentHotels = () => {
                   <span className="flex items-center gap-1"><BedDouble className="h-4 w-4" /> {hotel.rooms}</span>
                   <span className="flex items-center gap-1"><Star className="h-4 w-4 text-amber-500" /> {hotel.rating}</span>
                   <span className="text-green-500 font-medium">{hotel.occupancy}%</span>
+                </div>
+                <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <Button variant="hero" size="sm" onClick={() => navigate(`/admin/update-hotel/${hotel.id}`)}>
+                    <Edit className="h-3 w-3 mr-1" /> Edit
+                  </Button>
+                  <Button variant="outline" size="sm" onClick={() => navigate(`/admin/bookings?hotel=${hotel.id}`)}>
+                    <Calendar className="h-3 w-3 mr-1" /> Bookings
+                  </Button>
                 </div>
               </CardContent>
             </Card>

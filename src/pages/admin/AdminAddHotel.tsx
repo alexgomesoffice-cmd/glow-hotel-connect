@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Upload } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { getHotelEmoji, getNextId, useAdminData } from "@/data/adminStore";
 import { toast } from "@/hooks/use-toast";
 
 const bangladeshCities = [
@@ -27,6 +28,7 @@ const hotelAmenities = [
 
 const AdminAddHotel = () => {
   const navigate = useNavigate();
+  const { saveData } = useAdminData();
   const [isLoaded, setIsLoaded] = useState(false);
   const [formData, setFormData] = useState({
     name: "", location: "", address: "", zipCode: "", description: "", type: "", stars: "",
@@ -36,21 +38,60 @@ const AdminAddHotel = () => {
   });
   const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
 
-  useEffect(() => { setIsLoaded(true); }, []);
+  useEffect(() => {
+    setIsLoaded(true);
+  }, []);
 
   const toggleAmenity = (amenity: string) => {
-    setSelectedAmenities((prev) =>
-      prev.includes(amenity) ? prev.filter((a) => a !== amenity) : [...prev, amenity]
+    setSelectedAmenities((current) =>
+      current.includes(amenity) ? current.filter((item) => item !== amenity) : [...current, amenity],
     );
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!formData.name || !formData.location || !formData.adminEmail || !formData.adminName) {
-      toast({ title: "Missing fields", description: "Please fill in the required fields.", variant: "destructive" });
+  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    if (!formData.name || !formData.location || !formData.adminEmail || !formData.adminName || !formData.adminPassword) {
+      toast({ title: "Missing fields", description: "Please fill in the required hotel and admin details.", variant: "destructive" });
       return;
     }
-    toast({ title: "Hotel Created!", description: `${formData.name} has been created and a hotel system admin account has been set up.` });
+
+    saveData((current) => ({
+      ...current,
+      hotels: [
+        ...current.hotels,
+        {
+          id: getNextId(current.hotels),
+          name: formData.name,
+          location: formData.location,
+          address: formData.address,
+          zipCode: formData.zipCode,
+          description: formData.description,
+          type: formData.type || "hotel",
+          stars: Number(formData.stars || 0),
+          email: formData.email,
+          eContact1: formData.eContact1,
+          eContact2: formData.eContact2,
+          receptionNumber1: formData.receptionNumber1,
+          receptionNumber2: formData.receptionNumber2,
+          ownerName: formData.ownerName,
+          managerName: formData.managerName,
+          managerPhone: formData.managerPhone,
+          adminEmail: formData.adminEmail,
+          adminPassword: formData.adminPassword,
+          adminName: formData.adminName,
+          adminPhone: formData.adminPhone,
+          adminNID: formData.adminNID,
+          amenities: selectedAmenities,
+          rooms: [],
+          occupancy: 0,
+          rating: Number(formData.stars || 0),
+          image: getHotelEmoji(formData.type || "hotel"),
+        },
+      ],
+    }));
+
+    toast({ title: "Hotel created", description: `${formData.name} has been added successfully.` });
     navigate("/admin/hotels");
   };
 
@@ -62,7 +103,7 @@ const AdminAddHotel = () => {
         </Button>
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold">Add New Hotel</h1>
-          <p className="text-muted-foreground">Register a new property and set up a hotel system admin account</p>
+          <p className="text-muted-foreground">Register a new property and create its hotel system admin account.</p>
         </div>
       </div>
 
@@ -73,16 +114,14 @@ const AdminAddHotel = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Hotel Name *</Label>
-                <Input placeholder="e.g. Grand Palace Hotel" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} />
+                <Input value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} />
               </div>
               <div className="space-y-2">
                 <Label>Location (City) *</Label>
-                <Select value={formData.location} onValueChange={(v) => setFormData({ ...formData, location: v })}>
-                  <SelectTrigger className="rounded-xl"><SelectValue placeholder="Select city" /></SelectTrigger>
+                <Select value={formData.location} onValueChange={(value) => setFormData({ ...formData, location: value })}>
+                  <SelectTrigger><SelectValue placeholder="Select city" /></SelectTrigger>
                   <SelectContent>
-                    {bangladeshCities.map((city) => (
-                      <SelectItem key={city} value={city}>{city}</SelectItem>
-                    ))}
+                    {bangladeshCities.map((city) => <SelectItem key={city} value={city}>{city}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>
@@ -90,21 +129,21 @@ const AdminAddHotel = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Address</Label>
-                <Input placeholder="e.g. 123 Main Street, Area" value={formData.address} onChange={(e) => setFormData({ ...formData, address: e.target.value })} />
+                <Input value={formData.address} onChange={(e) => setFormData({ ...formData, address: e.target.value })} />
               </div>
               <div className="space-y-2">
                 <Label>Zip Code</Label>
-                <Input placeholder="e.g. 1205" value={formData.zipCode} onChange={(e) => setFormData({ ...formData, zipCode: e.target.value })} />
+                <Input value={formData.zipCode} onChange={(e) => setFormData({ ...formData, zipCode: e.target.value })} />
               </div>
             </div>
             <div className="space-y-2">
               <Label>Description</Label>
-              <Textarea placeholder="Describe the hotel..." value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} />
+              <Textarea value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} />
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Hotel Type</Label>
-                <Select value={formData.type} onValueChange={(v) => setFormData({ ...formData, type: v })}>
+                <Select value={formData.type} onValueChange={(value) => setFormData({ ...formData, type: value })}>
                   <SelectTrigger><SelectValue placeholder="Select type" /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="hotel">Hotel</SelectItem>
@@ -116,10 +155,10 @@ const AdminAddHotel = () => {
               </div>
               <div className="space-y-2">
                 <Label>Star Rating</Label>
-                <Select value={formData.stars} onValueChange={(v) => setFormData({ ...formData, stars: v })}>
+                <Select value={formData.stars} onValueChange={(value) => setFormData({ ...formData, stars: value })}>
                   <SelectTrigger><SelectValue placeholder="Select rating" /></SelectTrigger>
                   <SelectContent>
-                    {[1, 2, 3, 4, 5].map((s) => (<SelectItem key={s} value={String(s)}>{s} Star{s > 1 && "s"}</SelectItem>))}
+                    {[1, 2, 3, 4, 5].map((star) => <SelectItem key={star} value={String(star)}>{star} Star{star > 1 && "s"}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>
@@ -127,103 +166,97 @@ const AdminAddHotel = () => {
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div className="space-y-2">
                 <Label>Owner's Name</Label>
-                <Input placeholder="e.g. Mr. Rahman" value={formData.ownerName} onChange={(e) => setFormData({ ...formData, ownerName: e.target.value })} />
+                <Input value={formData.ownerName} onChange={(e) => setFormData({ ...formData, ownerName: e.target.value })} />
               </div>
               <div className="space-y-2">
                 <Label>Hotel Manager Name</Label>
-                <Input placeholder="e.g. Mr. Karim" value={formData.managerName} onChange={(e) => setFormData({ ...formData, managerName: e.target.value })} />
+                <Input value={formData.managerName} onChange={(e) => setFormData({ ...formData, managerName: e.target.value })} />
               </div>
               <div className="space-y-2">
                 <Label>Manager's Phone</Label>
-                <Input type="tel" placeholder="+880 1XXX XXXXXX" value={formData.managerPhone} onChange={(e) => setFormData({ ...formData, managerPhone: e.target.value })} />
+                <Input value={formData.managerPhone} onChange={(e) => setFormData({ ...formData, managerPhone: e.target.value })} />
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className={`${isLoaded ? "animate-fade-in-up" : "opacity-0"}`} style={{ animationDelay: "200ms" }}>
+        <Card className={`${isLoaded ? "animate-fade-in-up" : "opacity-0"}`} style={{ animationDelay: "180ms" }}>
           <CardHeader><CardTitle>Hotel System Admin Account *</CardTitle></CardHeader>
           <CardContent className="space-y-4">
-            <p className="text-xs text-muted-foreground">Create a hotel system admin account. This person will manage hotel info, rooms, and reservations.</p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Admin Name *</Label>
-                <Input placeholder="Full name" value={formData.adminName} onChange={(e) => setFormData({ ...formData, adminName: e.target.value })} />
+                <Input value={formData.adminName} onChange={(e) => setFormData({ ...formData, adminName: e.target.value })} />
               </div>
               <div className="space-y-2">
                 <Label>Admin Email *</Label>
-                <Input type="email" placeholder="admin@example.com" value={formData.adminEmail} onChange={(e) => setFormData({ ...formData, adminEmail: e.target.value })} />
+                <Input type="email" value={formData.adminEmail} onChange={(e) => setFormData({ ...formData, adminEmail: e.target.value })} />
               </div>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div className="space-y-2">
                 <Label>Password *</Label>
-                <Input type="password" placeholder="••••••••" value={formData.adminPassword} onChange={(e) => setFormData({ ...formData, adminPassword: e.target.value })} />
+                <Input type="password" value={formData.adminPassword} onChange={(e) => setFormData({ ...formData, adminPassword: e.target.value })} />
               </div>
               <div className="space-y-2">
                 <Label>Phone</Label>
-                <Input type="tel" placeholder="+880 1XXX XXXXXX" value={formData.adminPhone} onChange={(e) => setFormData({ ...formData, adminPhone: e.target.value })} />
+                <Input value={formData.adminPhone} onChange={(e) => setFormData({ ...formData, adminPhone: e.target.value })} />
               </div>
               <div className="space-y-2">
                 <Label>NID No.</Label>
-                <Input placeholder="National ID number" value={formData.adminNID} onChange={(e) => setFormData({ ...formData, adminNID: e.target.value })} />
+                <Input value={formData.adminNID} onChange={(e) => setFormData({ ...formData, adminNID: e.target.value })} />
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className={`${isLoaded ? "animate-fade-in-up" : "opacity-0"}`} style={{ animationDelay: "300ms" }}>
+        <Card className={`${isLoaded ? "animate-fade-in-up" : "opacity-0"}`} style={{ animationDelay: "260ms" }}>
           <CardHeader><CardTitle>Contact Details</CardTitle></CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Hotel Email</Label>
-                <Input type="email" placeholder="hotel@example.com" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} />
-              </div>
+            <div className="space-y-2">
+              <Label>Hotel Email</Label>
+              <Input type="email" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} />
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>E. Contact 1</Label>
-                <Input type="tel" placeholder="+880 1XXX XXXXXX" value={formData.eContact1} onChange={(e) => setFormData({ ...formData, eContact1: e.target.value })} />
+                <Input value={formData.eContact1} onChange={(e) => setFormData({ ...formData, eContact1: e.target.value })} />
               </div>
               <div className="space-y-2">
                 <Label>E. Contact 2</Label>
-                <Input type="tel" placeholder="+880 1XXX XXXXXX" value={formData.eContact2} onChange={(e) => setFormData({ ...formData, eContact2: e.target.value })} />
+                <Input value={formData.eContact2} onChange={(e) => setFormData({ ...formData, eContact2: e.target.value })} />
               </div>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Reception Number 1</Label>
-                <Input type="tel" placeholder="+880 2XXX XXXXXX" value={formData.receptionNumber1} onChange={(e) => setFormData({ ...formData, receptionNumber1: e.target.value })} />
+                <Input value={formData.receptionNumber1} onChange={(e) => setFormData({ ...formData, receptionNumber1: e.target.value })} />
               </div>
               <div className="space-y-2">
                 <Label>Reception Number 2</Label>
-                <Input type="tel" placeholder="+880 2XXX XXXXXX" value={formData.receptionNumber2} onChange={(e) => setFormData({ ...formData, receptionNumber2: e.target.value })} />
+                <Input value={formData.receptionNumber2} onChange={(e) => setFormData({ ...formData, receptionNumber2: e.target.value })} />
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className={`${isLoaded ? "animate-fade-in-up" : "opacity-0"}`} style={{ animationDelay: "400ms" }}>
+        <Card className={`${isLoaded ? "animate-fade-in-up" : "opacity-0"}`} style={{ animationDelay: "340ms" }}>
           <CardHeader><CardTitle>Photos</CardTitle></CardHeader>
           <CardContent>
-            <div className="border-2 border-dashed border-border rounded-xl p-8 text-center">
-              <Upload className="h-10 w-10 mx-auto text-muted-foreground mb-3" />
+            <div className="rounded-xl border-2 border-dashed border-border p-8 text-center">
+              <Upload className="mx-auto mb-3 h-10 w-10 text-muted-foreground" />
               <p className="text-sm text-muted-foreground">Drag & drop images here, or click to browse</p>
             </div>
           </CardContent>
         </Card>
 
-        <Card className={`${isLoaded ? "animate-fade-in-up" : "opacity-0"}`} style={{ animationDelay: "500ms" }}>
+        <Card className={`${isLoaded ? "animate-fade-in-up" : "opacity-0"}`} style={{ animationDelay: "420ms" }}>
           <CardHeader><CardTitle>Hotel Amenities</CardTitle></CardHeader>
           <CardContent>
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
               {hotelAmenities.map((amenity) => (
-                <label key={amenity} className="flex items-center gap-2 text-sm cursor-pointer hover:text-primary transition-colors">
-                  <Checkbox
-                    checked={selectedAmenities.includes(amenity)}
-                    onCheckedChange={() => toggleAmenity(amenity)}
-                  />
+                <label key={amenity} className="flex cursor-pointer items-center gap-2 text-sm transition-colors hover:text-primary">
+                  <Checkbox checked={selectedAmenities.includes(amenity)} onCheckedChange={() => toggleAmenity(amenity)} />
                   {amenity}
                 </label>
               ))}
@@ -231,9 +264,9 @@ const AdminAddHotel = () => {
           </CardContent>
         </Card>
 
-        <div className="flex gap-3 justify-end">
-          <Button variant="outline" type="button" onClick={() => navigate("/admin/hotels")}>Cancel</Button>
-          <Button variant="hero" type="submit">Create Hotel</Button>
+        <div className="flex justify-end gap-3">
+          <Button type="button" variant="outline" onClick={() => navigate("/admin/hotels")}>Cancel</Button>
+          <Button type="submit" variant="hero">Create Hotel</Button>
         </div>
       </form>
     </div>

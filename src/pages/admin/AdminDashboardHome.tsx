@@ -1,46 +1,58 @@
-import { useEffect, useState } from "react";
-import {
-  TrendingUp, TrendingDown, Users, Hotel, Calendar,
-  DollarSign, ArrowUpRight, MoreHorizontal, Plus, Search,
-  FileText, Shield, Globe, Activity,
-} from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { Activity, ArrowUpRight, Calendar, DollarSign, FileText, Globe, Hotel, Plus, Search, Shield, TrendingDown, TrendingUp, Users } from "lucide-react";
+import { Link } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Link } from "react-router-dom";
-
-const stats = [
-  { title: "Total Revenue", value: "$284,532", change: "+12.5%", trend: "up", icon: DollarSign, color: "from-green-500 to-emerald-500" },
-  { title: "Total Bookings", value: "1,847", change: "+8.2%", trend: "up", icon: Calendar, color: "from-primary to-accent" },
-  { title: "Active Guests", value: "432", change: "-2.4%", trend: "down", icon: Users, color: "from-orange-500 to-amber-500" },
-  { title: "Properties", value: "28", change: "+4", trend: "up", icon: Hotel, color: "from-purple-500 to-pink-500" },
-];
-
-const recentBookings = [
-  { id: 1, guest: "Emma Wilson", hotel: "Grand Palace Hotel", checkIn: "Feb 15, 2024", amount: "$840", status: "confirmed" },
-  { id: 2, guest: "Michael Chen", hotel: "Ocean View Resort", checkIn: "Feb 16, 2024", amount: "$780", status: "pending" },
-  { id: 3, guest: "Sarah Johnson", hotel: "Nordic Forest Lodge", checkIn: "Feb 17, 2024", amount: "$330", status: "confirmed" },
-  { id: 4, guest: "David Brown", hotel: "Tropical Paradise Villa", checkIn: "Feb 18, 2024", amount: "$2,240", status: "confirmed" },
-  { id: 5, guest: "Lisa Anderson", hotel: "Grand Palace Hotel", checkIn: "Feb 19, 2024", amount: "$560", status: "cancelled" },
-];
-
-const topHotels = [
-  { name: "Grand Palace Hotel", bookings: 234, revenue: "$68,450", occupancy: 92 },
-  { name: "Ocean View Resort", bookings: 198, revenue: "$52,320", occupancy: 88 },
-  { name: "Nordic Forest Lodge", bookings: 156, revenue: "$41,860", occupancy: 85 },
-  { name: "Tropical Paradise Villa", bookings: 142, revenue: "$56,200", occupancy: 78 },
-];
+import { formatCurrency, formatDate, sortBookingsByRecent, useAdminData } from "@/data/adminStore";
 
 const quickActions = [
   { icon: Plus, label: "Add Property", color: "from-primary to-accent", link: "/admin/add-hotel" },
-  { icon: FileText, label: "Reports", color: "from-green-500 to-emerald-500", link: "/admin/analytics" },
-  { icon: Shield, label: "Settings", color: "from-orange-500 to-amber-500", link: "/admin/settings" },
-  { icon: Globe, label: "Clients", color: "from-purple-500 to-pink-500", link: "/admin/clients" },
+  { icon: FileText, label: "Reports", color: "from-primary to-accent", link: "/admin/analytics" },
+  { icon: Shield, label: "Settings", color: "from-primary to-accent", link: "/admin/settings" },
+  { icon: Globe, label: "Clients", color: "from-primary to-accent", link: "/admin/clients" },
 ];
 
 const AdminDashboardHome = () => {
+  const { data } = useAdminData();
   const [isLoaded, setIsLoaded] = useState(false);
-  useEffect(() => { setIsLoaded(true); }, []);
+
+  useEffect(() => {
+    setIsLoaded(true);
+  }, []);
+
+  const hotelMap = useMemo(() => new Map(data.hotels.map((hotel) => [hotel.id, hotel.name])), [data.hotels]);
+  const recentBookings = useMemo(() => sortBookingsByRecent(data.bookings).slice(0, 5), [data.bookings]);
+  const totalRevenue = data.bookings.filter((booking) => booking.paymentStatus === "paid").reduce((sum, booking) => sum + booking.amount, 0);
+  const activeGuests = data.clients.filter((client) => !client.blocked).length;
+  const pendingBookings = data.bookings.filter((booking) => booking.status === "pending").length;
+
+  const topHotels = useMemo(() => {
+    return data.hotels
+      .map((hotel) => {
+        const hotelBookings = data.bookings.filter((booking) => booking.hotelId === hotel.id);
+        const hotelRevenue = hotelBookings
+          .filter((booking) => booking.paymentStatus === "paid")
+          .reduce((sum, booking) => sum + booking.amount, 0);
+
+        return {
+          id: hotel.id,
+          name: hotel.name,
+          bookings: hotelBookings.length,
+          revenue: hotelRevenue,
+          occupancy: hotel.occupancy,
+        };
+      })
+      .sort((a, b) => b.bookings - a.bookings)
+      .slice(0, 4);
+  }, [data.bookings, data.hotels]);
+
+  const stats = [
+    { title: "Total Revenue", value: formatCurrency(totalRevenue), change: "+12.5%", trend: "up", icon: DollarSign, color: "from-primary to-accent" },
+    { title: "Total Bookings", value: String(data.bookings.length), change: "+8.2%", trend: "up", icon: Calendar, color: "from-primary to-accent" },
+    { title: "Active Guests", value: String(activeGuests), change: activeGuests > 0 ? "+3.1%" : "0%", trend: "up", icon: Users, color: "from-primary to-accent" },
+    { title: "Properties", value: String(data.hotels.length), change: `+${data.hotels.length}`, trend: "up", icon: Hotel, color: "from-primary to-accent" },
+  ];
 
   return (
     <div className="space-y-8">
@@ -49,26 +61,31 @@ const AdminDashboardHome = () => {
           <h1 className="text-2xl sm:text-3xl font-bold">Admin Dashboard</h1>
           <p className="text-muted-foreground">Complete platform overview and management.</p>
         </div>
-        <div className="flex gap-3">
+        <div className="flex flex-wrap gap-3">
           <div className="relative hidden sm:block">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input placeholder="Quick search..." className="pl-10 w-48 bg-secondary/50" />
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input placeholder="Quick search..." className="w-48 bg-secondary/50 pl-10" />
           </div>
+          <Button variant="outline" asChild>
+            <Link to="/admin/add-system-admin">
+              <Shield className="mr-2 h-4 w-4" /> Add System Admin
+            </Link>
+          </Button>
           <Button variant="hero">
-            <Activity className="h-4 w-4 mr-2" /> Live Monitor
+            <Activity className="mr-2 h-4 w-4" /> Live Monitor
           </Button>
         </div>
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        {quickActions.map((action, i) => (
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+        {quickActions.map((action, index) => (
           <Link
             to={action.link}
             key={action.label}
-            className={`glass rounded-xl p-4 flex flex-col items-center gap-2 hover-lift transition-all ${isLoaded ? "animate-fade-in-up" : "opacity-0"}`}
-            style={{ animationDelay: `${(i + 1) * 80}ms` }}
+            className={`glass flex flex-col items-center gap-2 rounded-xl p-4 transition-all hover-lift ${isLoaded ? "animate-fade-in-up" : "opacity-0"}`}
+            style={{ animationDelay: `${(index + 1) * 80}ms` }}
           >
-            <div className={`p-3 rounded-xl bg-gradient-to-br ${action.color}`}>
+            <div className={`rounded-xl bg-gradient-to-br ${action.color} p-3`}>
               <action.icon className="h-5 w-5 text-primary-foreground" />
             </div>
             <span className="text-sm font-medium">{action.label}</span>
@@ -76,21 +93,21 @@ const AdminDashboardHome = () => {
         ))}
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 sm:gap-6">
         {stats.map((stat, index) => (
           <Card key={stat.title} className={`relative overflow-hidden hover-lift ${isLoaded ? "animate-fade-in-up" : "opacity-0"}`} style={{ animationDelay: `${(index + 1) * 100}ms` }}>
             <CardContent className="p-6">
               <div className="flex items-start justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground mb-1">{stat.title}</p>
-                  <p className="text-2xl sm:text-3xl font-bold">{stat.value}</p>
-                  <div className="flex items-center gap-1 mt-2">
-                    {stat.trend === "up" ? <TrendingUp className="h-4 w-4 text-green-500" /> : <TrendingDown className="h-4 w-4 text-destructive" />}
-                    <span className={`text-sm font-medium ${stat.trend === "up" ? "text-green-500" : "text-destructive"}`}>{stat.change}</span>
+                  <p className="mb-1 text-sm text-muted-foreground">{stat.title}</p>
+                  <p className="text-2xl font-bold sm:text-3xl">{stat.value}</p>
+                  <div className="mt-2 flex items-center gap-1">
+                    {stat.trend === "up" ? <TrendingUp className="h-4 w-4 text-primary" /> : <TrendingDown className="h-4 w-4 text-destructive" />}
+                    <span className={`text-sm font-medium ${stat.trend === "up" ? "text-primary" : "text-destructive"}`}>{stat.change}</span>
                     <span className="text-xs text-muted-foreground">vs last month</span>
                   </div>
                 </div>
-                <div className={`p-3 rounded-xl bg-gradient-to-br ${stat.color} shrink-0`}>
+                <div className={`shrink-0 rounded-xl bg-gradient-to-br ${stat.color} p-3`}>
                   <stat.icon className="h-5 w-5 text-primary-foreground" />
                 </div>
               </div>
@@ -100,37 +117,37 @@ const AdminDashboardHome = () => {
         ))}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         <Card className={`lg:col-span-2 ${isLoaded ? "animate-fade-in-up" : "opacity-0"}`} style={{ animationDelay: "500ms" }}>
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle>Recent Bookings</CardTitle>
-            <Button variant="ghost" size="sm" asChild><Link to="/admin/bookings">View all <ArrowUpRight className="h-4 w-4 ml-1" /></Link></Button>
+            <Button variant="ghost" size="sm" asChild>
+              <Link to="/admin/all-bookings">View all <ArrowUpRight className="ml-1 h-4 w-4" /></Link>
+            </Button>
           </CardHeader>
           <CardContent>
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-border">
-                    <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Guest</th>
-                    <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Hotel</th>
-                    <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground hidden sm:table-cell">Check-in</th>
-                    <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Amount</th>
-                    <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Status</th>
+                    <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Guest</th>
+                    <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Hotel</th>
+                    <th className="hidden sm:table-cell px-4 py-3 text-left text-sm font-medium text-muted-foreground">Booked At</th>
+                    <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Amount</th>
+                    <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Status</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {recentBookings.map((b) => (
-                    <tr key={b.id} className="border-b border-border/50 hover:bg-secondary/30 transition-colors">
-                      <td className="py-3 px-4 font-medium">{b.guest}</td>
-                      <td className="py-3 px-4 text-sm text-muted-foreground">{b.hotel}</td>
-                      <td className="py-3 px-4 text-sm text-muted-foreground hidden sm:table-cell">{b.checkIn}</td>
-                      <td className="py-3 px-4 font-medium">{b.amount}</td>
-                      <td className="py-3 px-4">
-                        <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${
-                          b.status === "confirmed" ? "bg-green-500/10 text-green-500"
-                            : b.status === "pending" ? "bg-amber-500/10 text-amber-500"
-                            : "bg-destructive/10 text-destructive"
-                        }`}>{b.status}</span>
+                  {recentBookings.map((booking) => (
+                    <tr key={booking.id} className="border-b border-border/50 transition-colors hover:bg-secondary/30">
+                      <td className="px-4 py-3 font-medium">{booking.guestName}</td>
+                      <td className="px-4 py-3 text-sm text-muted-foreground">{hotelMap.get(booking.hotelId) || "Unknown Hotel"}</td>
+                      <td className="hidden sm:table-cell px-4 py-3 text-sm text-muted-foreground">{formatDate(booking.bookedAt)}</td>
+                      <td className="px-4 py-3 font-medium">{formatCurrency(booking.amount)}</td>
+                      <td className="px-4 py-3">
+                        <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium ${booking.status === "cancelled" ? "bg-destructive/10 text-destructive" : booking.status === "confirmed" ? "bg-primary/10 text-primary" : "bg-secondary text-foreground"}`}>
+                          {booking.status}
+                        </span>
                       </td>
                     </tr>
                   ))}
@@ -141,22 +158,21 @@ const AdminDashboardHome = () => {
         </Card>
 
         <Card className={`${isLoaded ? "animate-fade-in-up" : "opacity-0"}`} style={{ animationDelay: "600ms" }}>
-          <CardHeader className="flex flex-row items-center justify-between">
+          <CardHeader>
             <CardTitle>Top Properties</CardTitle>
-            <button className="p-2 hover:bg-secondary rounded-lg"><MoreHorizontal className="h-4 w-4" /></button>
           </CardHeader>
           <CardContent className="space-y-4">
             {topHotels.map((hotel, index) => (
-              <div key={hotel.name} className="flex items-center gap-4 p-3 rounded-xl hover:bg-secondary/50 transition-colors">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center shrink-0">
+              <div key={hotel.id} className="flex items-center gap-4 rounded-xl p-3 transition-colors hover:bg-secondary/50">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 shrink-0">
                   <span className="text-sm font-bold text-primary">{index + 1}</span>
                 </div>
-                <div className="flex-1 min-w-0">
-                  <p className="font-medium truncate">{hotel.name}</p>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate font-medium">{hotel.name}</p>
                   <p className="text-sm text-muted-foreground">{hotel.bookings} bookings</p>
                 </div>
                 <div className="text-right">
-                  <p className="font-semibold text-gradient">{hotel.revenue}</p>
+                  <p className="font-semibold text-primary">{formatCurrency(hotel.revenue)}</p>
                   <p className="text-xs text-muted-foreground">{hotel.occupancy}% occ.</p>
                 </div>
               </div>
@@ -170,17 +186,17 @@ const AdminDashboardHome = () => {
           <CardTitle>Platform Management</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-            <div className="text-center p-6 rounded-xl glass">
-              <p className="text-3xl font-bold text-gradient mb-1">156</p>
-              <p className="text-sm text-muted-foreground">Hotel System Admins</p>
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
+            <div className="glass rounded-xl p-6 text-center">
+              <p className="mb-1 text-3xl font-bold text-primary">{data.systemAdmins.length}</p>
+              <p className="text-sm text-muted-foreground">Platform System Admins</p>
             </div>
-            <div className="text-center p-6 rounded-xl glass">
-              <p className="text-3xl font-bold text-gradient mb-1">12</p>
-              <p className="text-sm text-muted-foreground">Pending Approvals</p>
+            <div className="glass rounded-xl p-6 text-center">
+              <p className="mb-1 text-3xl font-bold text-primary">{pendingBookings}</p>
+              <p className="text-sm text-muted-foreground">Pending Bookings</p>
             </div>
-            <div className="text-center p-6 rounded-xl glass">
-              <p className="text-3xl font-bold text-gradient mb-1">99.9%</p>
+            <div className="glass rounded-xl p-6 text-center">
+              <p className="mb-1 text-3xl font-bold text-primary">99.9%</p>
               <p className="text-sm text-muted-foreground">Uptime</p>
             </div>
           </div>

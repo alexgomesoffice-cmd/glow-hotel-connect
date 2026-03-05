@@ -2,7 +2,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { ThemeProvider } from "@/hooks/use-theme";
 import Index from "./pages/Index";
 import HotelDetail from "./pages/HotelDetail";
@@ -17,8 +17,6 @@ import HotelAdminLogin from "./pages/HotelAdminLogin";
 import NotFound from "./pages/NotFound";
 import ExploreHotels from "./pages/ExploreHotels";
 import SearchHotels from "./pages/SearchHotels";
-
-// Admin
 import AdminLayout from "./components/admin/AdminLayout";
 import AdminDashboardHome from "./pages/admin/AdminDashboardHome";
 import AdminAddHotel from "./pages/admin/AdminAddHotel";
@@ -30,10 +28,11 @@ import AdminUpdateClient from "./pages/admin/AdminUpdateClient";
 import AdminClientHistory from "./pages/admin/AdminClientHistory";
 import AdminEraseClient from "./pages/admin/AdminEraseClient";
 import AdminBookings from "./pages/admin/AdminBookings";
+import AdminHotelBookings from "./pages/admin/AdminHotelBookings";
+import AdminAllBookings from "./pages/admin/AdminAllBookings";
+import AdminAddSystemAdmin from "./pages/admin/AdminAddSystemAdmin";
 import AdminAnalytics from "./pages/admin/AdminAnalytics";
 import AdminSettings from "./pages/admin/AdminSettings";
-
-// Hotel Admin
 import HotelAdminLayout from "./components/hotel-admin/HotelAdminLayout";
 import HotelAdminOverview from "./pages/hotel-admin/HotelAdminOverview";
 import HotelAdminRooms from "./pages/hotel-admin/HotelAdminRooms";
@@ -66,10 +65,10 @@ const App = () => (
             <Route path="/explore" element={<ExploreHotels />} />
             <Route path="/search" element={<SearchHotels />} />
 
-            {/* Admin Routes */}
             <Route path="/admin" element={<AdminLayout />}>
               <Route index element={<AdminDashboardHome />} />
               <Route path="add-hotel" element={<AdminAddHotel />} />
+              <Route path="add-system-admin" element={<AdminAddSystemAdmin />} />
               <Route path="hotels" element={<AdminCurrentHotels />} />
               <Route path="update-hotel/:id" element={<AdminUpdateHotel />} />
               <Route path="erase-hotel" element={<AdminEraseHotel />} />
@@ -78,11 +77,12 @@ const App = () => (
               <Route path="client-history/:id" element={<AdminClientHistory />} />
               <Route path="erase-client" element={<AdminEraseClient />} />
               <Route path="bookings" element={<AdminBookings />} />
+              <Route path="bookings/hotel/:hotelId" element={<AdminHotelBookings />} />
+              <Route path="all-bookings" element={<AdminAllBookings />} />
               <Route path="analytics" element={<AdminAnalytics />} />
               <Route path="settings" element={<AdminSettings />} />
             </Route>
 
-            {/* Hotel Admin Routes */}
             <Route path="/hotel-admin" element={<HotelAdminLayout />}>
               <Route index element={<HotelAdminOverview />} />
               <Route path="rooms" element={<HotelAdminRooms />} />

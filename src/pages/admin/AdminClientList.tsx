@@ -1,121 +1,141 @@
-import { useState, useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, Mail, Phone, Calendar, Eye, Edit, ShieldCheck, ShieldOff } from "lucide-react";
+import { Edit, Eye, Search, ShieldOff, ShieldCheck, Trash2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
-import {
-  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
-} from "@/components/ui/table";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { useAdminData } from "@/data/adminStore";
 import { toast } from "@/hooks/use-toast";
-
-const initialClients = [
-  { id: 1, name: "Emma Wilson", email: "emma@email.com", phone: "+1 555 1234", bookings: 5, joined: "Jan 2023", avatar: "EW", blocked: false },
-  { id: 2, name: "Michael Chen", email: "michael@email.com", phone: "+1 555 5678", bookings: 3, joined: "Mar 2023", avatar: "MC", blocked: false },
-  { id: 3, name: "Sarah Johnson", email: "sarah@email.com", phone: "+1 555 9012", bookings: 8, joined: "Nov 2022", avatar: "SJ", blocked: true },
-  { id: 4, name: "David Brown", email: "david@email.com", phone: "+1 555 3456", bookings: 2, joined: "Jul 2023", avatar: "DB", blocked: false },
-  { id: 5, name: "Lisa Anderson", email: "lisa@email.com", phone: "+1 555 7890", bookings: 12, joined: "Sep 2022", avatar: "LA", blocked: false },
-];
 
 const AdminClientList = () => {
   const navigate = useNavigate();
+  const { data, saveData } = useAdminData();
   const [isLoaded, setIsLoaded] = useState(false);
   const [search, setSearch] = useState("");
-  const [clients, setClients] = useState(initialClients);
 
-  useEffect(() => { setIsLoaded(true); }, []);
+  useEffect(() => {
+    setIsLoaded(true);
+  }, []);
+
+  const bookingCountByClient = useMemo(
+    () =>
+      data.bookings.reduce<Record<number, number>>((accumulator, booking) => {
+        accumulator[booking.clientId] = (accumulator[booking.clientId] || 0) + 1;
+        return accumulator;
+      }, {}),
+    [data.bookings],
+  );
+
+  const filteredClients = data.clients.filter(
+    (client) =>
+      client.name.toLowerCase().includes(search.toLowerCase()) ||
+      client.email.toLowerCase().includes(search.toLowerCase()),
+  );
 
   const toggleBlock = (id: number) => {
-    setClients((prev) =>
-      prev.map((c) => {
-        if (c.id === id) {
-          const newBlocked = !c.blocked;
-          toast({ title: newBlocked ? "User Blocked" : "User Unblocked", description: `${c.name} has been ${newBlocked ? "blocked" : "unblocked"}.` });
-          return { ...c, blocked: newBlocked };
-        }
-        return c;
-      })
-    );
+    const client = data.clients.find((item) => item.id === id);
+    if (!client) return;
+
+    saveData((current) => ({
+      ...current,
+      clients: current.clients.map((item) =>
+        item.id === id ? { ...item, blocked: !item.blocked } : item,
+      ),
+    }));
+
+    toast({
+      title: client.blocked ? "User unblocked" : "User blocked",
+      description: `${client.name} has been ${client.blocked ? "unblocked" : "blocked"}.`,
+    });
   };
 
-  const filtered = clients.filter(
-    (c) => c.name.toLowerCase().includes(search.toLowerCase()) || c.email.toLowerCase().includes(search.toLowerCase())
-  );
+  const eraseClient = (id: number) => {
+    const client = data.clients.find((item) => item.id === id);
+    if (!client || !window.confirm(`Erase ${client.name} and remove all of this user's bookings?`)) {
+      return;
+    }
+
+    saveData((current) => ({
+      ...current,
+      clients: current.clients.filter((item) => item.id !== id),
+      bookings: current.bookings.filter((booking) => booking.clientId !== id),
+    }));
+
+    toast({ title: "Client erased", description: `${client.name} was permanently removed.` });
+  };
 
   return (
     <div className="space-y-6">
       <div className={`${isLoaded ? "animate-fade-in-up" : "opacity-0"}`}>
         <h1 className="text-2xl sm:text-3xl font-bold">Client List</h1>
-        <p className="text-muted-foreground">All registered consumers on the platform</p>
+        <p className="text-muted-foreground">Manage consumers, edit details, review booking history, or erase them completely.</p>
       </div>
 
-      <div className={`relative ${isLoaded ? "animate-fade-in-up" : "opacity-0"}`} style={{ animationDelay: "100ms" }}>
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        <Input placeholder="Search clients by name or email..." className="pl-10 max-w-md" value={search} onChange={(e) => setSearch(e.target.value)} />
+      <div className={`relative max-w-md ${isLoaded ? "animate-fade-in-up" : "opacity-0"}`} style={{ animationDelay: "100ms" }}>
+        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+        <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search clients by name or email..." className="pl-10" />
       </div>
 
-      <Card className={`${isLoaded ? "animate-fade-in-up" : "opacity-0"}`} style={{ animationDelay: "200ms" }}>
+      <Card className={`${isLoaded ? "animate-fade-in-up" : "opacity-0"}`} style={{ animationDelay: "180ms" }}>
         <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Client</TableHead>
-                  <TableHead className="hidden sm:table-cell">Email</TableHead>
-                  <TableHead className="hidden md:table-cell">Phone</TableHead>
-                  <TableHead className="hidden md:table-cell">Bookings</TableHead>
-                  <TableHead className="hidden lg:table-cell">Joined</TableHead>
-                  <TableHead className="text-center">Actions</TableHead>
-                  <TableHead className="text-center">Status</TableHead>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Client</TableHead>
+                <TableHead className="hidden sm:table-cell">Email</TableHead>
+                <TableHead className="hidden md:table-cell">Phone</TableHead>
+                <TableHead className="hidden md:table-cell">Bookings</TableHead>
+                <TableHead className="hidden lg:table-cell">Joined</TableHead>
+                <TableHead className="text-center">Actions</TableHead>
+                <TableHead className="text-center">Status</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredClients.map((client) => (
+                <TableRow key={client.id} className="cursor-pointer" onClick={() => navigate(`/admin/update-client/${client.id}`)}>
+                  <TableCell>
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-accent text-xs font-semibold text-primary-foreground">
+                        {client.avatar}
+                      </div>
+                      <span className="font-medium">{client.name}</span>
+                    </div>
+                  </TableCell>
+                  <TableCell className="hidden sm:table-cell text-sm text-muted-foreground">{client.email}</TableCell>
+                  <TableCell className="hidden md:table-cell text-sm text-muted-foreground">{client.phone}</TableCell>
+                  <TableCell className="hidden md:table-cell">{bookingCountByClient[client.id] || 0}</TableCell>
+                  <TableCell className="hidden lg:table-cell text-sm text-muted-foreground">{client.joined}</TableCell>
+                  <TableCell>
+                    <div className="flex items-center justify-center gap-1" onClick={(e) => e.stopPropagation()}>
+                      <Button variant="ghost" size="icon" className="h-8 w-8" title="See history" onClick={() => navigate(`/admin/client-history/${client.id}`)}>
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                      <Button variant="ghost" size="icon" className="h-8 w-8" title="Edit user" onClick={() => navigate(`/admin/update-client/${client.id}`)}>
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" title="Erase user" onClick={() => eraseClient(client.id)}>
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center justify-center gap-2" onClick={(e) => e.stopPropagation()}>
+                      <Switch checked={!client.blocked} onCheckedChange={() => toggleBlock(client.id)} />
+                      <span className={`text-xs font-medium ${client.blocked ? "text-destructive" : "text-primary"}`}>
+                        {client.blocked ? <ShieldOff className="h-4 w-4" /> : <ShieldCheck className="h-4 w-4" />}
+                      </span>
+                    </div>
+                  </TableCell>
                 </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filtered.map((client) => (
-                  <TableRow key={client.id} className="group cursor-pointer hover:bg-secondary/30">
-                    <TableCell>
-                      <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-primary to-accent flex items-center justify-center shrink-0">
-                          <span className="text-xs font-semibold text-primary-foreground">{client.avatar}</span>
-                        </div>
-                        <span className="font-medium">{client.name}</span>
-                      </div>
-                    </TableCell>
-                    <TableCell className="hidden sm:table-cell text-muted-foreground text-sm">{client.email}</TableCell>
-                    <TableCell className="hidden md:table-cell text-muted-foreground text-sm">{client.phone}</TableCell>
-                    <TableCell className="hidden md:table-cell">
-                      <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full">{client.bookings}</span>
-                    </TableCell>
-                    <TableCell className="hidden lg:table-cell text-muted-foreground text-sm">{client.joined}</TableCell>
-                    <TableCell>
-                      <div className="flex items-center justify-center gap-1">
-                        <Button variant="ghost" size="icon" className="h-8 w-8" title="View History" onClick={() => navigate(`/admin/client-history/${client.id}`)}>
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                        <Button variant="ghost" size="icon" className="h-8 w-8" title="Edit User" onClick={() => navigate(`/admin/update-client/${client.id}`)}>
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center justify-center gap-2">
-                        <Switch
-                          checked={!client.blocked}
-                          onCheckedChange={() => toggleBlock(client.id)}
-                        />
-                        <span className={`text-xs font-medium ${client.blocked ? "text-destructive" : "text-green-500"}`}>
-                          {client.blocked ? "Blocked" : "Active"}
-                        </span>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
+              ))}
+            </TableBody>
+          </Table>
         </CardContent>
       </Card>
-      {filtered.length === 0 && <p className="text-center text-muted-foreground py-8">No clients found.</p>}
+
+      {filteredClients.length === 0 && <p className="py-8 text-center text-muted-foreground">No clients found.</p>}
     </div>
   );
 };

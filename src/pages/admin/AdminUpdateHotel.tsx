@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, Save, Upload } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { getHotelEmoji, useAdminData } from "@/data/adminStore";
 import { toast } from "@/hooks/use-toast";
 
 const bangladeshCities = [
@@ -25,31 +26,111 @@ const hotelAmenities = [
   "Wheelchair Accessible", "Pet Friendly", "Kids Play Area", "Business Center",
 ];
 
+const emptyForm = {
+  name: "", location: "", address: "", zipCode: "", description: "", type: "hotel", stars: "",
+  email: "", eContact1: "", eContact2: "", receptionNumber1: "", receptionNumber2: "",
+  ownerName: "", managerName: "", managerPhone: "",
+  adminEmail: "", adminPassword: "", adminName: "", adminPhone: "", adminNID: "",
+};
+
 const AdminUpdateHotel = () => {
   const navigate = useNavigate();
   const { id } = useParams();
+  const { data, saveData } = useAdminData();
   const [isLoaded, setIsLoaded] = useState(false);
-  const [formData, setFormData] = useState({
-    name: "Grand Palace Hotel", location: "Dhaka", address: "123 Main Street, Gulshan", zipCode: "1212",
-    description: "A luxurious hotel in the heart of Dhaka.", type: "hotel", stars: "5",
-    email: "info@grandpalace.com", eContact1: "+880 1711 123456", eContact2: "+880 1811 654321",
-    receptionNumber1: "+880 2 9876543", receptionNumber2: "+880 2 1234567",
-    ownerName: "Mr. Rahman", managerName: "Mr. Karim", managerPhone: "+880 1911 111222",
-    adminEmail: "admin@grandpalace.com", adminName: "Maria Garcia", adminPhone: "+880 1611 333444", adminNID: "1234567890",
-  });
-  const [selectedAmenities, setSelectedAmenities] = useState<string[]>(["Swimming Pool", "Free Wi-Fi", "Restaurant", "Parking", "Room Service"]);
+  const hotel = data.hotels.find((item) => item.id === Number(id));
+  const [formData, setFormData] = useState(emptyForm);
+  const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
 
-  useEffect(() => { setIsLoaded(true); }, []);
+  useEffect(() => {
+    setIsLoaded(true);
+  }, []);
+
+  useEffect(() => {
+    if (!hotel) return;
+    setFormData({
+      name: hotel.name,
+      location: hotel.location,
+      address: hotel.address,
+      zipCode: hotel.zipCode,
+      description: hotel.description,
+      type: hotel.type,
+      stars: String(hotel.stars),
+      email: hotel.email,
+      eContact1: hotel.eContact1,
+      eContact2: hotel.eContact2,
+      receptionNumber1: hotel.receptionNumber1,
+      receptionNumber2: hotel.receptionNumber2,
+      ownerName: hotel.ownerName,
+      managerName: hotel.managerName,
+      managerPhone: hotel.managerPhone,
+      adminEmail: hotel.adminEmail,
+      adminPassword: hotel.adminPassword,
+      adminName: hotel.adminName,
+      adminPhone: hotel.adminPhone,
+      adminNID: hotel.adminNID,
+    });
+    setSelectedAmenities(hotel.amenities);
+  }, [hotel]);
+
+  if (!hotel) {
+    return (
+      <div className="space-y-4 max-w-3xl">
+        <Button variant="outline" onClick={() => navigate("/admin/hotels")}>Go Back</Button>
+        <Card>
+          <CardContent className="p-6">
+            <p className="font-medium">Hotel not found.</p>
+            <p className="text-sm text-muted-foreground">This hotel may have been removed.</p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   const toggleAmenity = (amenity: string) => {
-    setSelectedAmenities((prev) =>
-      prev.includes(amenity) ? prev.filter((a) => a !== amenity) : [...prev, amenity]
+    setSelectedAmenities((current) =>
+      current.includes(amenity) ? current.filter((item) => item !== amenity) : [...current, amenity],
     );
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    toast({ title: "Hotel Updated!", description: `${formData.name} has been updated successfully.` });
+  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    saveData((current) => ({
+      ...current,
+      hotels: current.hotels.map((item) =>
+        item.id === hotel.id
+          ? {
+              ...item,
+              name: formData.name,
+              location: formData.location,
+              address: formData.address,
+              zipCode: formData.zipCode,
+              description: formData.description,
+              type: formData.type,
+              stars: Number(formData.stars || 0),
+              email: formData.email,
+              eContact1: formData.eContact1,
+              eContact2: formData.eContact2,
+              receptionNumber1: formData.receptionNumber1,
+              receptionNumber2: formData.receptionNumber2,
+              ownerName: formData.ownerName,
+              managerName: formData.managerName,
+              managerPhone: formData.managerPhone,
+              adminEmail: formData.adminEmail,
+              adminPassword: formData.adminPassword,
+              adminName: formData.adminName,
+              adminPhone: formData.adminPhone,
+              adminNID: formData.adminNID,
+              amenities: selectedAmenities,
+              rating: Number(formData.stars || item.rating),
+              image: getHotelEmoji(formData.type),
+            }
+          : item,
+      ),
+    }));
+
+    toast({ title: "Hotel updated", description: `${formData.name} has been updated successfully.` });
     navigate("/admin/hotels");
   };
 
@@ -61,7 +142,7 @@ const AdminUpdateHotel = () => {
         </Button>
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold">Update Hotel Info</h1>
-          <p className="text-muted-foreground">Edit property details and hotel system admin info</p>
+          <p className="text-muted-foreground">Edit property details and hotel system admin information.</p>
         </div>
       </div>
 
@@ -76,8 +157,8 @@ const AdminUpdateHotel = () => {
               </div>
               <div className="space-y-2">
                 <Label>Location (City) *</Label>
-                <Select value={formData.location} onValueChange={(v) => setFormData({ ...formData, location: v })}>
-                  <SelectTrigger className="rounded-xl"><SelectValue /></SelectTrigger>
+                <Select value={formData.location} onValueChange={(value) => setFormData({ ...formData, location: value })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
                     {bangladeshCities.map((city) => <SelectItem key={city} value={city}>{city}</SelectItem>)}
                   </SelectContent>
@@ -101,7 +182,7 @@ const AdminUpdateHotel = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Hotel Type</Label>
-                <Select value={formData.type} onValueChange={(v) => setFormData({ ...formData, type: v })}>
+                <Select value={formData.type} onValueChange={(value) => setFormData({ ...formData, type: value })}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="hotel">Hotel</SelectItem>
@@ -113,10 +194,10 @@ const AdminUpdateHotel = () => {
               </div>
               <div className="space-y-2">
                 <Label>Star Rating</Label>
-                <Select value={formData.stars} onValueChange={(v) => setFormData({ ...formData, stars: v })}>
+                <Select value={formData.stars} onValueChange={(value) => setFormData({ ...formData, stars: value })}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    {[1, 2, 3, 4, 5].map((s) => <SelectItem key={s} value={String(s)}>{s} Star{s > 1 && "s"}</SelectItem>)}
+                    {[1, 2, 3, 4, 5].map((star) => <SelectItem key={star} value={String(star)}>{star} Star{star > 1 && "s"}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>
@@ -132,13 +213,13 @@ const AdminUpdateHotel = () => {
               </div>
               <div className="space-y-2">
                 <Label>Manager's Phone</Label>
-                <Input type="tel" value={formData.managerPhone} onChange={(e) => setFormData({ ...formData, managerPhone: e.target.value })} />
+                <Input value={formData.managerPhone} onChange={(e) => setFormData({ ...formData, managerPhone: e.target.value })} />
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className={`${isLoaded ? "animate-fade-in-up" : "opacity-0"}`} style={{ animationDelay: "200ms" }}>
+        <Card className={`${isLoaded ? "animate-fade-in-up" : "opacity-0"}`} style={{ animationDelay: "180ms" }}>
           <CardHeader><CardTitle>Hotel System Admin Info</CardTitle></CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -151,10 +232,14 @@ const AdminUpdateHotel = () => {
                 <Input type="email" value={formData.adminEmail} onChange={(e) => setFormData({ ...formData, adminEmail: e.target.value })} />
               </div>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="space-y-2">
+                <Label>Password</Label>
+                <Input type="password" value={formData.adminPassword} onChange={(e) => setFormData({ ...formData, adminPassword: e.target.value })} />
+              </div>
               <div className="space-y-2">
                 <Label>Phone</Label>
-                <Input type="tel" value={formData.adminPhone} onChange={(e) => setFormData({ ...formData, adminPhone: e.target.value })} />
+                <Input value={formData.adminPhone} onChange={(e) => setFormData({ ...formData, adminPhone: e.target.value })} />
               </div>
               <div className="space-y-2">
                 <Label>NID No.</Label>
@@ -164,58 +249,53 @@ const AdminUpdateHotel = () => {
           </CardContent>
         </Card>
 
-        <Card className={`${isLoaded ? "animate-fade-in-up" : "opacity-0"}`} style={{ animationDelay: "300ms" }}>
+        <Card className={`${isLoaded ? "animate-fade-in-up" : "opacity-0"}`} style={{ animationDelay: "260ms" }}>
           <CardHeader><CardTitle>Contact Details</CardTitle></CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Hotel Email</Label>
-                <Input type="email" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} />
-              </div>
+            <div className="space-y-2">
+              <Label>Hotel Email</Label>
+              <Input type="email" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} />
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>E. Contact 1</Label>
-                <Input type="tel" value={formData.eContact1} onChange={(e) => setFormData({ ...formData, eContact1: e.target.value })} />
+                <Input value={formData.eContact1} onChange={(e) => setFormData({ ...formData, eContact1: e.target.value })} />
               </div>
               <div className="space-y-2">
                 <Label>E. Contact 2</Label>
-                <Input type="tel" value={formData.eContact2} onChange={(e) => setFormData({ ...formData, eContact2: e.target.value })} />
+                <Input value={formData.eContact2} onChange={(e) => setFormData({ ...formData, eContact2: e.target.value })} />
               </div>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Reception Number 1</Label>
-                <Input type="tel" value={formData.receptionNumber1} onChange={(e) => setFormData({ ...formData, receptionNumber1: e.target.value })} />
+                <Input value={formData.receptionNumber1} onChange={(e) => setFormData({ ...formData, receptionNumber1: e.target.value })} />
               </div>
               <div className="space-y-2">
                 <Label>Reception Number 2</Label>
-                <Input type="tel" value={formData.receptionNumber2} onChange={(e) => setFormData({ ...formData, receptionNumber2: e.target.value })} />
+                <Input value={formData.receptionNumber2} onChange={(e) => setFormData({ ...formData, receptionNumber2: e.target.value })} />
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className={`${isLoaded ? "animate-fade-in-up" : "opacity-0"}`} style={{ animationDelay: "400ms" }}>
+        <Card className={`${isLoaded ? "animate-fade-in-up" : "opacity-0"}`} style={{ animationDelay: "340ms" }}>
           <CardHeader><CardTitle>Photos</CardTitle></CardHeader>
           <CardContent>
-            <div className="border-2 border-dashed border-border rounded-xl p-8 text-center">
-              <Upload className="h-10 w-10 mx-auto text-muted-foreground mb-3" />
+            <div className="rounded-xl border-2 border-dashed border-border p-8 text-center">
+              <Upload className="mx-auto mb-3 h-10 w-10 text-muted-foreground" />
               <p className="text-sm text-muted-foreground">Drag & drop images here, or click to browse</p>
             </div>
           </CardContent>
         </Card>
 
-        <Card className={`${isLoaded ? "animate-fade-in-up" : "opacity-0"}`} style={{ animationDelay: "500ms" }}>
+        <Card className={`${isLoaded ? "animate-fade-in-up" : "opacity-0"}`} style={{ animationDelay: "420ms" }}>
           <CardHeader><CardTitle>Hotel Amenities</CardTitle></CardHeader>
           <CardContent>
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
               {hotelAmenities.map((amenity) => (
-                <label key={amenity} className="flex items-center gap-2 text-sm cursor-pointer hover:text-primary transition-colors">
-                  <Checkbox
-                    checked={selectedAmenities.includes(amenity)}
-                    onCheckedChange={() => toggleAmenity(amenity)}
-                  />
+                <label key={amenity} className="flex cursor-pointer items-center gap-2 text-sm transition-colors hover:text-primary">
+                  <Checkbox checked={selectedAmenities.includes(amenity)} onCheckedChange={() => toggleAmenity(amenity)} />
                   {amenity}
                 </label>
               ))}
@@ -223,9 +303,9 @@ const AdminUpdateHotel = () => {
           </CardContent>
         </Card>
 
-        <div className="flex gap-3 justify-end">
-          <Button variant="outline" type="button" onClick={() => navigate("/admin/hotels")}>Cancel</Button>
-          <Button variant="hero" type="submit"><Save className="h-4 w-4 mr-2" /> Save Changes</Button>
+        <div className="flex justify-end gap-3">
+          <Button type="button" variant="outline" onClick={() => navigate("/admin/hotels")}>Cancel</Button>
+          <Button type="submit" variant="hero"><Save className="mr-2 h-4 w-4" /> Save Changes</Button>
         </div>
       </form>
     </div>

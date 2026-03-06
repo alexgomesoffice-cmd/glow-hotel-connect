@@ -1,5 +1,5 @@
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Mail, Phone, Calendar } from "lucide-react";
+import { ArrowLeft, Mail, Phone, Calendar, MapPin, Globe, BedDouble, DollarSign } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -19,42 +19,111 @@ const HotelAdminGuestProfile = () => {
 
   if (!guest) return (
     <div className="text-center py-20">
+      <div className="w-16 h-16 mx-auto rounded-2xl bg-secondary/50 flex items-center justify-center mb-4">
+        <Mail className="h-8 w-8 text-muted-foreground" />
+      </div>
       <h2 className="text-xl font-bold mb-2">Guest not found</h2>
       <Button variant="outline" onClick={() => navigate(-1)}>Go Back</Button>
     </div>
   );
 
   return (
-    <div className="space-y-6 max-w-3xl">
-      <div className="flex items-center gap-4">
-        <Button variant="outline" size="icon" onClick={() => navigate(-1)}>
+    <div className="space-y-8 max-w-4xl">
+      {/* Header */}
+      <div className="flex items-center gap-4 animate-fade-in-up">
+        <Button variant="outline" size="icon" className="shrink-0 hover:border-primary/50 transition-colors" onClick={() => navigate(-1)}>
           <ArrowLeft className="h-4 w-4" />
         </Button>
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold">{guest.name}</h1>
-          <p className="text-muted-foreground">Guest Profile</p>
+        <div className="flex items-center gap-4">
+          <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center shrink-0">
+            <span className="text-lg font-bold text-primary-foreground">{guest.name.split(" ").map((n: string) => n[0]).join("")}</span>
+          </div>
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-bold">{guest.name}</h1>
+            <p className="text-muted-foreground">Guest Profile</p>
+          </div>
         </div>
       </div>
 
+      {/* Stats row */}
+      <div className="grid grid-cols-2 gap-4 animate-fade-in-up" style={{ animationDelay: "100ms" }}>
+        <Card className="relative overflow-hidden hover-lift">
+          <CardContent className="p-5">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Total Stays</p>
+                <p className="text-2xl font-bold mt-1">{guest.totalStays}</p>
+              </div>
+              <div className="p-2.5 rounded-xl bg-gradient-to-br from-primary to-accent">
+                <BedDouble className="h-4 w-4 text-primary-foreground" />
+              </div>
+            </div>
+            <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-primary to-accent" />
+          </CardContent>
+        </Card>
+        <Card className="relative overflow-hidden hover-lift">
+          <CardContent className="p-5">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Total Spent</p>
+                <p className="text-2xl font-bold mt-1">{guest.totalSpent}</p>
+              </div>
+              <div className="p-2.5 rounded-xl bg-gradient-to-br from-green-500 to-emerald-500">
+                <DollarSign className="h-4 w-4 text-primary-foreground" />
+              </div>
+            </div>
+            <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-green-500 to-emerald-500" />
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Detail cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card>
-          <CardHeader><CardTitle>Personal Information</CardTitle></CardHeader>
-          <CardContent className="space-y-3">
-            <div className="flex justify-between"><span className="text-muted-foreground">Name</span><span className="font-medium">{guest.name}</span></div>
-            <div className="flex justify-between"><span className="text-muted-foreground">Email</span><span className="font-medium flex items-center gap-1"><Mail className="h-3 w-3" />{guest.email}</span></div>
-            <div className="flex justify-between"><span className="text-muted-foreground">Phone</span><span className="font-medium flex items-center gap-1"><Phone className="h-3 w-3" />{guest.phone}</span></div>
-            <div className="flex justify-between"><span className="text-muted-foreground">Date of Birth</span><span className="font-medium flex items-center gap-1"><Calendar className="h-3 w-3" />{guest.dob}</span></div>
-            <div className="flex justify-between"><span className="text-muted-foreground">Gender</span><span className="font-medium">{guest.gender}</span></div>
+        <Card className="animate-fade-in-up" style={{ animationDelay: "200ms" }}>
+          <CardHeader className="border-b border-border/50">
+            <CardTitle className="flex items-center gap-2">
+              <div className="p-2 rounded-xl bg-gradient-to-br from-primary to-accent">
+                <Mail className="h-4 w-4 text-primary-foreground" />
+              </div>
+              Personal Information
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3 pt-5">
+            <div className="flex justify-between"><span className="text-sm text-muted-foreground">Name</span><span className="text-sm font-medium">{guest.name}</span></div>
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-muted-foreground">Email</span>
+              <span className="text-sm font-medium flex items-center gap-1.5"><Mail className="h-3 w-3 text-primary" />{guest.email}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-muted-foreground">Phone</span>
+              <span className="text-sm font-medium flex items-center gap-1.5"><Phone className="h-3 w-3 text-green-500" />{guest.phone}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-muted-foreground">Date of Birth</span>
+              <span className="text-sm font-medium flex items-center gap-1.5"><Calendar className="h-3 w-3 text-amber-500" />{guest.dob}</span>
+            </div>
+            <div className="flex justify-between"><span className="text-sm text-muted-foreground">Gender</span><Badge variant="secondary">{guest.gender}</Badge></div>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader><CardTitle>Location & Stats</CardTitle></CardHeader>
-          <CardContent className="space-y-3">
-            <div className="flex justify-between"><span className="text-muted-foreground">Address</span><span className="font-medium">{guest.address}</span></div>
-            <div className="flex justify-between"><span className="text-muted-foreground">Country</span><span className="font-medium">{guest.country}</span></div>
-            <div className="flex justify-between"><span className="text-muted-foreground">Total Stays</span><Badge variant="secondary">{guest.totalStays}</Badge></div>
-            <div className="flex justify-between"><span className="text-muted-foreground">Total Spent</span><span className="font-bold text-primary">{guest.totalSpent}</span></div>
+        <Card className="animate-fade-in-up" style={{ animationDelay: "300ms" }}>
+          <CardHeader className="border-b border-border/50">
+            <CardTitle className="flex items-center gap-2">
+              <div className="p-2 rounded-xl bg-gradient-to-br from-green-500 to-emerald-500">
+                <MapPin className="h-4 w-4 text-primary-foreground" />
+              </div>
+              Location
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3 pt-5">
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-muted-foreground">Address</span>
+              <span className="text-sm font-medium flex items-center gap-1.5"><MapPin className="h-3 w-3 text-destructive" />{guest.address}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-muted-foreground">Country</span>
+              <span className="text-sm font-medium flex items-center gap-1.5"><Globe className="h-3 w-3 text-primary" />{guest.country}</span>
+            </div>
           </CardContent>
         </Card>
       </div>

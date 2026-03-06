@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { Search, XCircle } from "lucide-react";
+import { Search, XCircle, Calendar, Users, CheckCircle, Clock } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,12 +16,12 @@ const reservations = [
   { id: "RES-005", guest: "Emma Davis", guestId: "g5", room: "Deluxe 310", roomType: "Deluxe", checkIn: "2025-02-23", checkOut: "2025-02-25", status: "confirmed", total: "$500" },
 ];
 
-const statusColors: Record<string, string> = {
-  confirmed: "bg-green-500/10 text-green-500",
-  "checked-in": "bg-blue-500/10 text-blue-500",
-  "checked-out": "bg-muted text-muted-foreground",
-  pending: "bg-amber-500/10 text-amber-500",
-  cancelled: "bg-destructive/10 text-destructive",
+const statusConfig: Record<string, { bg: string; dot: string; icon: any }> = {
+  confirmed: { bg: "bg-green-500/10 text-green-500 border-green-500/20", dot: "bg-green-500", icon: CheckCircle },
+  "checked-in": { bg: "bg-blue-500/10 text-blue-500 border-blue-500/20", dot: "bg-blue-500", icon: Users },
+  "checked-out": { bg: "bg-muted text-muted-foreground border-border", dot: "bg-muted-foreground", icon: Calendar },
+  pending: { bg: "bg-amber-500/10 text-amber-500 border-amber-500/20", dot: "bg-amber-500", icon: Clock },
+  cancelled: { bg: "bg-destructive/10 text-destructive border-destructive/20", dot: "bg-destructive", icon: XCircle },
 };
 
 const HotelAdminReservations = () => {
@@ -42,15 +42,46 @@ const HotelAdminReservations = () => {
     toast({ title: "Reservation Cancelled", description: `${id} has been cancelled.` });
   };
 
+  const totalBookings = reservations.length;
+  const confirmedCount = reservations.filter(r => r.status === "confirmed").length;
+  const checkedInCount = reservations.filter(r => r.status === "checked-in").length;
+  const pendingCount = reservations.filter(r => r.status === "pending").length;
+
   return (
-    <div className="space-y-6">
-      <div>
+    <div className="space-y-8">
+      {/* Header */}
+      <div className="animate-fade-in-up">
         <h1 className="text-2xl sm:text-3xl font-bold">Reservations</h1>
         <p className="text-muted-foreground">Manage guest bookings and check-ins</p>
       </div>
 
+      {/* Quick Stats */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 animate-fade-in-up" style={{ animationDelay: "100ms" }}>
+        {[
+          { label: "Total Bookings", value: totalBookings, gradient: "from-primary to-accent", icon: Calendar },
+          { label: "Confirmed", value: confirmedCount, gradient: "from-green-500 to-emerald-500", icon: CheckCircle },
+          { label: "Checked In", value: checkedInCount, gradient: "from-blue-500 to-cyan-500", icon: Users },
+          { label: "Pending", value: pendingCount, gradient: "from-amber-500 to-orange-500", icon: Clock },
+        ].map((stat) => (
+          <Card key={stat.label} className="relative overflow-hidden hover-lift">
+            <CardContent className="p-4 sm:p-5">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs sm:text-sm text-muted-foreground">{stat.label}</p>
+                  <p className="text-xl sm:text-2xl font-bold mt-1">{stat.value}</p>
+                </div>
+                <div className={`p-2.5 rounded-xl bg-gradient-to-br ${stat.gradient} shrink-0`}>
+                  <stat.icon className="h-4 w-4 text-primary-foreground" />
+                </div>
+              </div>
+              <div className={`absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r ${stat.gradient}`} />
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
       {/* Filters */}
-      <Card>
+      <Card className="animate-fade-in-up" style={{ animationDelay: "200ms" }}>
         <CardContent className="p-4">
           <div className="flex flex-col sm:flex-row gap-3">
             <div className="relative flex-1">
@@ -81,44 +112,56 @@ const HotelAdminReservations = () => {
         </CardContent>
       </Card>
 
-      <Card>
+      {/* Table */}
+      <Card className="animate-fade-in-up" style={{ animationDelay: "300ms" }}>
         <CardContent className="p-0">
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="border-b border-border">
+                <tr className="border-b border-border bg-secondary/30">
                   {["ID", "Guest", "Room", "Check-in", "Check-out", "Total", "Status", ""].map((h) => (
-                    <th key={h} className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">{h}</th>
+                    <th key={h} className="text-left py-3.5 px-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">{h}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
-                {filtered.map((r) => (
-                  <tr key={r.id} className="border-b border-border/50 hover:bg-secondary/30 transition-colors cursor-pointer" onClick={() => navigate(`/hotel-admin/reservations/${r.id}`)}>
-                    <td className="py-3 px-4 font-mono text-sm">{r.id}</td>
-                    <td className="py-3 px-4">
-                      <Link
-                        to={`/hotel-admin/guest/${r.guestId}`}
-                        className="font-medium text-primary hover:underline"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        {r.guest}
-                      </Link>
-                    </td>
-                    <td className="py-3 px-4 text-sm text-muted-foreground">{r.room}</td>
-                    <td className="py-3 px-4 text-sm">{r.checkIn}</td>
-                    <td className="py-3 px-4 text-sm">{r.checkOut}</td>
-                    <td className="py-3 px-4 font-medium">{r.total}</td>
-                    <td className="py-3 px-4"><Badge className={statusColors[r.status]}>{r.status}</Badge></td>
-                    <td className="py-3 px-4">
-                      {r.status !== "checked-out" && r.status !== "cancelled" && (
-                        <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive hover:bg-destructive/10" onClick={(e) => handleCancel(e, r.id)}>
-                          <XCircle className="h-4 w-4 mr-1" /> Cancel
-                        </Button>
-                      )}
-                    </td>
-                  </tr>
-                ))}
+                {filtered.map((r) => {
+                  const config = statusConfig[r.status];
+                  return (
+                    <tr key={r.id} className="border-b border-border/50 hover:bg-secondary/30 transition-colors cursor-pointer group" onClick={() => navigate(`/hotel-admin/reservations/${r.id}`)}>
+                      <td className="py-3.5 px-4 font-mono text-sm text-primary">{r.id}</td>
+                      <td className="py-3.5 px-4">
+                        <Link
+                          to={`/hotel-admin/guest/${r.guestId}`}
+                          className="font-medium text-foreground hover:text-primary transition-colors flex items-center gap-2"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <div className="w-7 h-7 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center shrink-0">
+                            <span className="text-[10px] font-bold text-primary-foreground">{r.guest.split(" ").map(n => n[0]).join("")}</span>
+                          </div>
+                          {r.guest}
+                        </Link>
+                      </td>
+                      <td className="py-3.5 px-4 text-sm text-muted-foreground">{r.room}</td>
+                      <td className="py-3.5 px-4 text-sm">{r.checkIn}</td>
+                      <td className="py-3.5 px-4 text-sm">{r.checkOut}</td>
+                      <td className="py-3.5 px-4 font-semibold">{r.total}</td>
+                      <td className="py-3.5 px-4">
+                        <Badge className={`border ${config?.bg}`}>
+                          <span className={`w-1.5 h-1.5 rounded-full mr-1.5 ${config?.dot}`} />
+                          {r.status}
+                        </Badge>
+                      </td>
+                      <td className="py-3.5 px-4">
+                        {r.status !== "checked-out" && r.status !== "cancelled" && (
+                          <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive hover:bg-destructive/10 opacity-0 group-hover:opacity-100 transition-opacity" onClick={(e) => handleCancel(e, r.id)}>
+                            <XCircle className="h-4 w-4 mr-1" /> Cancel
+                          </Button>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
@@ -126,7 +169,12 @@ const HotelAdminReservations = () => {
       </Card>
 
       {filtered.length === 0 && (
-        <div className="text-center py-12 text-muted-foreground">No reservations match your criteria.</div>
+        <div className="text-center py-16">
+          <div className="w-16 h-16 mx-auto rounded-2xl bg-secondary/50 flex items-center justify-center mb-4">
+            <Calendar className="h-8 w-8 text-muted-foreground" />
+          </div>
+          <p className="text-muted-foreground font-medium">No reservations match your criteria.</p>
+        </div>
       )}
     </div>
   );

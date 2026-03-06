@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Upload } from "lucide-react";
+import { ArrowLeft, Upload, BedDouble } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -33,20 +33,31 @@ const HotelAdminAddRoom = () => {
 
   return (
     <div className="space-y-6 max-w-3xl">
-      <div className="flex items-center gap-4">
-        <Button variant="outline" size="icon" onClick={() => navigate("/hotel-admin/rooms")}>
+      {/* Header */}
+      <div className="flex items-center gap-4 animate-fade-in-up">
+        <Button variant="outline" size="icon" className="shrink-0 hover:border-primary/50 transition-colors" onClick={() => navigate("/hotel-admin/rooms")}>
           <ArrowLeft className="h-4 w-4" />
         </Button>
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold">Add New Room</h1>
-          <p className="text-muted-foreground">Add a room to your hotel</p>
+        <div className="flex items-center gap-3">
+          <div className="p-2.5 rounded-xl bg-gradient-to-br from-primary to-accent">
+            <BedDouble className="h-5 w-5 text-primary-foreground" />
+          </div>
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-bold">Add New Room</h1>
+            <p className="text-muted-foreground">Add a room to your hotel</p>
+          </div>
         </div>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        <Card>
-          <CardHeader><CardTitle>Room Details</CardTitle></CardHeader>
-          <CardContent className="space-y-4">
+        <Card className="animate-fade-in-up" style={{ animationDelay: "100ms" }}>
+          <CardHeader className="border-b border-border/50">
+            <CardTitle className="flex items-center gap-2">
+              <div className="w-1.5 h-5 rounded-full bg-gradient-to-b from-primary to-accent" />
+              Room Details
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4 pt-6">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Room Number *</Label>
@@ -67,7 +78,7 @@ const HotelAdminAddRoom = () => {
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>Bed Type *</Label>
+                <Label>Bed Type</Label>
                 <Select value={formData.bedType} onValueChange={(v) => setFormData({ ...formData, bedType: v })}>
                   <SelectTrigger><SelectValue placeholder="Select bed type" /></SelectTrigger>
                   <SelectContent>
@@ -99,43 +110,55 @@ const HotelAdminAddRoom = () => {
               <Textarea placeholder="Describe this room..." value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} />
             </div>
             <div className="flex flex-col sm:flex-row gap-6 pt-2">
-              <label className="flex items-center gap-2 cursor-pointer">
+              <label className="flex items-center gap-2.5 cursor-pointer group">
                 <Checkbox checked={smokingAllowed} onCheckedChange={(v) => setSmokingAllowed(!!v)} />
-                <span className="text-sm font-medium">Smoking Allowed?</span>
+                <span className="text-sm font-medium group-hover:text-foreground transition-colors">Smoking Allowed?</span>
               </label>
-              <label className="flex items-center gap-2 cursor-pointer">
+              <label className="flex items-center gap-2.5 cursor-pointer group">
                 <Checkbox checked={petsAllowed} onCheckedChange={(v) => setPetsAllowed(!!v)} />
-                <span className="text-sm font-medium">Pets Allowed?</span>
+                <span className="text-sm font-medium group-hover:text-foreground transition-colors">Pets Allowed?</span>
               </label>
             </div>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader><CardTitle>Amenities</CardTitle></CardHeader>
-          <CardContent>
+        <Card className="animate-fade-in-up" style={{ animationDelay: "200ms" }}>
+          <CardHeader className="border-b border-border/50">
+            <CardTitle className="flex items-center gap-2">
+              <div className="w-1.5 h-5 rounded-full bg-gradient-to-b from-green-500 to-emerald-500" />
+              Amenities
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-6">
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               {amenitiesList.map((a) => (
-                <label key={a} className="flex items-center gap-2 cursor-pointer">
+                <label key={a} className={`flex items-center gap-2.5 p-3 rounded-xl border cursor-pointer transition-all duration-200 ${amenities.includes(a) ? "border-primary/50 bg-primary/5" : "border-border hover:border-primary/30 hover:bg-secondary/50"}`}>
                   <Checkbox checked={amenities.includes(a)} onCheckedChange={() => toggleAmenity(a)} />
-                  <span className="text-sm">{a}</span>
+                  <span className="text-sm font-medium">{a}</span>
                 </label>
               ))}
             </div>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader><CardTitle>Photos</CardTitle></CardHeader>
-          <CardContent>
-            <div className="border-2 border-dashed border-border rounded-xl p-8 text-center">
-              <Upload className="h-10 w-10 mx-auto text-muted-foreground mb-3" />
-              <p className="text-sm text-muted-foreground">Drag & drop room images here, or click to browse</p>
+        <Card className="animate-fade-in-up" style={{ animationDelay: "300ms" }}>
+          <CardHeader className="border-b border-border/50">
+            <CardTitle className="flex items-center gap-2">
+              <div className="w-1.5 h-5 rounded-full bg-gradient-to-b from-purple-500 to-pink-500" />
+              Photos
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-6">
+            <div className="border-2 border-dashed border-border rounded-xl p-10 text-center hover:border-primary/40 transition-colors cursor-pointer group">
+              <div className="w-14 h-14 mx-auto rounded-2xl bg-secondary/50 flex items-center justify-center mb-3 group-hover:bg-primary/10 transition-colors">
+                <Upload className="h-6 w-6 text-muted-foreground group-hover:text-primary transition-colors" />
+              </div>
+              <p className="text-sm text-muted-foreground">Drag & drop room images here, or <span className="text-primary font-medium">click to browse</span></p>
             </div>
           </CardContent>
         </Card>
 
-        <div className="flex gap-3 justify-end">
+        <div className="flex gap-3 justify-end animate-fade-in-up" style={{ animationDelay: "400ms" }}>
           <Button variant="outline" type="button" onClick={() => navigate("/hotel-admin/rooms")}>Cancel</Button>
           <Button variant="hero" type="submit">Add Room</Button>
         </div>

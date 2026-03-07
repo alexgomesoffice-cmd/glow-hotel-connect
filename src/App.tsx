@@ -7,6 +7,7 @@ import { ThemeProvider } from "@/hooks/use-theme";
 import Index from "./pages/Index";
 import HotelDetail from "./pages/HotelDetail";
 import Destinations from "./pages/Destinations";
+import DestinationHotels from "./pages/DestinationHotels";
 import Popular from "./pages/Popular";
 import CarRental from "./pages/CarRental";
 import Attractions from "./pages/Attractions";
@@ -17,6 +18,9 @@ import HotelAdminLogin from "./pages/HotelAdminLogin";
 import NotFound from "./pages/NotFound";
 import ExploreHotels from "./pages/ExploreHotels";
 import SearchHotels from "./pages/SearchHotels";
+import UserProfile from "./pages/UserProfile";
+import MyBookings from "./pages/MyBookings";
+import UserSettings from "./pages/UserSettings";
 import AdminLayout from "./components/admin/AdminLayout";
 import AdminDashboardHome from "./pages/admin/AdminDashboardHome";
 import AdminAddHotel from "./pages/admin/AdminAddHotel";
@@ -26,9 +30,11 @@ import AdminEraseHotel from "./pages/admin/AdminEraseHotel";
 import AdminClientList from "./pages/admin/AdminClientList";
 import AdminUpdateClient from "./pages/admin/AdminUpdateClient";
 import AdminClientHistory from "./pages/admin/AdminClientHistory";
+import AdminClientProfile from "./pages/admin/AdminClientProfile";
 import AdminEraseClient from "./pages/admin/AdminEraseClient";
 import AdminBookings from "./pages/admin/AdminBookings";
 import AdminHotelBookings from "./pages/admin/AdminHotelBookings";
+import AdminBookingDetail from "./pages/admin/AdminBookingDetail";
 import AdminAllBookings from "./pages/admin/AdminAllBookings";
 import AdminAddSystemAdmin from "./pages/admin/AdminAddSystemAdmin";
 import AdminAnalytics from "./pages/admin/AdminAnalytics";
@@ -58,6 +64,7 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/hotel/:id" element={<HotelDetail />} />
             <Route path="/destinations" element={<Destinations />} />
+            <Route path="/destination/:name" element={<DestinationHotels />} />
             <Route path="/popular" element={<Popular />} />
             <Route path="/car-rental" element={<CarRental />} />
             <Route path="/attractions" element={<Attractions />} />
@@ -67,6 +74,9 @@ const App = () => (
             <Route path="/signup" element={<Signup />} />
             <Route path="/explore" element={<ExploreHotels />} />
             <Route path="/search" element={<SearchHotels />} />
+            <Route path="/profile" element={<UserProfile />} />
+            <Route path="/my-bookings" element={<MyBookings />} />
+            <Route path="/user-settings" element={<UserSettings />} />
 
             <Route path="/admin" element={<AdminLayout />}>
               <Route index element={<AdminDashboardHome />} />
@@ -78,9 +88,11 @@ const App = () => (
               <Route path="clients" element={<AdminClientList />} />
               <Route path="update-client/:id" element={<AdminUpdateClient />} />
               <Route path="client-history/:id" element={<AdminClientHistory />} />
+              <Route path="client-profile/:clientId" element={<AdminClientProfile />} />
               <Route path="erase-client" element={<AdminEraseClient />} />
               <Route path="bookings" element={<AdminBookings />} />
               <Route path="bookings/hotel/:hotelId" element={<AdminHotelBookings />} />
+              <Route path="booking/:bookingId" element={<AdminBookingDetail />} />
               <Route path="all-bookings" element={<AdminAllBookings />} />
               <Route path="analytics" element={<AdminAnalytics />} />
               <Route path="settings" element={<AdminSettings />} />

@@ -1,9 +1,11 @@
 import { useParams, useNavigate, Link } from "react-router-dom";
-import { ArrowLeft, User, Calendar, BedDouble, DollarSign, XCircle, CreditCard } from "lucide-react";
+import { useState } from "react";
+import { ArrowLeft, User, Calendar, BedDouble, CreditCard, XCircle } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "@/hooks/use-toast";
+import ConfirmDialog from "@/components/ConfirmDialog";
 
 const allReservations = [
   { id: "RES-001", guest: "Alice Martin", guestId: "g1", room: "Suite 301", roomType: "Suite", checkIn: "2025-02-20", checkOut: "2025-02-24", status: "confirmed", total: "$1,400", nights: 4, guests: 2, email: "alice@email.com", phone: "+1 555 0101", paymentMethod: "Visa •••• 4242", bookedAt: "2025-02-10" },
@@ -24,6 +26,7 @@ const statusConfig: Record<string, { bg: string; dot: string }> = {
 const HotelAdminReservationDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const [showCancel, setShowCancel] = useState(false);
   const reservation = allReservations.find((r) => r.id === id);
 
   if (!reservation) return (
@@ -40,12 +43,12 @@ const HotelAdminReservationDetail = () => {
 
   const handleCancel = () => {
     toast({ title: "Reservation Cancelled", description: `${reservation.id} has been cancelled.` });
+    setShowCancel(false);
     navigate("/hotel-admin/reservations");
   };
 
   return (
     <div className="space-y-6 max-w-4xl">
-      {/* Header */}
       <div className="flex items-center gap-4 animate-fade-in-up">
         <Button variant="outline" size="icon" className="shrink-0 hover:border-primary/50 transition-colors" onClick={() => navigate("/hotel-admin/reservations")}>
           <ArrowLeft className="h-4 w-4" />
@@ -66,9 +69,7 @@ const HotelAdminReservationDetail = () => {
         <Card className="animate-fade-in-up" style={{ animationDelay: "100ms" }}>
           <CardHeader className="border-b border-border/50">
             <CardTitle className="flex items-center gap-2">
-              <div className="p-2 rounded-xl bg-gradient-to-br from-primary to-accent">
-                <User className="h-4 w-4 text-primary-foreground" />
-              </div>
+              <div className="p-2 rounded-xl bg-gradient-to-br from-primary to-accent"><User className="h-4 w-4 text-primary-foreground" /></div>
               Guest Information
             </CardTitle>
           </CardHeader>
@@ -86,9 +87,7 @@ const HotelAdminReservationDetail = () => {
         <Card className="animate-fade-in-up" style={{ animationDelay: "200ms" }}>
           <CardHeader className="border-b border-border/50">
             <CardTitle className="flex items-center gap-2">
-              <div className="p-2 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500">
-                <BedDouble className="h-4 w-4 text-primary-foreground" />
-              </div>
+              <div className="p-2 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500"><BedDouble className="h-4 w-4 text-primary-foreground" /></div>
               Room Details
             </CardTitle>
           </CardHeader>
@@ -102,9 +101,7 @@ const HotelAdminReservationDetail = () => {
         <Card className="animate-fade-in-up" style={{ animationDelay: "300ms" }}>
           <CardHeader className="border-b border-border/50">
             <CardTitle className="flex items-center gap-2">
-              <div className="p-2 rounded-xl bg-gradient-to-br from-green-500 to-emerald-500">
-                <Calendar className="h-4 w-4 text-primary-foreground" />
-              </div>
+              <div className="p-2 rounded-xl bg-gradient-to-br from-green-500 to-emerald-500"><Calendar className="h-4 w-4 text-primary-foreground" /></div>
               Stay Period
             </CardTitle>
           </CardHeader>
@@ -117,9 +114,7 @@ const HotelAdminReservationDetail = () => {
         <Card className="animate-fade-in-up" style={{ animationDelay: "400ms" }}>
           <CardHeader className="border-b border-border/50">
             <CardTitle className="flex items-center gap-2">
-              <div className="p-2 rounded-xl bg-gradient-to-br from-amber-500 to-orange-500">
-                <CreditCard className="h-4 w-4 text-primary-foreground" />
-              </div>
+              <div className="p-2 rounded-xl bg-gradient-to-br from-amber-500 to-orange-500"><CreditCard className="h-4 w-4 text-primary-foreground" /></div>
               Payment
             </CardTitle>
           </CardHeader>
@@ -135,11 +130,21 @@ const HotelAdminReservationDetail = () => {
 
       {reservation.status !== "cancelled" && reservation.status !== "checked-out" && (
         <div className="flex justify-end animate-fade-in-up" style={{ animationDelay: "500ms" }}>
-          <Button variant="destructive" onClick={handleCancel} className="hover:shadow-lg transition-shadow">
+          <Button variant="destructive" onClick={() => setShowCancel(true)} className="hover:shadow-lg transition-shadow">
             <XCircle className="h-4 w-4 mr-2" /> Cancel Reservation
           </Button>
         </div>
       )}
+
+      <ConfirmDialog
+        open={showCancel}
+        onOpenChange={setShowCancel}
+        title="Cancel this reservation?"
+        description={`Are you sure you want to cancel reservation ${reservation.id} for ${reservation.guest}? This action cannot be undone.`}
+        confirmLabel="Yes, Cancel Reservation"
+        onConfirm={handleCancel}
+        variant="destructive"
+      />
     </div>
   );
 };

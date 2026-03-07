@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "@/hooks/use-toast";
+import ConfirmDialog from "@/components/ConfirmDialog";
 
 const reservations = [
   { id: "RES-001", guest: "Alice Martin", guestId: "g1", room: "Suite 301", roomType: "Suite", checkIn: "2025-02-20", checkOut: "2025-02-24", status: "confirmed", total: "$1,400" },
@@ -29,6 +30,7 @@ const HotelAdminReservations = () => {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [roomTypeFilter, setRoomTypeFilter] = useState("all");
+  const [cancelTarget, setCancelTarget] = useState<string | null>(null);
 
   const filtered = reservations.filter((r) => {
     const matchSearch = r.guest.toLowerCase().includes(search.toLowerCase()) || r.id.toLowerCase().includes(search.toLowerCase()) || r.room.toLowerCase().includes(search.toLowerCase());
@@ -37,10 +39,14 @@ const HotelAdminReservations = () => {
     return matchSearch && matchStatus && matchType;
   });
 
-  const handleCancel = (e: React.MouseEvent, id: string) => {
-    e.stopPropagation();
-    toast({ title: "Reservation Cancelled", description: `${id} has been cancelled.` });
+  const handleCancel = () => {
+    if (cancelTarget) {
+      toast({ title: "Reservation Cancelled", description: `${cancelTarget} has been cancelled.` });
+      setCancelTarget(null);
+    }
   };
+
+  const cancelReservation = reservations.find((r) => r.id === cancelTarget);
 
   const totalBookings = reservations.length;
   const confirmedCount = reservations.filter(r => r.status === "confirmed").length;
@@ -49,13 +55,11 @@ const HotelAdminReservations = () => {
 
   return (
     <div className="space-y-8">
-      {/* Header */}
       <div className="animate-fade-in-up">
         <h1 className="text-2xl sm:text-3xl font-bold">Reservations</h1>
         <p className="text-muted-foreground">Manage guest bookings and check-ins</p>
       </div>
 
-      {/* Quick Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 animate-fade-in-up" style={{ animationDelay: "100ms" }}>
         {[
           { label: "Total Bookings", value: totalBookings, gradient: "from-primary to-accent", icon: Calendar },
@@ -80,7 +84,6 @@ const HotelAdminReservations = () => {
         ))}
       </div>
 
-      {/* Filters */}
       <Card className="animate-fade-in-up" style={{ animationDelay: "200ms" }}>
         <CardContent className="p-4">
           <div className="flex flex-col sm:flex-row gap-3">
@@ -112,7 +115,6 @@ const HotelAdminReservations = () => {
         </CardContent>
       </Card>
 
-      {/* Table */}
       <Card className="animate-fade-in-up" style={{ animationDelay: "300ms" }}>
         <CardContent className="p-0">
           <div className="overflow-x-auto">
@@ -154,7 +156,7 @@ const HotelAdminReservations = () => {
                       </td>
                       <td className="py-3.5 px-4">
                         {r.status !== "checked-out" && r.status !== "cancelled" && (
-                          <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive hover:bg-destructive/10 opacity-0 group-hover:opacity-100 transition-opacity" onClick={(e) => handleCancel(e, r.id)}>
+                          <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive hover:bg-destructive/10 opacity-0 group-hover:opacity-100 transition-opacity" onClick={(e) => { e.stopPropagation(); setCancelTarget(r.id); }}>
                             <XCircle className="h-4 w-4 mr-1" /> Cancel
                           </Button>
                         )}
@@ -176,6 +178,16 @@ const HotelAdminReservations = () => {
           <p className="text-muted-foreground font-medium">No reservations match your criteria.</p>
         </div>
       )}
+
+      <ConfirmDialog
+        open={!!cancelTarget}
+        onOpenChange={(open) => !open && setCancelTarget(null)}
+        title="Cancel this reservation?"
+        description={`Are you sure you want to cancel reservation ${cancelTarget} for ${cancelReservation?.guest || "this guest"}? This action cannot be undone.`}
+        confirmLabel="Yes, Cancel"
+        onConfirm={handleCancel}
+        variant="destructive"
+      />
     </div>
   );
 };

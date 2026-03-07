@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, Link } from "react-router-dom";
 import { ArrowLeft, Filter, Search } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -10,14 +10,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { formatCurrency, formatDate, sortBookingsByRecent, useAdminData } from "@/data/adminStore";
 
 const getBadgeClasses = (value: string) => {
-  if (value === "cancelled" || value === "refunded") {
-    return "border-destructive/20 bg-destructive/10 text-destructive";
-  }
-
-  if (value === "confirmed" || value === "paid") {
-    return "border-primary/20 bg-primary/10 text-primary";
-  }
-
+  if (value === "cancelled" || value === "refunded") return "border-destructive/20 bg-destructive/10 text-destructive";
+  if (value === "confirmed" || value === "paid") return "border-primary/20 bg-primary/10 text-primary";
   return "border-border bg-secondary text-foreground";
 };
 
@@ -31,9 +25,7 @@ const AdminHotelBookings = () => {
   const [filterStatus, setFilterStatus] = useState("all");
   const [filterPayment, setFilterPayment] = useState("all");
 
-  useEffect(() => {
-    setIsLoaded(true);
-  }, []);
+  useEffect(() => { setIsLoaded(true); }, []);
 
   const hotel = data.hotels.find((item) => item.id === Number(hotelId));
   const hotelBookings = useMemo(
@@ -55,12 +47,7 @@ const AdminHotelBookings = () => {
     return (
       <div className="space-y-4 max-w-3xl">
         <Button variant="outline" onClick={() => navigate("/admin/bookings")}>Go Back</Button>
-        <Card>
-          <CardContent className="p-6">
-            <p className="font-medium">Hotel not found.</p>
-            <p className="text-sm text-muted-foreground">The selected hotel booking page is unavailable.</p>
-          </CardContent>
-        </Card>
+        <Card><CardContent className="p-6"><p className="font-medium">Hotel not found.</p></CardContent></Card>
       </div>
     );
   }
@@ -73,31 +60,14 @@ const AdminHotelBookings = () => {
         </Button>
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold">{hotel.name} Bookings</h1>
-          <p className="text-muted-foreground">Search guest history and filter bookings by room, booking status, and payment.</p>
+          <p className="text-muted-foreground">Click on a row to see booking details, or click a guest name to view their profile.</p>
         </div>
       </div>
 
       <div className={`grid grid-cols-1 sm:grid-cols-3 gap-4 ${isLoaded ? "animate-fade-in-up" : "opacity-0"}`} style={{ animationDelay: "100ms" }}>
-        <Card>
-          <CardContent className="p-5">
-            <p className="text-sm text-muted-foreground">Total Bookings</p>
-            <p className="text-3xl font-bold">{hotelBookings.length}</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-5">
-            <p className="text-sm text-muted-foreground">Paid Revenue</p>
-            <p className="text-3xl font-bold">
-              {formatCurrency(hotelBookings.filter((booking) => booking.paymentStatus === "paid").reduce((sum, booking) => sum + booking.amount, 0))}
-            </p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-5">
-            <p className="text-sm text-muted-foreground">Rooms Used</p>
-            <p className="text-3xl font-bold">{roomOptions.length}</p>
-          </CardContent>
-        </Card>
+        <Card><CardContent className="p-5"><p className="text-sm text-muted-foreground">Total Bookings</p><p className="text-3xl font-bold">{hotelBookings.length}</p></CardContent></Card>
+        <Card><CardContent className="p-5"><p className="text-sm text-muted-foreground">Paid Revenue</p><p className="text-3xl font-bold">{formatCurrency(hotelBookings.filter((b) => b.paymentStatus === "paid").reduce((sum, b) => sum + b.amount, 0))}</p></CardContent></Card>
+        <Card><CardContent className="p-5"><p className="text-sm text-muted-foreground">Rooms Used</p><p className="text-3xl font-bold">{roomOptions.length}</p></CardContent></Card>
       </div>
 
       <div className={`space-y-3 ${isLoaded ? "animate-fade-in-up" : "opacity-0"}`} style={{ animationDelay: "180ms" }}>
@@ -106,9 +76,7 @@ const AdminHotelBookings = () => {
           <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search by guest name..." className="pl-10" />
         </div>
         <div className="flex flex-wrap items-center gap-3">
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Filter className="h-4 w-4" /> Filters:
-          </div>
+          <div className="flex items-center gap-2 text-sm text-muted-foreground"><Filter className="h-4 w-4" /> Filters:</div>
           <Select value={filterRoom} onValueChange={setFilterRoom}>
             <SelectTrigger className="h-9 w-[180px] text-sm"><SelectValue placeholder="Room" /></SelectTrigger>
             <SelectContent>
@@ -117,7 +85,7 @@ const AdminHotelBookings = () => {
             </SelectContent>
           </Select>
           <Select value={filterStatus} onValueChange={setFilterStatus}>
-            <SelectTrigger className="h-9 w-[160px] text-sm"><SelectValue placeholder="Booking Status" /></SelectTrigger>
+            <SelectTrigger className="h-9 w-[160px] text-sm"><SelectValue placeholder="Status" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Status</SelectItem>
               <SelectItem value="confirmed">Confirmed</SelectItem>
@@ -138,9 +106,7 @@ const AdminHotelBookings = () => {
       </div>
 
       <Card className={`${isLoaded ? "animate-fade-in-up" : "opacity-0"}`} style={{ animationDelay: "240ms" }}>
-        <CardHeader>
-          <CardTitle>Guest Booking History</CardTitle>
-        </CardHeader>
+        <CardHeader><CardTitle>Guest Booking History</CardTitle></CardHeader>
         <CardContent className="p-0">
           <Table>
             <TableHeader>
@@ -157,18 +123,22 @@ const AdminHotelBookings = () => {
             </TableHeader>
             <TableBody>
               {filteredBookings.map((booking) => (
-                <TableRow key={booking.id}>
-                  <TableCell className="font-medium">{booking.guestName}</TableCell>
+                <TableRow key={booking.id} className="cursor-pointer" onClick={() => navigate(`/admin/booking/${booking.id}`)}>
+                  <TableCell>
+                    <Link
+                      to={`/admin/client-profile/${booking.clientId}`}
+                      className="font-medium text-primary hover:underline"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      {booking.guestName}
+                    </Link>
+                  </TableCell>
                   <TableCell className="text-muted-foreground">{booking.room}</TableCell>
                   <TableCell className="hidden md:table-cell">{formatDate(booking.checkIn)}</TableCell>
                   <TableCell className="hidden md:table-cell">{formatDate(booking.checkOut)}</TableCell>
                   <TableCell className="font-medium">{formatCurrency(booking.amount)}</TableCell>
-                  <TableCell>
-                    <Badge variant="outline" className={getBadgeClasses(booking.status)}>{booking.status}</Badge>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant="outline" className={getBadgeClasses(booking.paymentStatus)}>{booking.paymentStatus}</Badge>
-                  </TableCell>
+                  <TableCell><Badge variant="outline" className={getBadgeClasses(booking.status)}>{booking.status}</Badge></TableCell>
+                  <TableCell><Badge variant="outline" className={getBadgeClasses(booking.paymentStatus)}>{booking.paymentStatus}</Badge></TableCell>
                   <TableCell className="hidden lg:table-cell text-muted-foreground">{formatDate(booking.bookedAt)}</TableCell>
                 </TableRow>
               ))}

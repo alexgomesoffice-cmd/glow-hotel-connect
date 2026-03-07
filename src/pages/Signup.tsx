@@ -1,11 +1,14 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Hotel, Eye, EyeOff, ArrowRight } from "lucide-react";
+import { toast } from "@/hooks/use-toast";
+import { setLoggedInUser } from "@/components/Navbar";
 
 const Signup = () => {
+  const navigate = useNavigate();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -15,7 +18,12 @@ const Signup = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    setTimeout(() => setIsLoading(false), 1500);
+    setTimeout(() => {
+      setLoggedInUser({ name, email });
+      toast({ title: "Account created!", description: `Welcome to StayVista, ${name}` });
+      setIsLoading(false);
+      navigate("/");
+    }, 800);
   };
 
   return (
@@ -41,58 +49,23 @@ const Signup = () => {
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
               <Label htmlFor="name">Full name</Label>
-              <Input
-                id="name"
-                placeholder="John Doe"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                className="mt-1.5 bg-secondary/30 border-border/50 focus:border-primary"
-                required
-              />
+              <Input id="name" placeholder="John Doe" value={name} onChange={(e) => setName(e.target.value)} className="mt-1.5 bg-secondary/30 border-border/50 focus:border-primary" required />
             </div>
-
             <div>
               <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="you@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="mt-1.5 bg-secondary/30 border-border/50 focus:border-primary"
-                required
-              />
+              <Input id="email" type="email" placeholder="you@example.com" value={email} onChange={(e) => setEmail(e.target.value)} className="mt-1.5 bg-secondary/30 border-border/50 focus:border-primary" required />
             </div>
-
             <div>
               <Label htmlFor="password">Password</Label>
               <div className="relative mt-1.5">
-                <Input
-                  id="password"
-                  type={showPassword ? "text" : "password"}
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="bg-secondary/30 border-border/50 focus:border-primary pr-10"
-                  required
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-                >
+                <Input id="password" type={showPassword ? "text" : "password"} placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} className="bg-secondary/30 border-border/50 focus:border-primary pr-10" required />
+                <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors">
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
               </div>
               <p className="text-xs text-muted-foreground mt-1.5">Must be at least 8 characters</p>
             </div>
-
-            <Button
-              type="submit"
-              variant="hero"
-              className="w-full group"
-              disabled={isLoading}
-            >
+            <Button type="submit" variant="hero" className="w-full group" disabled={isLoading}>
               {isLoading ? "Creating account..." : "Create account"}
               <ArrowRight className="h-4 w-4 ml-2 group-hover:translate-x-1 transition-transform" />
             </Button>

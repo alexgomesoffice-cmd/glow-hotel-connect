@@ -8,63 +8,53 @@ import { Switch } from "@/components/ui/switch";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useAdminData } from "@/data/adminStore";
 import { toast } from "@/hooks/use-toast";
+import ConfirmDialog from "@/components/ConfirmDialog";
 
 const AdminClientList = () => {
   const navigate = useNavigate();
   const { data, saveData } = useAdminData();
   const [isLoaded, setIsLoaded] = useState(false);
   const [search, setSearch] = useState("");
+  const [eraseTarget, setEraseTarget] = useState<number | null>(null);
+  const [blockTarget, setBlockTarget] = useState<number | null>(null);
 
-  useEffect(() => {
-    setIsLoaded(true);
-  }, []);
+  useEffect(() => { setIsLoaded(true); }, []);
 
   const bookingCountByClient = useMemo(
-    () =>
-      data.bookings.reduce<Record<number, number>>((accumulator, booking) => {
-        accumulator[booking.clientId] = (accumulator[booking.clientId] || 0) + 1;
-        return accumulator;
-      }, {}),
+    () => data.bookings.reduce<Record<number, number>>((acc, b) => { acc[b.clientId] = (acc[b.clientId] || 0) + 1; return acc; }, {}),
     [data.bookings],
   );
 
   const filteredClients = data.clients.filter(
-    (client) =>
-      client.name.toLowerCase().includes(search.toLowerCase()) ||
-      client.email.toLowerCase().includes(search.toLowerCase()),
+    (c) => c.name.toLowerCase().includes(search.toLowerCase()) || c.email.toLowerCase().includes(search.toLowerCase()),
   );
 
-  const toggleBlock = (id: number) => {
-    const client = data.clients.find((item) => item.id === id);
+  const eraseClient = () => {
+    if (!eraseTarget) return;
+    const client = data.clients.find((c) => c.id === eraseTarget);
+    saveData((cur) => ({
+      ...cur,
+      clients: cur.clients.filter((c) => c.id !== eraseTarget),
+      bookings: cur.bookings.filter((b) => b.clientId !== eraseTarget),
+    }));
+    setEraseTarget(null);
+    toast({ title: "Client erased", description: `${client?.name} was permanently removed.` });
+  };
+
+  const toggleBlock = () => {
+    if (!blockTarget) return;
+    const client = data.clients.find((c) => c.id === blockTarget);
     if (!client) return;
-
-    saveData((current) => ({
-      ...current,
-      clients: current.clients.map((item) =>
-        item.id === id ? { ...item, blocked: !item.blocked } : item,
-      ),
+    saveData((cur) => ({
+      ...cur,
+      clients: cur.clients.map((c) => c.id === blockTarget ? { ...c, blocked: !c.blocked } : c),
     }));
-
-    toast({
-      title: client.blocked ? "User unblocked" : "User blocked",
-      description: `${client.name} has been ${client.blocked ? "unblocked" : "blocked"}.`,
-    });
+    toast({ title: client.blocked ? "User unblocked" : "User blocked", description: `${client.name} has been ${client.blocked ? "unblocked" : "blocked"}.` });
+    setBlockTarget(null);
   };
 
-  const eraseClient = (id: number) => {
-    const client = data.clients.find((item) => item.id === id);
-    if (!client || !window.confirm(`Erase ${client.name} and remove all of this user's bookings?`)) {
-      return;
-    }
-
-    saveData((current) => ({
-      ...current,
-      clients: current.clients.filter((item) => item.id !== id),
-      bookings: current.bookings.filter((booking) => booking.clientId !== id),
-    }));
-
-    toast({ title: "Client erased", description: `${client.name} was permanently removed.` });
-  };
+  const eraseClientObj = data.clients.find((c) => c.id === eraseTarget);
+  const blockClientObj = data.clients.find((c) => c.id === blockTarget);
 
   return (
     <div className="space-y-6">
@@ -97,9 +87,7 @@ const AdminClientList = () => {
                 <TableRow key={client.id} className="cursor-pointer" onClick={() => navigate(`/admin/update-client/${client.id}`)}>
                   <TableCell>
                     <div className="flex items-center gap-3">
-                      <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-accent text-xs font-semibold text-primary-foreground">
-                        {client.avatar}
-                      </div>
+                      <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-accent text-xs font-semibold text-primary-foreground">{client.avatar}</div>
                       <span className="font-medium">{client.name}</span>
                     </div>
                   </TableCell>
@@ -109,20 +97,14 @@ const AdminClientList = () => {
                   <TableCell className="hidden lg:table-cell text-sm text-muted-foreground">{client.joined}</TableCell>
                   <TableCell>
                     <div className="flex items-center justify-center gap-1" onClick={(e) => e.stopPropagation()}>
-                      <Button variant="ghost" size="icon" className="h-8 w-8" title="See history" onClick={() => navigate(`/admin/client-history/${client.id}`)}>
-                        <Eye className="h-4 w-4" />
-                      </Button>
-                      <Button variant="ghost" size="icon" className="h-8 w-8" title="Edit user" onClick={() => navigate(`/admin/update-client/${client.id}`)}>
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" title="Erase user" onClick={() => eraseClient(client.id)}>
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                      <Button variant="ghost" size="icon" className="h-8 w-8" title="See history" onClick={() => navigate(`/admin/client-history/${client.id}`)}><Eye className="h-4 w-4" /></Button>
+                      <Button variant="ghost" size="icon" className="h-8 w-8" title="Edit user" onClick={() => navigate(`/admin/update-client/${client.id}`)}><Edit className="h-4 w-4" /></Button>
+                      <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" title="Erase user" onClick={() => setEraseTarget(client.id)}><Trash2 className="h-4 w-4" /></Button>
                     </div>
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center justify-center gap-2" onClick={(e) => e.stopPropagation()}>
-                      <Switch checked={!client.blocked} onCheckedChange={() => toggleBlock(client.id)} />
+                      <Switch checked={!client.blocked} onCheckedChange={() => setBlockTarget(client.id)} />
                       <span className={`text-xs font-medium ${client.blocked ? "text-destructive" : "text-primary"}`}>
                         {client.blocked ? <ShieldOff className="h-4 w-4" /> : <ShieldCheck className="h-4 w-4" />}
                       </span>
@@ -136,6 +118,26 @@ const AdminClientList = () => {
       </Card>
 
       {filteredClients.length === 0 && <p className="py-8 text-center text-muted-foreground">No clients found.</p>}
+
+      <ConfirmDialog
+        open={!!eraseTarget}
+        onOpenChange={(open) => !open && setEraseTarget(null)}
+        title="Erase this client?"
+        description={`Are you sure you want to permanently erase ${eraseClientObj?.name || "this client"} and remove all their bookings? This cannot be undone.`}
+        confirmLabel="Yes, Erase"
+        onConfirm={eraseClient}
+        variant="destructive"
+      />
+
+      <ConfirmDialog
+        open={!!blockTarget}
+        onOpenChange={(open) => !open && setBlockTarget(null)}
+        title={blockClientObj?.blocked ? "Unblock this client?" : "Block this client?"}
+        description={`Are you sure you want to ${blockClientObj?.blocked ? "unblock" : "block"} ${blockClientObj?.name || "this client"}?`}
+        confirmLabel={blockClientObj?.blocked ? "Yes, Unblock" : "Yes, Block"}
+        onConfirm={toggleBlock}
+        variant={blockClientObj?.blocked ? "default" : "destructive"}
+      />
     </div>
   );
 };

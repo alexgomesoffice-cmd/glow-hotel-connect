@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Shield, Eye, EyeOff, ArrowRight } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import { apiPost } from "@/utils/api";
 
 const AdminLogin = () => {
   const navigate = useNavigate();
@@ -13,14 +14,48 @@ const AdminLogin = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!email || !password) {
+      toast({ title: "Error", description: "Please fill in all fields", variant: "destructive" });
+      return;
+    }
+
     setIsLoading(true);
-    setTimeout(() => {
+
+    try {
+      const data = await apiPost("/auth/system-admin/login", { email, password });
+
+      if (data.success) {
+        // Store token and admin info
+        localStorage.setItem("authToken", data.data.token);
+        localStorage.setItem("user", JSON.stringify(data.data.admin));
+        localStorage.setItem("userRole", "SYSTEM_ADMIN");
+
+        toast({
+          title: "Welcome, Admin!",
+          description: "You have been logged in successfully.",
+        });
+
+        navigate("/admin");
+      } else {
+        toast({
+          title: "Login Failed",
+          description: data.message || "Invalid admin credentials",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error("Admin login error:", error);
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Login failed. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
       setIsLoading(false);
-      toast({ title: "Welcome, Admin!", description: "You have been logged in successfully." });
-      navigate("/admin");
-    }, 1200);
+    }
   };
 
   return (

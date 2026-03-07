@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Hotel, Eye, EyeOff, ArrowRight } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { setLoggedInUser } from "@/components/Navbar";
+import { apiPost } from "@/utils/api";
 
 const Signup = () => {
   const navigate = useNavigate();
@@ -15,15 +16,60 @@ const Signup = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!name || !email || !password) {
+      toast({ title: "Error", description: "Please fill in all fields", variant: "destructive" });
+      return;
+    }
+
+    if (password.length < 6) {
+      toast({ 
+        title: "Error", 
+        description: "Password must be at least 6 characters", 
+        variant: "destructive" 
+      });
+      return;
+    }
+
     setIsLoading(true);
-    setTimeout(() => {
-      setLoggedInUser({ name, email });
-      toast({ title: "Account created!", description: `Welcome to StayVista, ${name}` });
+
+    try {
+      const data = await apiPost("/auth/end-user/register", {
+        name,
+        email,
+        password,
+      });
+
+      if (data.success) {
+        // User created successfully
+        toast({
+          title: "Account created!",
+          description: `Welcome to StayVista, ${data.data.user.name}. Redirecting to login...`,
+        });
+
+        // Redirect to login after 1 second
+        setTimeout(() => {
+          navigate("/login");
+        }, 1000);
+      } else {
+        toast({
+          title: "Signup Failed",
+          description: data.message || "Could not create account",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error("Signup error:", error);
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Signup failed. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
       setIsLoading(false);
-      navigate("/");
-    }, 800);
+    }
   };
 
   return (

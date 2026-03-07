@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Hotel, Eye, EyeOff, ArrowRight } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import { apiPost } from "@/utils/api";
 
 const HotelAdminLogin = () => {
   const navigate = useNavigate();
@@ -13,14 +14,49 @@ const HotelAdminLogin = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!email || !password) {
+      toast({ title: "Error", description: "Please fill in all fields", variant: "destructive" });
+      return;
+    }
+
     setIsLoading(true);
-    setTimeout(() => {
+
+    try {
+      const data = await apiPost("/auth/hotel-admin/login", { email, password });
+
+      if (data.success) {
+        // Store token and admin info
+        localStorage.setItem("authToken", data.data.token);
+        localStorage.setItem("user", JSON.stringify(data.data.admin));
+        localStorage.setItem("userRole", "HOTEL_ADMIN");
+        localStorage.setItem("hotelId", data.data.admin.hotel_id);
+
+        toast({
+          title: "Welcome, Hotel Admin!",
+          description: "You have been logged in successfully.",
+        });
+
+        navigate("/hotel-admin");
+      } else {
+        toast({
+          title: "Login Failed",
+          description: data.message || "Invalid hotel admin credentials",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error("Hotel admin login error:", error);
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Login failed. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
       setIsLoading(false);
-      toast({ title: "Welcome, Hotel System Admin!", description: "You have been logged in successfully." });
-      navigate("/hotel-admin");
-    }, 1200);
+    }
   };
 
   return (

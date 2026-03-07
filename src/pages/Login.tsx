@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Hotel, Eye, EyeOff, ArrowRight } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { setLoggedInUser } from "@/components/Navbar";
+import { apiPost } from "@/utils/api";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -14,16 +15,51 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!email || !password) {
+      toast({ title: "Error", description: "Please fill in all fields", variant: "destructive" });
+      return;
+    }
+
     setIsLoading(true);
-    setTimeout(() => {
-      const name = email.split("@")[0].replace(/[._]/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
-      setLoggedInUser({ name, email });
-      toast({ title: "Welcome back!", description: `Signed in as ${name}` });
+
+    try {
+      const data = await apiPost("/auth/end-user/login", { email, password });
+
+      if (data.success) {
+        // Store token and user info
+        localStorage.setItem("authToken", data.data.token);
+        localStorage.setItem("user", JSON.stringify(data.data.user));
+        localStorage.setItem("userRole", "END_USER");
+
+        // Update UI
+        setLoggedInUser(data.data.user);
+
+        toast({
+          title: "Welcome back!",
+          description: `Signed in as ${data.data.user.name}`,
+        });
+
+        navigate("/");
+      } else {
+        toast({
+          title: "Login Failed",
+          description: data.message || "Invalid credentials",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error("Login error:", error);
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Login failed. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
       setIsLoading(false);
-      navigate("/");
-    }, 800);
+    }
   };
 
   return (

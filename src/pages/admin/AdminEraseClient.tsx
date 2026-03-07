@@ -6,44 +6,39 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAdminData } from "@/data/adminStore";
 import { toast } from "@/hooks/use-toast";
+import ConfirmDialog from "@/components/ConfirmDialog";
 
 const AdminEraseClient = () => {
   const navigate = useNavigate();
   const { data, saveData } = useAdminData();
   const [isLoaded, setIsLoaded] = useState(false);
   const [search, setSearch] = useState("");
-  const [confirmId, setConfirmId] = useState<number | null>(null);
+  const [eraseTarget, setEraseTarget] = useState<number | null>(null);
 
-  useEffect(() => {
-    setIsLoaded(true);
-  }, []);
+  useEffect(() => { setIsLoaded(true); }, []);
 
   const filteredClients = data.clients.filter(
-    (client) =>
-      client.name.toLowerCase().includes(search.toLowerCase()) ||
-      client.email.toLowerCase().includes(search.toLowerCase()),
+    (c) => c.name.toLowerCase().includes(search.toLowerCase()) || c.email.toLowerCase().includes(search.toLowerCase()),
   );
 
-  const handleDelete = (id: number) => {
-    const client = data.clients.find((item) => item.id === id);
-    if (!client) return;
-
-    saveData((current) => ({
-      ...current,
-      clients: current.clients.filter((item) => item.id !== id),
-      bookings: current.bookings.filter((booking) => booking.clientId !== id),
+  const handleDelete = () => {
+    if (!eraseTarget) return;
+    const client = data.clients.find((c) => c.id === eraseTarget);
+    saveData((cur) => ({
+      ...cur,
+      clients: cur.clients.filter((c) => c.id !== eraseTarget),
+      bookings: cur.bookings.filter((b) => b.clientId !== eraseTarget),
     }));
-
-    setConfirmId(null);
-    toast({ title: "Client erased", description: `${client.name} has been permanently removed.` });
+    setEraseTarget(null);
+    toast({ title: "Client erased", description: `${client?.name} has been permanently removed.` });
   };
+
+  const targetClient = data.clients.find((c) => c.id === eraseTarget);
 
   return (
     <div className="space-y-6 max-w-4xl">
       <div className={`flex items-center gap-4 ${isLoaded ? "animate-fade-in-up" : "opacity-0"}`}>
-        <Button variant="outline" size="icon" onClick={() => navigate("/admin/clients")}>
-          <ArrowLeft className="h-4 w-4" />
-        </Button>
+        <Button variant="outline" size="icon" onClick={() => navigate("/admin/clients")}><ArrowLeft className="h-4 w-4" /></Button>
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold">Erase Client</h1>
           <p className="text-muted-foreground">Permanently remove a consumer and their related bookings.</p>
@@ -60,34 +55,31 @@ const AdminEraseClient = () => {
           <Card key={client.id} className={`${isLoaded ? "animate-fade-in-up" : "opacity-0"}`} style={{ animationDelay: `${(index + 2) * 80}ms` }}>
             <CardContent className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-accent text-sm font-semibold text-primary-foreground">
-                  {client.avatar}
-                </div>
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-accent text-sm font-semibold text-primary-foreground">{client.avatar}</div>
                 <div>
                   <h3 className="font-semibold">{client.name}</h3>
                   <p className="text-sm text-muted-foreground">{client.email}</p>
                 </div>
               </div>
-
-              {confirmId === client.id ? (
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="flex items-center gap-1 text-sm text-destructive">
-                    <AlertTriangle className="h-4 w-4" /> Confirm erase?
-                  </span>
-                  <Button variant="destructive" size="sm" onClick={() => handleDelete(client.id)}>Yes, Erase</Button>
-                  <Button variant="outline" size="sm" onClick={() => setConfirmId(null)}>Cancel</Button>
-                </div>
-              ) : (
-                <Button variant="outline" size="sm" className="text-destructive" onClick={() => setConfirmId(client.id)}>
-                  <Trash2 className="mr-2 h-4 w-4" /> Erase
-                </Button>
-              )}
+              <Button variant="outline" size="sm" className="text-destructive" onClick={() => setEraseTarget(client.id)}>
+                <Trash2 className="mr-2 h-4 w-4" /> Erase
+              </Button>
             </CardContent>
           </Card>
         ))}
       </div>
 
       {filteredClients.length === 0 && <p className="py-8 text-center text-muted-foreground">No clients found.</p>}
+
+      <ConfirmDialog
+        open={!!eraseTarget}
+        onOpenChange={(open) => !open && setEraseTarget(null)}
+        title="Erase this client?"
+        description={`Are you sure you want to permanently erase ${targetClient?.name || "this client"} and remove all their bookings? This action cannot be undone.`}
+        confirmLabel="Yes, Erase"
+        onConfirm={handleDelete}
+        variant="destructive"
+      />
     </div>
   );
 };

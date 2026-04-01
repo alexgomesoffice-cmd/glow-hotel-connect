@@ -104,6 +104,11 @@ interface RoomVariation {
   smoking_allowed: boolean;
   pet_allowed: boolean;
   status: string;
+  images?: string[];
+  amenities?: string[];
+  price_modifier?: number; // additional price on top of base
+  meal_plan?: string;
+  refund_policy?: string;
 }
 
 interface Room {

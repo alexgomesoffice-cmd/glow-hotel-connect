@@ -615,7 +615,7 @@ const HotelDetail = () => {
                 </CardContent>
               </Card>
 
-              {/* Rooms Section */}
+              {/* Rooms Section — Expandable by Room Type */}
               <div className="animate-fade-in-up" style={{ animationDelay: "200ms" }}>
                 <div className="flex items-center justify-between mb-6">
                   <h2 className="text-2xl font-bold">Available Rooms</h2>
@@ -627,97 +627,183 @@ const HotelDetail = () => {
                   </div>
                 ) : (
                   <div className="space-y-4">
-                    {hotel.rooms.map((room, index) => (
-                      <Card
-                        key={room.id}
-                        className={cn(
-                          "glass border-border/50 transition-all duration-500 cursor-pointer group overflow-hidden",
-                          selectedRoom?.id === room.id
-                            ? "border-primary ring-2 ring-primary/20 scale-[1.01]"
-                            : "hover:border-primary/50 hover:scale-[1.005]"
-                        )}
-                        onClick={() => setSelectedRoom(room)}
-                        style={{ animationDelay: `${index * 100}ms` }}
-                      >
-                        <CardContent className="p-0 flex flex-col sm:flex-row">
-                          {/* Room Image - Left Side */}
-                          {room.image && (
-                            <div className="w-full sm:w-48 flex-shrink-0 h-48 sm:h-auto overflow-hidden rounded-tl-lg sm:rounded-l-lg">
-                              <img
-                                src={room.image}
-                                alt={room.name}
-                                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                                onError={(e) => {
-                                  // Hide image if it fails to load
-                                  (e.currentTarget.parentElement as HTMLElement).style.display = 'none';
-                                }}
-                              />
-                            </div>
-                          )}
+                    {hotel.rooms.map((room, index) => {
+                      const isExpanded = expandedRoomType === room.id;
+                      const availableCount = room.variations?.filter(v => v.status === "AVAILABLE").length || 0;
 
-                          {/* Room Details - Right Side */}
-                          <div className="p-6 flex-1 flex flex-col sm:flex-row sm:items-start justify-between gap-4">
-                            <div className="flex-1">
-                              <div className="flex items-center gap-3 mb-2">
-                                <h3 className="text-lg font-semibold group-hover:text-primary transition-colors">
-                                  {room.name}
-                                </h3>
-                                {selectedRoom?.id === room.id && (
-                                  <span className="px-2.5 py-1 rounded-full bg-primary text-primary-foreground text-xs font-medium flex items-center gap-1 animate-scale-in">
-                                    <Check className="w-3 h-3" />
-                                    Selected
-                                  </span>
+                      return (
+                        <Card
+                          key={room.id}
+                          className={cn(
+                            "glass border-border/50 transition-all duration-500 overflow-hidden",
+                            selectedRoom?.id === room.id
+                              ? "border-primary ring-2 ring-primary/20"
+                              : "hover:border-primary/50"
+                          )}
+                          style={{ animationDelay: `${index * 100}ms` }}
+                        >
+                          {/* Room Type Header — clickable to expand */}
+                          <CardContent
+                            className="p-0 flex flex-col sm:flex-row cursor-pointer"
+                            onClick={() => setExpandedRoomType(isExpanded ? null : room.id)}
+                          >
+                            {/* Room Image */}
+                            {room.image && (
+                              <div className="w-full sm:w-48 flex-shrink-0 h-48 sm:h-auto overflow-hidden">
+                                <img
+                                  src={room.image}
+                                  alt={room.name}
+                                  className="w-full h-full object-cover transition-transform duration-500 hover:scale-110"
+                                  onError={(e) => {
+                                    (e.currentTarget.parentElement as HTMLElement).style.display = 'none';
+                                  }}
+                                />
+                              </div>
+                            )}
+
+                            {/* Room Type Info */}
+                            <div className="p-6 flex-1 flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+                              <div className="flex-1">
+                                <div className="flex items-center gap-3 mb-2">
+                                  <h3 className="text-lg font-semibold hover:text-primary transition-colors">
+                                    {room.name}
+                                  </h3>
+                                  {selectedRoom?.id === room.id && (
+                                    <span className="px-2.5 py-1 rounded-full bg-primary text-primary-foreground text-xs font-medium flex items-center gap-1 animate-scale-in">
+                                      <Check className="w-3 h-3" />
+                                      Selected
+                                    </span>
+                                  )}
+                                  {room.variations && room.variations.length > 0 && (
+                                    <span className="px-2.5 py-1 rounded-full bg-accent/15 text-accent text-xs font-medium">
+                                      {availableCount} available
+                                    </span>
+                                  )}
+                                </div>
+                                <p className="text-muted-foreground text-sm mb-4">{room.description}</p>
+
+                                <div className="flex flex-wrap gap-4 text-sm text-muted-foreground mb-4">
+                                  <div className="flex items-center gap-1.5">
+                                    <Users className="h-4 w-4" />
+                                    <span>Up to {room.capacity} guests</span>
+                                  </div>
+                                  <div className="flex items-center gap-1.5">
+                                    <Bed className="h-4 w-4" />
+                                    <span>{room.beds}</span>
+                                  </div>
+                                  <div className="flex items-center gap-1.5">
+                                    <Maximize className="h-4 w-4" />
+                                    <span>{room.size} m²</span>
+                                  </div>
+                                </div>
+
+                                {room.amenities && room.amenities.length > 0 && (
+                                  <div className="flex flex-wrap gap-2">
+                                    {room.amenities.map((amenity, ai) => (
+                                      <span
+                                        key={`${amenity}-${ai}`}
+                                        className="inline-flex items-center px-3 py-1.5 rounded-full bg-gradient-to-r from-accent/20 to-primary/20 text-xs font-medium text-foreground"
+                                      >
+                                        {amenity}
+                                      </span>
+                                    ))}
+                                  </div>
                                 )}
                               </div>
-                              <p className="text-muted-foreground text-sm mb-4">{room.description}</p>
 
-                              <div className="flex flex-wrap gap-4 text-sm text-muted-foreground mb-4">
-                                <div className="flex items-center gap-1.5 group/item">
-                                  <Users className="h-4 w-4 group-hover/item:text-primary transition-colors" />
-                                  <span>Up to {room.capacity} guests</span>
-                                </div>
-                                <div className="flex items-center gap-1.5 group/item">
-                                  <Bed className="h-4 w-4 group-hover/item:text-primary transition-colors" />
-                                  <span>{room.beds}</span>
-                                </div>
-                                <div className="flex items-center gap-1.5 group/item">
-                                  <Maximize className="h-4 w-4 group-hover/item:text-primary transition-colors" />
-                                  <span>{room.size} m²</span>
+                              <div className="text-right flex flex-col items-end gap-2">
+                                <div className="text-3xl font-bold text-gradient">${room.price}</div>
+                                <div className="text-sm text-muted-foreground">per night</div>
+                                <div className="flex items-center gap-2 mt-2">
+                                  <Button
+                                    variant={selectedRoom?.id === room.id ? "hero" : "outline"}
+                                    size="sm"
+                                    className="gap-1"
+                                    onClick={(e) => { e.stopPropagation(); setSelectedRoom(room); }}
+                                  >
+                                    {selectedRoom?.id === room.id ? "Selected" : "Select"}
+                                  </Button>
+                                  {room.variations && room.variations.length > 0 && (
+                                    <Button variant="ghost" size="sm" className="gap-1 text-muted-foreground">
+                                      <ChevronDown className={cn("w-4 h-4 transition-transform duration-300", isExpanded && "rotate-180")} />
+                                      {isExpanded ? "Hide" : "Details"}
+                                    </Button>
+                                  )}
                                 </div>
                               </div>
+                            </div>
+                          </CardContent>
 
-                              {/* Room Amenities */}
-                              {room.amenities && room.amenities.length > 0 && (
-                                <div className="flex flex-wrap gap-2 mt-3">
-                                  {room.amenities.map((amenity, amenityIndex) => (
-                                    <span
-                                      key={`${amenity}-${amenityIndex}`}
-                                      className="inline-flex items-center px-3 py-1.5 rounded-full bg-gradient-to-r from-accent/20 to-primary/20 text-xs font-medium text-foreground hover:from-accent/30 hover:to-primary/30 transition-all duration-300 whitespace-nowrap"
-                                      style={{ animationDelay: `${amenityIndex * 30}ms` }}
-                                    >
-                                      {amenity}
-                                    </span>
-                                  ))}
+                          {/* Expanded Variations Table */}
+                          {isExpanded && room.variations && room.variations.length > 0 && (
+                            <div className="border-t border-border/50 bg-secondary/20 animate-fade-in">
+                              <div className="px-6 py-3">
+                                <h4 className="text-sm font-semibold text-muted-foreground mb-3">Room Variations</h4>
+                                <div className="overflow-x-auto">
+                                  <table className="w-full text-sm">
+                                    <thead>
+                                      <tr className="border-b border-border/50 text-left">
+                                        <th className="pb-2 pr-4 font-medium text-muted-foreground">Room #</th>
+                                        <th className="pb-2 pr-4 font-medium text-muted-foreground">Bed Type</th>
+                                        <th className="pb-2 pr-4 font-medium text-muted-foreground">Max Occupancy</th>
+                                        <th className="pb-2 pr-4 font-medium text-muted-foreground">Smoking</th>
+                                        <th className="pb-2 pr-4 font-medium text-muted-foreground">Pets</th>
+                                        <th className="pb-2 font-medium text-muted-foreground">Status</th>
+                                      </tr>
+                                    </thead>
+                                    <tbody>
+                                      {room.variations.map((v) => (
+                                        <tr key={v.room_details_id} className="border-b border-border/30 last:border-0 hover:bg-secondary/30 transition-colors">
+                                          <td className="py-3 pr-4 font-medium">{v.room_number}</td>
+                                          <td className="py-3 pr-4">
+                                            <div className="flex items-center gap-1.5">
+                                              <Bed className="h-3.5 w-3.5 text-muted-foreground" />
+                                              {v.bed_type}
+                                            </div>
+                                          </td>
+                                          <td className="py-3 pr-4">
+                                            <div className="flex items-center gap-1.5">
+                                              <Users className="h-3.5 w-3.5 text-muted-foreground" />
+                                              {v.max_occupancy}
+                                            </div>
+                                          </td>
+                                          <td className="py-3 pr-4">
+                                            <div className="flex items-center gap-1.5">
+                                              <Cigarette className={cn("h-3.5 w-3.5", v.smoking_allowed ? "text-accent" : "text-muted-foreground/40")} />
+                                              <span className={v.smoking_allowed ? "text-foreground" : "text-muted-foreground/60"}>
+                                                {v.smoking_allowed ? "Yes" : "No"}
+                                              </span>
+                                            </div>
+                                          </td>
+                                          <td className="py-3 pr-4">
+                                            <div className="flex items-center gap-1.5">
+                                              <PawPrint className={cn("h-3.5 w-3.5", v.pet_allowed ? "text-accent" : "text-muted-foreground/40")} />
+                                              <span className={v.pet_allowed ? "text-foreground" : "text-muted-foreground/60"}>
+                                                {v.pet_allowed ? "Yes" : "No"}
+                                              </span>
+                                            </div>
+                                          </td>
+                                          <td className="py-3">
+                                            <span className={cn(
+                                              "px-2.5 py-1 rounded-full text-xs font-medium",
+                                              v.status === "AVAILABLE" && "bg-green-500/15 text-green-600 dark:text-green-400",
+                                              v.status === "UNAVAILABLE" && "bg-red-500/15 text-red-600 dark:text-red-400",
+                                              v.status === "MAINTENANCE" && "bg-yellow-500/15 text-yellow-600 dark:text-yellow-400",
+                                            )}>
+                                              {v.status}
+                                            </span>
+                                          </td>
+                                        </tr>
+                                      ))}
+                                    </tbody>
+                                  </table>
                                 </div>
-                              )}
+                              </div>
                             </div>
-
-                            <div className="text-right flex flex-col items-end">
-                              <div className="text-3xl font-bold text-gradient">${room.price}</div>
-                              <div className="text-sm text-muted-foreground mb-3">per night</div>
-                              <Button
-                                variant={selectedRoom?.id === room.id ? "hero" : "outline"}
-                                size="sm"
-                                className="gap-1 group/btn"
-                              >
-                                {selectedRoom?.id === room.id ? "Selected" : "Select"}
-                                <ChevronRight className="w-4 h-4 transition-transform group-hover/btn:translate-x-1" />
-                              </Button>
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
+                          )}
+                        </Card>
+                      );
+                    })}
                   </div>
                 )}
               </div>

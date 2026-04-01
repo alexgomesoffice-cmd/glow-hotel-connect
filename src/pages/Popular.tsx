@@ -52,7 +52,7 @@ const Popular = () => {
   const sortedHotels = [...hotels].sort((a, b) => {
     switch (sortBy) {
       case "rating":
-        return (b.hotel_details?.star_rating || 0) - (a.hotel_details?.star_rating || 0);
+        return (Number(b.hotel_details?.star_rating) || 0) - (Number(a.hotel_details?.star_rating) || 0);
       // Add price/reviews sorting if available in backend
       default:
         return 0;
@@ -64,7 +64,7 @@ const Popular = () => {
     const passesTag = activeFilter === "all"
       ? true
       : activeFilter === "luxury" ? (hotel.hotel_type?.toLowerCase().includes("luxury") ?? false)
-      : activeFilter === "top-rated" ? (hotel.hotel_details?.star_rating ?? 0) >= 4.8
+      : activeFilter === "top-rated" ? (Number(hotel.hotel_details?.star_rating) ?? 0) >= 4.8
       : true;
     const passesLocation = locationFilter === "all" || (hotel.city || "Unknown") === locationFilter;
     return passesTag && passesLocation;

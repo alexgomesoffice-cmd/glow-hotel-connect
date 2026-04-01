@@ -64,7 +64,7 @@ const AdminCurrentHotels = () => {
       (hotel.city?.toLowerCase().includes(search.toLowerCase()) ?? false);
     const matchesCity = filterCity === "all" || hotel.city === filterCity;
     const matchesType = filterType === "all" || hotel.hotel_type === filterType;
-    const matchesStars = filterStars === "all" || hotel.star_rating === Number(filterStars);
+    const matchesStars = filterStars === "all" || hotel.hotel_details?.star_rating === Number(filterStars);
     return matchesSearch && matchesCity && matchesType && matchesStars;
   });
 
@@ -135,7 +135,7 @@ const AdminCurrentHotels = () => {
                 <div className="flex items-center gap-1 text-sm text-muted-foreground"><UserCheck className="h-4 w-4" /> {hotel.owner_name || "No owner"}</div>
                 <div className="flex items-center justify-between text-sm">
                   <span className="flex items-center gap-1"><BedDouble className="h-4 w-4" /> Hotel</span>
-                  <span className="flex items-center gap-1"><Star className="h-4 w-4 text-primary" /> {hotel.star_rating || "N/A"}</span>
+                  <span className="flex items-center gap-1"><Star className="h-4 w-4 text-primary" /> {hotel.hotel_details?.star_rating || "N/A"}</span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-xs rounded-full bg-primary/10 px-2 py-1 text-primary font-medium">{hotel.approval_status}</span>
@@ -164,7 +164,7 @@ const AdminCurrentHotels = () => {
                 </div>
                 <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
                   <span className="flex items-center gap-1"><UserCheck className="h-4 w-4" /> {hotel.owner_name || "No owner"}</span>
-                  <span className="flex items-center gap-1"><Star className="h-4 w-4 text-primary" /> {hotel.star_rating || "N/A"}</span>
+                  <span className="flex items-center gap-1"><Star className="h-4 w-4 text-primary" /> {hotel.hotel_details?.star_rating || "N/A"}</span>
                   <span className="rounded-full bg-primary/10 px-2 py-1 text-primary font-medium text-xs">{hotel.approval_status}</span>
                 </div>
                 <div className="flex gap-2 opacity-0 transition-opacity group-hover:opacity-100">

@@ -19,9 +19,12 @@ import {
   Shield,
   Clock,
   ChevronRight,
+  ChevronDown,
   Share2,
   Image as ImageIcon,
-  Loader
+  Loader,
+  Cigarette,
+  PawPrint
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";

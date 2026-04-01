@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { format, differenceInDays } from "date-fns";
 import { 
   Check, 
@@ -10,7 +11,8 @@ import {
   MapPin,
   Star,
   Sparkles,
-  PartyPopper
+  PartyPopper,
+  AlertCircle
 } from "lucide-react";
 import {
   Dialog,
@@ -21,13 +23,15 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Hotel, Room } from "@/data/hotels";
+import { getLoggedInUser } from "@/utils/auth";
+
+import { useToast } from "@/hooks/use-toast";
 
 interface BookingConfirmationProps {
   isOpen: boolean;
   onClose: () => void;
-  hotel: Hotel;
-  room: Room;
+  hotel: any;
+  room: any;
   checkIn: Date;
   checkOut: Date;
   guests: number;
@@ -42,8 +46,11 @@ const BookingConfirmation = ({
   checkOut,
   guests,
 }: BookingConfirmationProps) => {
+  const navigate = useNavigate();
+  const { toast } = useToast();
   const [step, setStep] = useState<"details" | "payment" | "confirmed">("details");
-  const [isProcessing, setIsProcessing] = useState(false);
+  const [isReserving, setIsReserving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [guestInfo, setGuestInfo] = useState({
     firstName: "",
     lastName: "",
@@ -60,15 +67,109 @@ const BookingConfirmation = ({
   const grandTotal = roomTotal + cleaningFee + serviceFee + taxes;
 
   const handleConfirmBooking = async () => {
-    setIsProcessing(true);
-    // Simulate payment processing
+    setIsReserving(true);
+    // Simulate payment processing - placeholder for future payment system
     await new Promise((resolve) => setTimeout(resolve, 2000));
-    setIsProcessing(false);
+    setIsReserving(false);
     setStep("confirmed");
+  };
+
+  const handleReserveBooking = async () => {
+    try {
+      setError(null);
+      const user = getLoggedInUser();
+
+      if (!user) {
+        setError("You must be logged in to make a reservation");
+        toast({
+          title: "Error",
+          description: "Please log in to make a reservation",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      setIsReserving(true);
+
+      console.log("[BOOKING] Attempting to create booking with data:", {
+        hotel_id: hotel.id,
+        check_in: format(checkIn, "yyyy-MM-dd"),
+        check_out: format(checkOut, "yyyy-MM-dd"),
+        room_id: room.id,
+      });
+
+      // Call backend API to create booking
+      const response = await fetch(`${import.meta.env.VITE_API_URL || "http://localhost:3000/api"}/bookings/create`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("authToken")}`,
+        },
+        body: JSON.stringify({
+          hotel_id: hotel.id || 1,
+          check_in: format(checkIn, "yyyy-MM-dd"),
+          check_out: format(checkOut, "yyyy-MM-dd"),
+          rooms: [
+            {
+              hotel_room_id: room.id || 1,
+              quantity: 1,
+            },
+          ],
+          special_request: guestInfo.specialRequests || null,
+        }),
+      });
+
+      console.log("[BOOKING] Response status:", response.status, response.statusText);
+
+      if (!response.ok) {
+        const contentType = response.headers.get("content-type");
+        let errorData;
+        
+        if (contentType && contentType.includes("application/json")) {
+          errorData = await response.json();
+        } else {
+          const text = await response.text();
+          console.error("[BOOKING] Non-JSON response:", text);
+          throw new Error(`Server error (${response.status}): ${response.statusText}`);
+        }
+        
+        throw new Error(errorData.message || "Failed to create booking");
+      }
+
+      const bookingData = await response.json();
+
+      console.log("[BOOKING] Booking created successfully:", bookingData.data);
+
+      toast({
+        title: "Success",
+        description: "Booking reserved successfully!",
+      });
+
+      // Show confirmation screen
+      setStep("confirmed");
+
+      // After 2 seconds, close and navigate
+      setTimeout(() => {
+        setIsReserving(false);
+        handleClose();
+        navigate("/my-bookings");
+      }, 2000);
+    } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : "Failed to reserve booking";
+      console.error("[BOOKING] Error:", errorMsg);
+      setError(errorMsg);
+      setIsReserving(false);
+      toast({
+        title: "Error",
+        description: errorMsg,
+        variant: "destructive",
+      });
+    }
   };
 
   const handleClose = () => {
     setStep("details");
+    setError(null);
     setGuestInfo({
       firstName: "",
       lastName: "",
@@ -141,7 +242,7 @@ const BookingConfirmation = ({
               <Button variant="outline" className="flex-1" onClick={handleClose}>
                 Back to Hotel
               </Button>
-              <Button variant="hero" className="flex-1">
+              <Button variant="hero" className="flex-1" onClick={() => { handleClose(); navigate("/my-bookings"); }}>
                 View My Bookings
               </Button>
             </div>
@@ -163,6 +264,14 @@ const BookingConfirmation = ({
                 )}
               </DialogTitle>
             </DialogHeader>
+
+            {/* Error Display */}
+            {error && (
+              <div className="flex items-center gap-3 p-4 rounded-lg bg-destructive/10 border border-destructive/30 text-destructive animate-fade-in">
+                <AlertCircle className="w-5 h-5 flex-shrink-0" />
+                <p className="text-sm font-medium">{error}</p>
+              </div>
+            )}
 
             {/* Progress Steps */}
             <div className="flex items-center justify-center gap-2 mb-6">
@@ -301,6 +410,15 @@ const BookingConfirmation = ({
                 >
                   Continue to Payment
                 </Button>
+                <Button
+                  variant="outline"
+                  size="lg"
+                  className="w-full mt-3 border-amber-400 text-amber-600 hover:bg-amber-500/10"
+                  onClick={handleReserveBooking}
+                  disabled={!guestInfo.firstName || !guestInfo.lastName || !guestInfo.email || isReserving}
+                >
+                  {isReserving ? "Reserving..." : "Save & Skip Payment"}
+                </Button>
               </div>
             ) : (
               // Payment Form
@@ -375,9 +493,9 @@ const BookingConfirmation = ({
                     size="lg"
                     className="flex-1"
                     onClick={handleConfirmBooking}
-                    disabled={isProcessing}
+                    disabled={isReserving}
                   >
-                    {isProcessing ? (
+                    {isReserving ? (
                       <span className="flex items-center gap-2">
                         <span className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
                         Processing...

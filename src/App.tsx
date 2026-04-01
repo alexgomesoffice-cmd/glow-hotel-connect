@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { ThemeProvider } from "@/hooks/use-theme";
+import { ProtectedRoute } from "@/utils/ProtectedRoute";
 import Index from "./pages/Index";
 import HotelDetail from "./pages/HotelDetail";
 import Destinations from "./pages/Destinations";
@@ -43,6 +44,7 @@ import HotelAdminLayout from "./components/hotel-admin/HotelAdminLayout";
 import HotelAdminOverview from "./pages/hotel-admin/HotelAdminOverview";
 import HotelAdminRooms from "./pages/hotel-admin/HotelAdminRooms";
 import HotelAdminAddRoom from "./pages/hotel-admin/HotelAdminAddRoom";
+import HotelAdminEditRoom from "./pages/hotel-admin/HotelAdminEditRoom";
 import HotelAdminReservations from "./pages/hotel-admin/HotelAdminReservations";
 import HotelAdminReservationDetail from "./pages/hotel-admin/HotelAdminReservationDetail";
 import HotelAdminAddSubAdmin from "./pages/hotel-admin/HotelAdminAddSubAdmin";
@@ -50,6 +52,7 @@ import HotelAdminGuestProfile from "./pages/hotel-admin/HotelAdminGuestProfile";
 import HotelAdminRevenue from "./pages/hotel-admin/HotelAdminRevenue";
 import HotelAdminReviews from "./pages/hotel-admin/HotelAdminReviews";
 import HotelAdminSettings from "./pages/hotel-admin/HotelAdminSettings";
+import HotelAdminHotelEdit from "./pages/hotel-admin/HotelAdminHotelEdit";
 
 const queryClient = new QueryClient();
 
@@ -78,7 +81,7 @@ const App = () => (
             <Route path="/my-bookings" element={<MyBookings />} />
             <Route path="/user-settings" element={<UserSettings />} />
 
-            <Route path="/admin" element={<AdminLayout />}>
+            <Route path="/admin" element={<ProtectedRoute element={<AdminLayout />} requiredRole="SYSTEM_ADMIN" />}>
               <Route index element={<AdminDashboardHome />} />
               <Route path="add-hotel" element={<AdminAddHotel />} />
               <Route path="add-system-admin" element={<AdminAddSystemAdmin />} />
@@ -98,11 +101,13 @@ const App = () => (
               <Route path="settings" element={<AdminSettings />} />
             </Route>
 
-            <Route path="/hotel-admin" element={<HotelAdminLayout />}>
+            <Route path="/hotel-admin" element={<ProtectedRoute element={<HotelAdminLayout />} requiredRole="HOTEL_ADMIN" />}>
               <Route index element={<HotelAdminOverview />} />
               <Route path="rooms" element={<HotelAdminRooms />} />
               <Route path="add-room" element={<HotelAdminAddRoom />} />
+              <Route path="edit-room/:roomDetailsId" element={<HotelAdminEditRoom />} />
               <Route path="add-sub-admin" element={<HotelAdminAddSubAdmin />} />
+              <Route path="update-hotel" element={<HotelAdminHotelEdit />} />
               <Route path="reservations" element={<HotelAdminReservations />} />
               <Route path="reservations/:id" element={<HotelAdminReservationDetail />} />
               <Route path="guest/:id" element={<HotelAdminGuestProfile />} />

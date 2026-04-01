@@ -1,49 +1,62 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { MapPin, Search, ArrowRight, Sparkles, TrendingUp, Star, Filter, LayoutGrid, List } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { apiGet } from "@/utils/api";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 
-import barcelonaImg from "@/assets/destinations/barcelona.jpg";
-import londonImg from "@/assets/destinations/london.jpg";
-import tokyoImg from "@/assets/destinations/tokyo.jpg";
-import dubaiImg from "@/assets/destinations/dubai.jpg";
-import parisImg from "@/assets/destinations/paris.jpg";
-
-const allDestinations = [
-  { id: 1, name: "Barcelona", country: "Spain", image: barcelonaImg, hotels: 2340, avgPrice: 180, rating: 4.8, trending: true, description: "Gothic quarters, Gaudí masterpieces, and Mediterranean beaches" },
-  { id: 2, name: "London", country: "United Kingdom", image: londonImg, hotels: 4521, avgPrice: 220, rating: 4.7, trending: true, description: "Royal palaces, world-class museums, and iconic landmarks" },
-  { id: 3, name: "Tokyo", country: "Japan", image: tokyoImg, hotels: 3890, avgPrice: 195, rating: 4.9, trending: true, description: "Ancient temples, neon-lit streets, and culinary excellence" },
-  { id: 4, name: "Dubai", country: "UAE", image: dubaiImg, hotels: 1890, avgPrice: 280, rating: 4.8, trending: false, description: "Futuristic architecture, luxury shopping, and desert adventures" },
-  { id: 5, name: "Paris", country: "France", image: parisImg, hotels: 3210, avgPrice: 240, rating: 4.9, trending: true, description: "Romantic ambiance, art galleries, and exquisite cuisine" },
-  { id: 6, name: "New York", country: "USA", image: barcelonaImg, hotels: 5200, avgPrice: 300, rating: 4.7, trending: true, description: "The city that never sleeps with endless entertainment" },
-  { id: 7, name: "Sydney", country: "Australia", image: londonImg, hotels: 2100, avgPrice: 210, rating: 4.8, trending: false, description: "Stunning harbor views and beautiful beaches" },
-  { id: 8, name: "Rome", country: "Italy", image: parisImg, hotels: 2800, avgPrice: 175, rating: 4.8, trending: false, description: "Ancient ruins, Renaissance art, and authentic Italian cuisine" },
-];
+interface City {
+  id: number;
+  name: string;
+  image_url: string | null;
+}
 
 const Destinations = () => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const [hoveredCard, setHoveredCard] = useState<number | null>(null);
   const [view, setView] = useState<"grid" | "list">("grid");
-  const [filterTrending, setFilterTrending] = useState("all");
   const [sortBy, setSortBy] = useState("name");
+  const [destinations, setDestinations] = useState<City[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const filteredDestinations = allDestinations
+  const fetchDestinations = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      const response = await apiGet("/cities/destinations");
+      if (response.success && response.data) {
+        // Ensure image URLs are absolute paths
+        const citiesWithAbsoluteUrls = response.data.map((city: City) => ({
+          ...city,
+          image_url: city.image_url 
+            ? (city.image_url.startsWith('http') 
+              ? city.image_url 
+              : `${import.meta.env.VITE_API_URL || "http://localhost:3000"}/${city.image_url}`)
+            : null,
+        }));
+        setDestinations(citiesWithAbsoluteUrls);
+      }
+    } catch (error) {
+      console.error("Failed to fetch destinations:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchDestinations();
+  }, [fetchDestinations]);
+
+  const filteredDestinations = destinations
     .filter((dest) => {
-      const matchSearch = dest.name.toLowerCase().includes(searchQuery.toLowerCase()) || dest.country.toLowerCase().includes(searchQuery.toLowerCase());
-      const matchTrending = filterTrending === "all" || (filterTrending === "trending" && dest.trending) || (filterTrending === "regular" && !dest.trending);
-      return matchSearch && matchTrending;
+      return dest.name.toLowerCase().includes(searchQuery.toLowerCase());
     })
     .sort((a, b) => {
-      if (sortBy === "price-low") return a.avgPrice - b.avgPrice;
-      if (sortBy === "price-high") return b.avgPrice - a.avgPrice;
-      if (sortBy === "rating") return b.rating - a.rating;
-      if (sortBy === "hotels") return b.hotels - a.hotels;
-      return a.name.localeCompare(b.name);
+      if (sortBy === "name") return a.name.localeCompare(b.name);
+      return 0;
     });
 
   return (
@@ -78,13 +91,8 @@ const Destinations = () => {
           <div className="flex flex-wrap justify-center gap-8 mb-8 animate-fade-in-up" style={{ animationDelay: "200ms" }}>
             <div className="flex items-center gap-2 px-4 py-2 rounded-xl glass">
               <MapPin className="w-5 h-5 text-primary" />
-              <span className="font-semibold">{allDestinations.length}</span>
+              <span className="font-semibold">{destinations.length}</span>
               <span className="text-muted-foreground">Destinations</span>
-            </div>
-            <div className="flex items-center gap-2 px-4 py-2 rounded-xl glass">
-              <TrendingUp className="w-5 h-5 text-accent" />
-              <span className="font-semibold">{allDestinations.filter(d => d.trending).length}</span>
-              <span className="text-muted-foreground">Trending</span>
             </div>
           </div>
 
@@ -95,23 +103,10 @@ const Destinations = () => {
               <Input type="text" placeholder="Search destinations..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-11 h-11 rounded-xl" />
             </div>
             <div className="flex items-center gap-2 flex-wrap">
-              <div className="flex items-center gap-2 text-sm text-muted-foreground"><Filter className="h-4 w-4" /></div>
-              <Select value={filterTrending} onValueChange={setFilterTrending}>
-                <SelectTrigger className="h-9 w-[140px] text-sm"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All</SelectItem>
-                  <SelectItem value="trending">Trending</SelectItem>
-                  <SelectItem value="regular">Regular</SelectItem>
-                </SelectContent>
-              </Select>
               <Select value={sortBy} onValueChange={setSortBy}>
                 <SelectTrigger className="h-9 w-[160px] text-sm"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="name">Name A-Z</SelectItem>
-                  <SelectItem value="rating">Highest Rated</SelectItem>
-                  <SelectItem value="hotels">Most Hotels</SelectItem>
-                  <SelectItem value="price-low">Price: Low → High</SelectItem>
-                  <SelectItem value="price-high">Price: High → Low</SelectItem>
                 </SelectContent>
               </Select>
               <div className="flex gap-1">
@@ -123,85 +118,86 @@ const Destinations = () => {
 
           {/* Grid View */}
           {view === "grid" && (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {filteredDestinations.map((destination, index) => (
-                <div
-                  key={destination.id}
-                  onClick={() => navigate(`/destination/${encodeURIComponent(destination.name.toLowerCase())}`)}
-                  className="group relative rounded-3xl overflow-hidden cursor-pointer animate-fade-in-up transform transition-all duration-500 hover:scale-[1.02] hover:-translate-y-2"
-                  style={{ animationDelay: `${index * 100}ms` }}
-                  onMouseEnter={() => setHoveredCard(destination.id)}
-                  onMouseLeave={() => setHoveredCard(null)}
-                >
-                  <div className="aspect-[3/4] overflow-hidden">
-                    <img src={destination.image} alt={destination.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
-                  </div>
-                  <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent transition-opacity duration-500" />
-                  {destination.trending && (
-                    <div className="absolute top-4 left-4 flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-accent text-accent-foreground text-xs font-semibold animate-pulse">
-                      <TrendingUp className="w-3 h-3" /> Trending
+            isLoading ? (
+              <div className="text-center py-12">
+                <p className="text-muted-foreground">Loading destinations...</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                {filteredDestinations.map((destination, index) => (
+                  <div
+                    key={destination.id}
+                    onClick={() => navigate(`/destination/${encodeURIComponent(destination.name.toLowerCase())}`)}
+                    className="group relative rounded-3xl overflow-hidden cursor-pointer animate-fade-in-up transform transition-all duration-500 hover:scale-[1.02] hover:-translate-y-2"
+                    style={{ animationDelay: `${index * 100}ms` }}
+                    onMouseEnter={() => setHoveredCard(destination.id)}
+                    onMouseLeave={() => setHoveredCard(null)}
+                  >
+                    <div className="aspect-[3/4] overflow-hidden">
+                      {destination.image_url ? (
+                        <img src={destination.image_url} alt={destination.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                      ) : (
+                        <div className="w-full h-full bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
+                          <span className="text-muted-foreground">{destination.name}</span>
+                        </div>
+                      )}
                     </div>
-                  )}
-                  <div className="absolute top-4 right-4 flex items-center gap-1 px-2.5 py-1 rounded-full glass">
-                    <Star className="w-4 h-4 fill-accent text-accent" />
-                    <span className="text-sm font-semibold">{destination.rating}</span>
-                  </div>
-                  <div className="absolute bottom-0 left-0 right-0 p-6 transform transition-transform duration-500">
-                    <h3 className="text-2xl font-bold mb-1 group-hover:text-primary transition-colors">{destination.name}</h3>
-                    <p className="text-muted-foreground mb-3 flex items-center gap-1"><MapPin className="w-4 h-4" />{destination.country}</p>
-                    <div className={`overflow-hidden transition-all duration-500 ${hoveredCard === destination.id ? 'max-h-32 opacity-100' : 'max-h-0 opacity-0'}`}>
-                      <p className="text-sm text-muted-foreground mb-3">{destination.description}</p>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs px-2.5 py-1 rounded-full bg-primary/20 text-primary font-medium">{destination.hotels.toLocaleString()} hotels</span>
-                        <span className="text-xs text-muted-foreground">from ${destination.avgPrice}/night</span>
+                    <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent transition-opacity duration-500" />
+                    <div className="absolute bottom-0 left-0 right-0 p-6 transform transition-transform duration-500">
+                      <h3 className="text-2xl font-bold mb-1 group-hover:text-primary transition-colors">{destination.name}</h3>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs px-2.5 py-1 rounded-full bg-primary/20 text-primary font-medium">Explore</span>
+                        </div>
+                        <ArrowRight className={`w-5 h-5 text-primary transition-all duration-300 ${hoveredCard === destination.id ? 'translate-x-0 opacity-100' : '-translate-x-2 opacity-0'}`} />
                       </div>
-                      <ArrowRight className={`w-5 h-5 text-primary transition-all duration-300 ${hoveredCard === destination.id ? 'translate-x-0 opacity-100' : '-translate-x-2 opacity-0'}`} />
+                    </div>
+                    <div className="absolute inset-0 rounded-3xl border-2 border-transparent group-hover:border-primary/30 transition-all duration-500 pointer-events-none">
+                      <div className="absolute inset-0 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 bg-gradient-to-t from-primary/10 via-transparent to-transparent" />
                     </div>
                   </div>
-                  <div className="absolute inset-0 rounded-3xl border-2 border-transparent group-hover:border-primary/30 transition-all duration-500 pointer-events-none">
-                    <div className="absolute inset-0 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 bg-gradient-to-t from-primary/10 via-transparent to-transparent" />
-                  </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )
           )}
 
           {/* List View */}
           {view === "list" && (
-            <div className="space-y-4">
-              {filteredDestinations.map((destination, index) => (
-                <div
-                  key={destination.id}
-                  onClick={() => navigate(`/destination/${encodeURIComponent(destination.name.toLowerCase())}`)}
-                  className="group flex flex-col sm:flex-row rounded-2xl overflow-hidden bg-card border border-border hover:border-primary/30 transition-all duration-500 cursor-pointer hover:scale-[1.01] animate-fade-in-up"
-                  style={{ animationDelay: `${index * 80}ms` }}
-                >
-                  <div className="w-full sm:w-64 shrink-0 aspect-[16/10] sm:aspect-auto overflow-hidden relative">
-                    <img src={destination.image} alt={destination.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
-                    {destination.trending && (
-                      <div className="absolute top-3 left-3 flex items-center gap-1 px-2.5 py-1 rounded-full bg-accent text-accent-foreground text-xs font-semibold">
-                        <TrendingUp className="w-3 h-3" /> Trending
+            isLoading ? (
+              <div className="text-center py-12">
+                <p className="text-muted-foreground">Loading destinations...</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {filteredDestinations.map((destination, index) => (
+                  <div
+                    key={destination.id}
+                    onClick={() => navigate(`/destination/${encodeURIComponent(destination.name.toLowerCase())}`)}
+                    className="group flex flex-col sm:flex-row rounded-2xl overflow-hidden bg-card border border-border hover:border-primary/30 transition-all duration-500 cursor-pointer hover:scale-[1.01] animate-fade-in-up"
+                    style={{ animationDelay: `${index * 80}ms` }}
+                  >
+                    <div className="w-full sm:w-64 shrink-0 aspect-[16/10] sm:aspect-auto overflow-hidden relative">
+                      {destination.image_url ? (
+                        <img src={destination.image_url} alt={destination.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                      ) : (
+                        <div className="w-full h-full bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
+                          <span className="text-muted-foreground">{destination.name}</span>
+                        </div>
+                      )}
+                    </div>
+                    <div className="p-5 flex-1 flex flex-col justify-center">
+                      <h3 className="text-xl font-bold mb-1 group-hover:text-primary transition-colors">{destination.name}</h3>
+                      <div className="flex items-center gap-3 flex-wrap">
+                        <span className="text-xs px-2.5 py-1 rounded-full bg-primary/20 text-primary font-medium">Explore</span>
                       </div>
-                    )}
-                  </div>
-                  <div className="p-5 flex-1 flex flex-col justify-center">
-                    <h3 className="text-xl font-bold mb-1 group-hover:text-primary transition-colors">{destination.name}</h3>
-                    <p className="text-sm text-muted-foreground flex items-center gap-1 mb-2"><MapPin className="h-3.5 w-3.5" /> {destination.country}</p>
-                    <p className="text-sm text-muted-foreground mb-3">{destination.description}</p>
-                    <div className="flex items-center gap-3 flex-wrap">
-                      <span className="text-xs px-2.5 py-1 rounded-full bg-primary/20 text-primary font-medium">{destination.hotels.toLocaleString()} hotels</span>
-                      <span className="flex items-center gap-1 text-sm"><Star className="w-3.5 h-3.5 fill-accent text-accent" /> {destination.rating}</span>
-                      <span className="text-sm text-muted-foreground">from ${destination.avgPrice}/night</span>
+                    </div>
+                    <div className="hidden sm:flex items-center pr-5">
+                      <ArrowRight className="w-5 h-5 text-primary opacity-0 group-hover:opacity-100 transition-all duration-300" />
                     </div>
                   </div>
-                  <div className="hidden sm:flex items-center pr-5">
-                    <ArrowRight className="w-5 h-5 text-primary opacity-0 group-hover:opacity-100 transition-all duration-300" />
-                  </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )
           )}
 
           {filteredDestinations.length === 0 && (

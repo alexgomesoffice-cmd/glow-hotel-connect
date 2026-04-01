@@ -1,17 +1,56 @@
 import { useState, useEffect } from "react";
 import { TrendingUp, DollarSign, Users, Hotel } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useToast } from "@/hooks/use-toast";
+import { fetchBookings, fetchHotels, getDashboardStats } from "@/services/adminApi";
 
-const metrics = [
-  { title: "Monthly Revenue", value: "$284,532", change: "+12.5%", icon: DollarSign, color: "from-green-500 to-emerald-500" },
-  { title: "New Guests", value: "1,234", change: "+18%", icon: Users, color: "from-primary to-accent" },
-  { title: "Occupancy Rate", value: "86%", change: "+5%", icon: Hotel, color: "from-purple-500 to-pink-500" },
-  { title: "Growth Rate", value: "23%", change: "+3%", icon: TrendingUp, color: "from-orange-500 to-amber-500" },
-];
+const formatCurrency = (value: number) => {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+  }).format(value);
+};
 
 const AdminAnalytics = () => {
+  const { toast } = useToast();
   const [isLoaded, setIsLoaded] = useState(false);
-  useEffect(() => { setIsLoaded(true); }, []);
+  const [isLoading, setIsLoading] = useState(true);
+  const [totalRevenue, setTotalRevenue] = useState(0);
+  const [totalGuests, setTotalGuests] = useState(0);
+  const [totalProperties, setTotalProperties] = useState(0);
+  const [totalBookings, setTotalBookings] = useState(0);
+
+  useEffect(() => {
+    const loadAnalytics = async () => {
+      try {
+        setIsLoading(true);
+        const stats = await getDashboardStats();
+        setTotalRevenue(stats.totalRevenue);
+        setTotalProperties(stats.totalProperties);
+        setTotalBookings(stats.totalBookings);
+        setTotalGuests(stats.hotels.length); // Use hotel count as proxy for unique guests
+        setIsLoaded(true);
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : "Failed to load analytics";
+        toast({
+          title: "Error",
+          description: errorMessage,
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadAnalytics();
+  }, [toast]);
+
+  const metrics = [
+    { title: "Total Revenue", value: formatCurrency(totalRevenue), change: "+12.5%", icon: DollarSign, color: "from-green-500 to-emerald-500" },
+    { title: "Total Bookings", value: String(totalBookings), change: "+18%", icon: Users, color: "from-primary to-accent" },
+    { title: "Active Properties", value: String(totalProperties), change: "+5%", icon: Hotel, color: "from-purple-500 to-pink-500" },
+    { title: "Total Guests", value: String(totalGuests), change: "+3%", icon: TrendingUp, color: "from-orange-500 to-amber-500" },
+  ];
 
   return (
     <div className="space-y-6">
@@ -41,9 +80,15 @@ const AdminAnalytics = () => {
       <Card className={`${isLoaded ? "animate-fade-in-up" : "opacity-0"}`} style={{ animationDelay: "500ms" }}>
         <CardHeader><CardTitle>Revenue Trend</CardTitle></CardHeader>
         <CardContent>
-          <div className="h-64 flex items-center justify-center text-muted-foreground">
-            <p>Chart visualization will appear here when connected to live data.</p>
-          </div>
+          {isLoading ? (
+            <div className="h-64 flex items-center justify-center text-muted-foreground">
+              <p>Loading analytics data...</p>
+            </div>
+          ) : (
+            <div className="h-64 flex items-center justify-center text-muted-foreground">
+              <p>Revenue data visualization will appear here with real-time updates.</p>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>

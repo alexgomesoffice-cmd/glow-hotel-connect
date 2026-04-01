@@ -6,24 +6,7 @@ import { cn } from "@/lib/utils";
 import { useTheme } from "@/hooks/use-theme";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { toast } from "@/hooks/use-toast";
-
-const USER_KEY = "stayvista-user";
-
-export const getLoggedInUser = () => {
-  try {
-    const raw = localStorage.getItem(USER_KEY);
-    return raw ? JSON.parse(raw) : null;
-  } catch { return null; }
-};
-
-export const setLoggedInUser = (user: { name: string; email: string } | null) => {
-  if (user) {
-    localStorage.setItem(USER_KEY, JSON.stringify(user));
-  } else {
-    localStorage.removeItem(USER_KEY);
-  }
-  window.dispatchEvent(new Event("stayvista-auth-change"));
-};
+import { getLoggedInUser, setLoggedInUser } from "@/utils/auth";
 
 const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -47,7 +30,12 @@ const Navbar = () => {
   }, []);
 
   const handleLogout = () => {
+    // Clear all auth data
+    localStorage.removeItem("authToken");
+    localStorage.removeItem("userRole");
+    localStorage.removeItem("user");
     setLoggedInUser(null);
+    
     toast({ title: "Logged out", description: "You have been signed out successfully." });
     navigate("/");
   };

@@ -6,7 +6,23 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { formatCurrency, formatDate, sortBookingsByRecent, useAdminData } from "@/data/adminStore";
+import { useToast } from "@/hooks/use-toast";
+import { fetchBookings, fetchHotels, BookingResponse, HotelResponse } from "@/services/adminApi";
+
+const formatCurrency = (value: number) => {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+  }).format(value);
+};
+
+const formatDate = (dateString: string) => {
+  return new Date(dateString).toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+};
 
 const getBadgeClasses = (value: string) => {
   if (value === "cancelled" || value === "refunded") {
@@ -21,26 +37,51 @@ const getBadgeClasses = (value: string) => {
 };
 
 const AdminAllBookings = () => {
-  const { data } = useAdminData();
+  const { toast } = useToast();
   const [isLoaded, setIsLoaded] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
   const [filterPayment, setFilterPayment] = useState("all");
+  const [bookings, setBookings] = useState<BookingResponse[]>([]);
+  const [hotels, setHotels] = useState<HotelResponse[]>([]);
 
   useEffect(() => {
-    setIsLoaded(true);
-  }, []);
+    const loadData = async () => {
+      try {
+        setIsLoading(true);
+        const [bookingsData, hotelsData] = await Promise.all([
+          fetchBookings({ limit: 100 }),
+          fetchHotels({ limit: 100 }),
+        ]);
+        setBookings(bookingsData);
+        setHotels(hotelsData);
+        setIsLoaded(true);
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : "Failed to load bookings";
+        toast({
+          title: "Error",
+          description: errorMessage,
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-  const bookings = useMemo(() => sortBookingsByRecent(data.bookings), [data.bookings]);
-  const hotelMap = useMemo(() => new Map(data.hotels.map((hotel) => [hotel.id, hotel.name])), [data.hotels]);
+    loadData();
+  }, [toast]);
 
-  const filteredBookings = bookings.filter((booking) => {
-    const hotelName = hotelMap.get(booking.hotelId) || "Unknown Hotel";
-    const matchesSearch =
-      booking.guestName.toLowerCase().includes(search.toLowerCase()) ||
-      hotelName.toLowerCase().includes(search.toLowerCase());
-    const matchesStatus = filterStatus === "all" || booking.status === filterStatus;
-    const matchesPayment = filterPayment === "all" || booking.paymentStatus === filterPayment;
+  const sortedBookings = useMemo(() => {
+    return bookings.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+  }, [bookings]);
+
+  const hotelMap = useMemo(() => new Map(hotels.map((hotel) => [hotel.hotel_id, hotel.name])), [hotels]);
+
+  const filteredBookings = sortedBookings.filter((booking) => {
+    const matchesSearch = booking.booking_status.toLowerCase().includes(search.toLowerCase());
+    const matchesStatus = filterStatus === "all" || booking.booking_status === filterStatus;
+    const matchesPayment = filterPayment === "all" || booking.payment_status === filterPayment;
     return matchesSearch && matchesStatus && matchesPayment;
   });
 
@@ -86,46 +127,46 @@ const AdminAllBookings = () => {
           <CardTitle>Recent Booking Feed</CardTitle>
         </CardHeader>
         <CardContent className="p-0">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Guest</TableHead>
-                <TableHead>Hotel</TableHead>
-                <TableHead className="hidden md:table-cell">Room</TableHead>
-                <TableHead className="hidden md:table-cell">Check-in</TableHead>
-                <TableHead>Amount</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Payment</TableHead>
-                <TableHead className="hidden lg:table-cell">Booked At</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredBookings.map((booking) => (
-                <TableRow key={booking.id}>
-                  <TableCell className="font-medium">{booking.guestName}</TableCell>
-                  <TableCell>
-                    <Link className="font-medium text-primary hover:underline" to={`/admin/bookings/hotel/${booking.hotelId}`}>
-                      {hotelMap.get(booking.hotelId) || "Unknown Hotel"}
-                    </Link>
-                  </TableCell>
-                  <TableCell className="hidden md:table-cell text-muted-foreground">{booking.room}</TableCell>
-                  <TableCell className="hidden md:table-cell">{formatDate(booking.checkIn)}</TableCell>
-                  <TableCell className="font-medium">{formatCurrency(booking.amount)}</TableCell>
-                  <TableCell>
-                    <Badge variant="outline" className={getBadgeClasses(booking.status)}>{booking.status}</Badge>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant="outline" className={getBadgeClasses(booking.paymentStatus)}>{booking.paymentStatus}</Badge>
-                  </TableCell>
-                  <TableCell className="hidden lg:table-cell text-muted-foreground">{formatDate(booking.bookedAt)}</TableCell>
+          {isLoading ? (
+            <div className="p-6 text-center text-muted-foreground">Loading bookings...</div>
+          ) : filteredBookings.length === 0 ? (
+            <div className="p-6 text-center text-muted-foreground">No bookings found.</div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Guest ID</TableHead>
+                  <TableHead>Check-in</TableHead>
+                  <TableHead>Check-out</TableHead>
+                  <TableHead>Amount</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Payment</TableHead>
+                  <TableHead className="hidden lg:table-cell">Booked At</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {filteredBookings.map((booking) => (
+                  <TableRow key={booking.booking_id}>
+                    <TableCell className="font-medium">User #{booking.end_user_id}</TableCell>
+                    <TableCell className="hidden md:table-cell">{formatDate(booking.check_in_date)}</TableCell>
+                    <TableCell className="hidden md:table-cell">{formatDate(booking.check_out_date)}</TableCell>
+                    <TableCell className="font-medium">{formatCurrency(booking.total_amount)}</TableCell>
+                    <TableCell>
+                      <Badge variant="outline" className={getBadgeClasses(booking.booking_status)}>{booking.booking_status}</Badge>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="outline" className={getBadgeClasses(booking.payment_status)}>{booking.payment_status}</Badge>
+                    </TableCell>
+                    <TableCell className="hidden lg:table-cell text-muted-foreground">{formatDate(booking.created_at)}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
         </CardContent>
       </Card>
 
-      {filteredBookings.length === 0 && <p className="py-8 text-center text-muted-foreground">No bookings found.</p>}
+      {!isLoading && filteredBookings.length === 0 && <p className="py-8 text-center text-muted-foreground">No bookings found.</p>}
     </div>
   );
 };

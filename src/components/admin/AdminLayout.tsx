@@ -1,13 +1,15 @@
 import { useState } from "react";
-import { Link, useLocation, Outlet } from "react-router-dom";
+import { Link, useLocation, useNavigate, Outlet } from "react-router-dom";
 import {
   LayoutDashboard, Hotel, Users, Calendar, BarChart3, Settings, LogOut, Menu, X, Bell, Search,
   ChevronDown, ChevronRight, Plus, List, Trash2, UserCheck,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import NotificationPanel from "@/components/NotificationPanel";
+import { setLoggedInUser } from "@/utils/auth";
 
 interface AdminLayoutProps { children?: React.ReactNode; }
 
@@ -56,6 +58,19 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
   });
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
+  const { toast } = useToast();
+
+  const handleLogout = () => {
+    // Clear all auth data
+    localStorage.removeItem("authToken");
+    localStorage.removeItem("userRole");
+    localStorage.removeItem("user");
+    setLoggedInUser(null);
+    
+    toast({ title: "Logged out", description: "You have been signed out successfully." });
+    navigate("/");
+  };
 
   const toggleDropdown = (label: string) => {
     setOpenDropdowns((prev) => ({ ...prev, [label]: !prev[label] }));
@@ -140,7 +155,10 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
         </nav>
 
         <div className="p-4 border-t border-border bg-card shrink-0">
-          <button className="flex items-center gap-3 px-4 py-3 w-full rounded-xl text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors">
+          <button 
+            onClick={handleLogout}
+            className="flex items-center gap-3 px-4 py-3 w-full rounded-xl text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"
+          >
             <LogOut className="h-5 w-5 shrink-0" />
             {isSidebarOpen && <span className="font-medium">Logout</span>}
           </button>

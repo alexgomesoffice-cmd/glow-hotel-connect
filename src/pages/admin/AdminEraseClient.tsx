@@ -4,36 +4,81 @@ import { AlertTriangle, ArrowLeft, Search, Trash2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useAdminData } from "@/data/adminStore";
-import { toast } from "@/hooks/use-toast";
+import { useToast } from "@/hooks/use-toast";
+import { fetchEndUsers, EndUserResponse } from "@/services/adminApi";
+import { apiDelete } from "@/utils/api";
 import ConfirmDialog from "@/components/ConfirmDialog";
 
 const AdminEraseClient = () => {
   const navigate = useNavigate();
-  const { data, saveData } = useAdminData();
+  const { toast } = useToast();
   const [isLoaded, setIsLoaded] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [clients, setClients] = useState<EndUserResponse[]>([]);
   const [search, setSearch] = useState("");
   const [eraseTarget, setEraseTarget] = useState<number | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
-  useEffect(() => { setIsLoaded(true); }, []);
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        setIsLoading(true);
+        const usersData = await fetchEndUsers();
+        setClients(usersData);
+        setIsLoaded(true);
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : "Failed to load clients";
+        toast({
+          title: "Error",
+          description: errorMessage,
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-  const filteredClients = data.clients.filter(
-    (c) => c.name.toLowerCase().includes(search.toLowerCase()) || c.email.toLowerCase().includes(search.toLowerCase()),
-  );
+    loadData();
+  }, [toast]);
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (!eraseTarget) return;
-    const client = data.clients.find((c) => c.id === eraseTarget);
-    saveData((cur) => ({
-      ...cur,
-      clients: cur.clients.filter((c) => c.id !== eraseTarget),
-      bookings: cur.bookings.filter((b) => b.clientId !== eraseTarget),
-    }));
-    setEraseTarget(null);
-    toast({ title: "Client erased", description: `${client?.name} has been permanently removed.` });
+    
+    setIsDeleting(true);
+
+    try {
+      const response = await apiDelete(`/end-users/${eraseTarget}`);
+
+      if (!response.success) {
+        throw new Error(response.message || "Failed to delete client");
+      }
+
+      const deletedClient = clients.find((c) => c.end_user_id === eraseTarget);
+      setClients(clients.filter((c) => c.end_user_id !== eraseTarget));
+
+      toast({
+        title: "Client Erased Successfully",
+        description: `${deletedClient?.name || "Client"} has been permanently removed.`,
+      });
+
+      setEraseTarget(null);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to delete client",
+        variant: "destructive",
+      });
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
-  const targetClient = data.clients.find((c) => c.id === eraseTarget);
+  const filteredClients = clients.filter(
+    (c) => (c.name?.toLowerCase() || "").includes(search.toLowerCase()) || 
+           c.email.toLowerCase().includes(search.toLowerCase()),
+  );
+
+  const targetClient = clients.find((c) => c.end_user_id === eraseTarget);
 
   return (
     <div className="space-y-6 max-w-4xl">
@@ -45,38 +90,58 @@ const AdminEraseClient = () => {
         </div>
       </div>
 
-      <div className={`relative ${isLoaded ? "animate-fade-in-up" : "opacity-0"}`} style={{ animationDelay: "100ms" }}>
-        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-        <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search clients..." className="pl-10" />
+      <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-start gap-3">
+        <AlertTriangle className="h-5 w-5 text-red-600 shrink-0 mt-0.5" />
+        <div>
+          <p className="font-medium text-red-900">Danger Zone</p>
+          <p className="text-sm text-red-700">Erasing a client is permanent and cannot be undone. All their bookings will also be removed.</p>
+        </div>
       </div>
 
-      <div className="space-y-4">
-        {filteredClients.map((client, index) => (
-          <Card key={client.id} className={`${isLoaded ? "animate-fade-in-up" : "opacity-0"}`} style={{ animationDelay: `${(index + 2) * 80}ms` }}>
-            <CardContent className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between">
-              <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-accent text-sm font-semibold text-primary-foreground">{client.avatar}</div>
-                <div>
-                  <h3 className="font-semibold">{client.name}</h3>
-                  <p className="text-sm text-muted-foreground">{client.email}</p>
-                </div>
-              </div>
-              <Button variant="outline" size="sm" className="text-destructive" onClick={() => setEraseTarget(client.id)}>
-                <Trash2 className="mr-2 h-4 w-4" /> Erase
-              </Button>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+      {isLoading ? (
+        <div className="text-center py-20">
+          <p className="text-muted-foreground">Loading clients...</p>
+        </div>
+      ) : (
+        <>
+          <div className={`relative ${isLoaded ? "animate-fade-in-up" : "opacity-0"}`} style={{ animationDelay: "100ms" }}>
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search clients by name or email..." className="pl-10" />
+          </div>
 
-      {filteredClients.length === 0 && <p className="py-8 text-center text-muted-foreground">No clients found.</p>}
+          <div className="space-y-4">
+            {filteredClients.length === 0 ? (
+              <p className="py-8 text-center text-muted-foreground">No clients found.</p>
+            ) : (
+              filteredClients.map((client, index) => (
+                <Card key={client.end_user_id} className={`${isLoaded ? "animate-fade-in-up" : "opacity-0"}`} style={{ animationDelay: `${(index + 2) * 80}ms` }}>
+                  <CardContent className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-accent text-sm font-semibold text-primary-foreground">
+                        {client.name?.charAt(0).toUpperCase() || 'U'}
+                      </div>
+                      <div>
+                        <h3 className="font-semibold">{client.name || "Unknown Guest"}</h3>
+                        <p className="text-sm text-muted-foreground">{client.email}</p>
+                      </div>
+                    </div>
+                    <Button variant="outline" size="sm" className="text-destructive" onClick={() => setEraseTarget(client.end_user_id)}>
+                      <Trash2 className="mr-2 h-4 w-4" /> Erase
+                    </Button>
+                  </CardContent>
+                </Card>
+              ))
+            )}
+          </div>
+        </>
+      )}
 
       <ConfirmDialog
         open={!!eraseTarget}
         onOpenChange={(open) => !open && setEraseTarget(null)}
         title="Erase this client?"
         description={`Are you sure you want to permanently erase ${targetClient?.name || "this client"} and remove all their bookings? This action cannot be undone.`}
-        confirmLabel="Yes, Erase"
+        confirmLabel={isDeleting ? "Erasing..." : "Yes, Erase Permanently"}
         onConfirm={handleDelete}
         variant="destructive"
       />

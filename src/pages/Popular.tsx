@@ -1,10 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Star, Heart, MapPin, Flame, Award, ThumbsUp, Grid, List } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { hotels } from "@/data/hotels";
+import { fetchPublicHotels, PublicHotel } from "@/services/publicHotelApi";
 
 const Popular = () => {
   const navigate = useNavigate();
@@ -14,7 +14,25 @@ const Popular = () => {
   const [activeFilter, setActiveFilter] = useState<string>("all");
   const [locationFilter, setLocationFilter] = useState<string>("all");
 
-  const uniqueLocations = [...new Set(hotels.map((h) => h.location))];
+  const [hotels, setHotels] = useState<PublicHotel[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    setLoading(true);
+    setError(null);
+    fetchPublicHotels()
+      .then((data) => {
+        setHotels(data);
+        setLoading(false);
+      })
+      .catch((err) => {
+        setError(err.message || "Failed to load hotels");
+        setLoading(false);
+      });
+  }, []);
+
+  const uniqueLocations = [...new Set(hotels.map((h) => h.city || "Unknown"))];
 
   const filters = [
     { id: "all", label: "All", icon: Grid },
@@ -30,26 +48,25 @@ const Popular = () => {
     );
   };
 
+  // Sorting and filtering for backend data
   const sortedHotels = [...hotels].sort((a, b) => {
     switch (sortBy) {
       case "rating":
-        return b.rating - a.rating;
-      case "price":
-        return a.price - b.price;
-      case "reviews":
-        return b.reviews - a.reviews;
+        return (b.hotel_details?.star_rating || 0) - (a.hotel_details?.star_rating || 0);
+      // Add price/reviews sorting if available in backend
       default:
         return 0;
     }
   });
 
   const filteredHotels = sortedHotels.filter((hotel) => {
-    const passesTag = activeFilter === "all" ? true
-      : activeFilter === "luxury" ? hotel.tags.includes("Luxury")
-      : activeFilter === "trending" ? hotel.tags.includes("Trending")
-      : activeFilter === "top-rated" ? hotel.rating >= 4.8
+    // Only 'luxury' and 'top-rated' filters are supported with backend fields
+    const passesTag = activeFilter === "all"
+      ? true
+      : activeFilter === "luxury" ? (hotel.hotel_type?.toLowerCase().includes("luxury") ?? false)
+      : activeFilter === "top-rated" ? (hotel.hotel_details?.star_rating ?? 0) >= 4.8
       : true;
-    const passesLocation = locationFilter === "all" || hotel.location === locationFilter;
+    const passesLocation = locationFilter === "all" || (hotel.city || "Unknown") === locationFilter;
     return passesTag && passesLocation;
   });
 
@@ -87,7 +104,7 @@ const Popular = () => {
               Popular <span className="text-gradient">Hotels</span>
             </h1>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto animate-fade-in-up" style={{ animationDelay: "100ms" }}>
-              Discover the most loved accommodations chosen by travelers worldwide
+              {loading ? "Loading hotels..." : "Discover the most loved accommodations chosen by travelers worldwide"}
             </p>
           </div>
 
@@ -150,105 +167,88 @@ const Popular = () => {
       <section className="pb-24">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className={viewMode === "grid" ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6" : "flex flex-col gap-6"}>
-            {filteredHotels.map((hotel, index) => (
-              <div
-                key={hotel.id}
-                onClick={() => navigate(`/hotel/${hotel.id}`)}
-                className={`group relative rounded-2xl overflow-hidden bg-card border border-border transition-all duration-500 cursor-pointer animate-fade-in-up hover:border-primary/30 ${
-                  viewMode === "grid" ? "hover-lift" : "flex flex-col sm:flex-row hover:bg-card/80"
-                }`}
-                style={{ animationDelay: `${index * 100}ms` }}
-              >
-                {/* Image */}
-                <div className={`relative overflow-hidden ${viewMode === "grid" ? "aspect-[4/3]" : "w-full sm:w-72 h-48 flex-shrink-0"}`}>
-                  <img
-                    src={hotel.image}
-                    alt={hotel.name}
-                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                  />
-                  
-                  {/* Like Button */}
-                  <button
-                    onClick={(e) => toggleLike(e, hotel.id)}
-                    className="absolute top-4 right-4 p-2.5 rounded-full glass transition-all duration-300 hover:scale-110 group/like"
-                  >
-                    <Heart
-                      className={`h-5 w-5 transition-all duration-300 ${
-                        likedHotels.includes(hotel.id)
-                          ? "fill-destructive text-destructive scale-110"
-                          : "text-foreground group-hover/like:text-destructive"
-                      }`}
+            {error && (
+              <div className="text-center py-16">
+                <p className="text-xl font-semibold mb-2 text-destructive">{error}</p>
+                <p className="text-muted-foreground">Try adjusting your filters</p>
+              </div>
+            )}
+            {!error && filteredHotels.map((hotel, index) => {
+              const coverImg = hotel.hotel_images?.find(img => img.is_cover)?.image_url || hotel.hotel_images?.[0]?.image_url || "https://via.placeholder.com/400x300?text=No+Image";
+              return (
+                <div
+                  key={hotel.hotel_id}
+                  onClick={() => navigate(`/hotel/${hotel.hotel_id}`)}
+                  className={`group relative rounded-2xl overflow-hidden bg-card border border-border transition-all duration-500 cursor-pointer animate-fade-in-up hover:border-primary/30 ${
+                    viewMode === "grid" ? "hover-lift" : "flex flex-col sm:flex-row hover:bg-card/80"
+                  }`}
+                  style={{ animationDelay: `${index * 100}ms` }}
+                >
+                  {/* Image */}
+                  <div className={`relative overflow-hidden ${viewMode === "grid" ? "aspect-[4/3]" : "w-full sm:w-72 h-48 flex-shrink-0"}`}>
+                    <img
+                      src={coverImg}
+                      alt={hotel.name}
+                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                     />
-                  </button>
-
-                  {/* Rating Badge */}
-                  <div className="absolute top-4 left-4 flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary/90 backdrop-blur-sm transition-transform duration-300 group-hover:scale-105">
-                    <Star className="h-4 w-4 fill-primary-foreground text-primary-foreground" />
-                    <span className="text-sm font-semibold text-primary-foreground">{hotel.rating}</span>
-                  </div>
-
-                  {/* Tags */}
-                  <div className={`absolute bottom-4 left-4 flex gap-2 ${viewMode === "list" ? "hidden" : ""}`}>
-                    {hotel.tags.slice(0, 2).map((tag) => (
-                      <span
-                        key={tag}
-                        className="text-xs px-2.5 py-1 rounded-full glass font-medium transition-transform duration-300 hover:scale-105"
-                      >
-                        {tag}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Content */}
-                <div className={`p-5 ${viewMode === "list" ? "flex-1 flex flex-col justify-between" : ""}`}>
-                  <div>
-                    <h3 className="text-lg font-semibold mb-2 group-hover:text-primary transition-colors">
-                      {hotel.name}
-                    </h3>
-                    <div className="flex items-center gap-1.5 text-muted-foreground mb-3">
-                      <MapPin className="h-4 w-4" />
-                      <span className="text-sm">{hotel.location}</span>
-                    </div>
-                    {viewMode === "list" && (
-                      <div className="flex gap-2 mb-3">
-                        {hotel.tags.map((tag) => (
-                          <span
-                            key={tag}
-                            className="text-xs px-2.5 py-1 rounded-full bg-secondary text-secondary-foreground font-medium"
-                          >
-                            {tag}
-                          </span>
-                        ))}
+                    {/* Like Button */}
+                    <button
+                      onClick={(e) => toggleLike(e, hotel.hotel_id)}
+                      className="absolute top-4 right-4 p-2.5 rounded-full glass transition-all duration-300 hover:scale-110 group/like"
+                    >
+                      <Heart
+                        className={`h-5 w-5 transition-all duration-300 ${
+                          likedHotels.includes(hotel.hotel_id)
+                            ? "fill-destructive text-destructive scale-110"
+                            : "text-foreground group-hover/like:text-destructive"
+                        }`}
+                      />
+                    </button>
+                    {/* Rating Badge */}
+                    {hotel.hotel_details?.star_rating && (
+                      <div className="absolute top-4 left-4 flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary/90 backdrop-blur-sm transition-transform duration-300 group-hover:scale-105">
+                        <Star className="h-4 w-4 fill-primary-foreground text-primary-foreground" />
+                        <span className="text-sm font-semibold text-primary-foreground">{hotel.hotel_details.star_rating}</span>
                       </div>
                     )}
                   </div>
-                  <div className="flex items-end justify-between">
+                  {/* Content */}
+                  <div className={`p-5 ${viewMode === "list" ? "flex-1 flex flex-col justify-between" : ""}`}>
                     <div>
-                      <span className="text-2xl font-bold text-gradient">${hotel.price}</span>
-                      <span className="text-sm text-muted-foreground">/night</span>
+                      <h3 className="text-lg font-semibold mb-2 group-hover:text-primary transition-colors">
+                        {hotel.name}
+                      </h3>
+                      <div className="flex items-center gap-1.5 text-muted-foreground mb-3">
+                        <MapPin className="h-4 w-4" />
+                        <span className="text-sm">{hotel.city || hotel.address || "Unknown"}</span>
+                      </div>
+                      {viewMode === "list" && hotel.hotel_type && (
+                        <div className="flex gap-2 mb-3">
+                          <span
+                            className="text-xs px-2.5 py-1 rounded-full bg-secondary text-secondary-foreground font-medium"
+                          >
+                            {hotel.hotel_type}
+                          </span>
+                        </div>
+                      )}
                     </div>
-                    <span className="text-xs text-muted-foreground">
-                      {hotel.reviews.toLocaleString()} reviews
-                    </span>
+                    {/* Price and reviews can be added if available in backend */}
+                  </div>
+                  {/* Hover Overlay - Grid only */}
+                  {viewMode === "grid" && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-background/80 opacity-0 group-hover:opacity-100 transition-all duration-300">
+                      <Button variant="hero" size="lg" className="transform scale-90 group-hover:scale-100 transition-transform duration-300">
+                        View Details
+                      </Button>
+                    </div>
+                  )}
+                  {/* Animated Border */}
+                  <div className="absolute inset-0 rounded-2xl border-2 border-transparent group-hover:border-primary/20 transition-colors pointer-events-none overflow-hidden">
+                    <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 bg-gradient-to-r from-primary/5 via-transparent to-accent/5" />
                   </div>
                 </div>
-
-                {/* Hover Overlay - Grid only */}
-                {viewMode === "grid" && (
-                  <div className="absolute inset-0 flex items-center justify-center bg-background/80 opacity-0 group-hover:opacity-100 transition-all duration-300">
-                    <Button variant="hero" size="lg" className="transform scale-90 group-hover:scale-100 transition-transform duration-300">
-                      View Details
-                    </Button>
-                  </div>
-                )}
-
-                {/* Animated Border */}
-                <div className="absolute inset-0 rounded-2xl border-2 border-transparent group-hover:border-primary/20 transition-colors pointer-events-none overflow-hidden">
-                  <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 bg-gradient-to-r from-primary/5 via-transparent to-accent/5" />
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
           {/* No Results */}

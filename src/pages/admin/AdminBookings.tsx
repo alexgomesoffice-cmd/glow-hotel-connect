@@ -5,36 +5,62 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { useAdminData } from "@/data/adminStore";
+import { useToast } from "@/hooks/use-toast";
+import { fetchHotels, fetchBookings, HotelResponse, BookingResponse } from "@/services/adminApi";
 
 const AdminBookings = () => {
   const navigate = useNavigate();
-  const { data } = useAdminData();
+  const { toast } = useToast();
   const [isLoaded, setIsLoaded] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [hotels, setHotels] = useState<HotelResponse[]>([]);
+  const [bookings, setBookings] = useState<BookingResponse[]>([]);
   const [search, setSearch] = useState("");
   const [filterCity, setFilterCity] = useState("all");
   const [filterType, setFilterType] = useState("all");
   const [filterStars, setFilterStars] = useState("all");
 
   useEffect(() => {
-    setIsLoaded(true);
-  }, []);
+    const loadData = async () => {
+      try {
+        setIsLoading(true);
+        const [hotelsData, bookingsData] = await Promise.all([
+          fetchHotels(),
+          fetchBookings()
+        ]);
+        setHotels(hotelsData);
+        setBookings(bookingsData);
+        setIsLoaded(true);
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : "Failed to load bookings";
+        toast({
+          title: "Error",
+          description: errorMessage,
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-  const cities = [...new Set(data.hotels.map((hotel) => hotel.location))];
+    loadData();
+  }, [toast]);
+
+  const cities = [...new Set(hotels.map((hotel) => hotel.city))].filter(Boolean);
   const bookingCountByHotel = useMemo(
     () =>
-      data.bookings.reduce<Record<number, number>>((accumulator, booking) => {
-        accumulator[booking.hotelId] = (accumulator[booking.hotelId] || 0) + 1;
+      bookings.reduce<Record<string, number>>((accumulator, booking) => {
+        accumulator[booking.room_id] = (accumulator[booking.room_id] || 0) + 1;
         return accumulator;
       }, {}),
-    [data.bookings],
+    [bookings],
   );
 
-  const filteredHotels = data.hotels.filter((hotel) => {
+  const filteredHotels = hotels.filter((hotel) => {
     const matchesSearch = hotel.name.toLowerCase().includes(search.toLowerCase());
-    const matchesCity = filterCity === "all" || hotel.location === filterCity;
-    const matchesType = filterType === "all" || hotel.type === filterType;
-    const matchesStars = filterStars === "all" || hotel.stars === Number(filterStars);
+    const matchesCity = filterCity === "all" || hotel.city === filterCity;
+    const matchesType = filterType === "all" || hotel.hotel_type === filterType;
+    const matchesStars = filterStars === "all" || hotel.star_rating === Number(filterStars);
     return matchesSearch && matchesCity && matchesType && matchesStars;
   });
 
@@ -83,40 +109,52 @@ const AdminBookings = () => {
 
       <Card className={`${isLoaded ? "animate-fade-in-up" : "opacity-0"}`} style={{ animationDelay: "200ms" }}>
         <CardContent className="p-0">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Hotel</TableHead>
-                <TableHead>City</TableHead>
-                <TableHead className="hidden md:table-cell">Type</TableHead>
-                <TableHead className="hidden md:table-cell">Stars</TableHead>
-                <TableHead className="hidden lg:table-cell">Rooms</TableHead>
-                <TableHead>Total Bookings</TableHead>
-                <TableHead className="hidden lg:table-cell">Hotel Admin</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredHotels.map((hotel) => (
-                <TableRow
-                  key={hotel.id}
-                  className="cursor-pointer"
-                  onClick={() => navigate(`/admin/bookings/hotel/${hotel.id}`)}
-                >
-                  <TableCell className="font-medium text-primary">{hotel.name}</TableCell>
-                  <TableCell>{hotel.location}</TableCell>
-                  <TableCell className="hidden md:table-cell capitalize text-muted-foreground">{hotel.type}</TableCell>
-                  <TableCell className="hidden md:table-cell">{hotel.stars}</TableCell>
-                  <TableCell className="hidden lg:table-cell">{hotel.rooms.length}</TableCell>
-                  <TableCell>{bookingCountByHotel[hotel.id] || 0}</TableCell>
-                  <TableCell className="hidden lg:table-cell text-muted-foreground">{hotel.adminName}</TableCell>
+          {isLoading ? (
+            <div className="p-8 text-center text-muted-foreground">
+              <p>Loading hotels and bookings...</p>
+            </div>
+          ) : filteredHotels.length === 0 ? (
+            <div className="p-8 text-center text-muted-foreground">
+              <p>No hotels found.</p>
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Hotel</TableHead>
+                  <TableHead>City</TableHead>
+                  <TableHead className="hidden md:table-cell">Type</TableHead>
+                  <TableHead className="hidden md:table-cell">Stars</TableHead>
+                  <TableHead>Total Bookings</TableHead>
+                  <TableHead className="hidden lg:table-cell">Status</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {filteredHotels.map((hotel) => (
+                  <TableRow
+                    key={hotel.hotel_id}
+                    className="cursor-pointer"
+                    onClick={() => navigate(`/admin/bookings/hotel/${hotel.hotel_id}`)}
+                  >
+                    <TableCell className="font-medium text-primary">{hotel.name}</TableCell>
+                    <TableCell>{hotel.city}</TableCell>
+                    <TableCell className="hidden md:table-cell capitalize text-muted-foreground">{hotel.hotel_type}</TableCell>
+                    <TableCell className="hidden md:table-cell">{hotel.star_rating} ⭐</TableCell>
+                    <TableCell>{bookingCountByHotel[hotel.hotel_id] || 0}</TableCell>
+                    <TableCell className="hidden lg:table-cell">
+                      <span className={`text-xs px-2 py-1 rounded-full ${hotel.approval_status === "approved" ? "bg-green-100 text-green-700" : "bg-yellow-100 text-yellow-700"}`}>
+                        {hotel.approval_status}
+                      </span>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
         </CardContent>
       </Card>
 
-      {filteredHotels.length === 0 && <p className="py-8 text-center text-muted-foreground">No hotels found.</p>}
+      {!isLoading && filteredHotels.length === 0 && <p className="py-8 text-center text-muted-foreground">No hotels found.</p>}
     </div>
   );
 };

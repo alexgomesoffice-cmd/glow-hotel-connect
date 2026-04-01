@@ -3,13 +3,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { useAdminData } from "@/data/adminStore";
-import { toast } from "@/hooks/use-toast";
+import { useToast } from "@/hooks/use-toast";
 
 const AdminSettings = () => {
-  const { data, saveData } = useAdminData();
+  const { toast } = useToast();
   const [isLoaded, setIsLoaded] = useState(false);
   const [notifications, setNotifications] = useState({
     email: true,
@@ -17,41 +15,22 @@ const AdminSettings = () => {
     bookingAlerts: true,
   });
   const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    password: "",
-    dob: "",
-    gender: "male",
-    address: "",
-    nid: "",
-    phone: "",
+    name: "System Administrator",
+    email: "admin@grandstayconnect.com",
   });
 
   useEffect(() => {
     setIsLoaded(true);
   }, []);
 
-  useEffect(() => {
-    setFormData(data.adminProfile);
-  }, [data.adminProfile]);
-
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    saveData((current) => ({
-      ...current,
-      adminProfile: {
-        ...current.adminProfile,
-        name: formData.name,
-        password: formData.password,
-        dob: formData.dob,
-        gender: formData.gender as "male" | "female" | "other",
-        address: formData.address,
-        phone: formData.phone,
-      },
-    }));
-
-    toast({ title: "Settings saved", description: "Admin profile details have been updated." });
+    // Note: Backend endpoint for updating admin profile would be needed
+    toast({
+      title: "Info",
+      description: "Settings update requires backend API endpoint (PUT /api/admin/profile)",
+    });
   };
 
   return (
@@ -74,42 +53,10 @@ const AdminSettings = () => {
               <Input value={formData.email} disabled className="cursor-not-allowed opacity-60" />
             </div>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label>Password</Label>
-              <Input type="password" value={formData.password} onChange={(e) => setFormData({ ...formData, password: e.target.value })} />
-            </div>
-            <div className="space-y-2">
-              <Label>Date of Birth</Label>
-              <Input type="date" value={formData.dob} onChange={(e) => setFormData({ ...formData, dob: e.target.value })} />
-            </div>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label>Gender</Label>
-              <Select value={formData.gender} onValueChange={(value) => setFormData({ ...formData, gender: value })}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="male">Male</SelectItem>
-                  <SelectItem value="female">Female</SelectItem>
-                  <SelectItem value="other">Other</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label>Phone</Label>
-              <Input value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} />
-            </div>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label>Address</Label>
-              <Input value={formData.address} onChange={(e) => setFormData({ ...formData, address: e.target.value })} />
-            </div>
-            <div className="space-y-2">
-              <Label>NID No. (Unchangeable)</Label>
-              <Input value={formData.nid} disabled className="cursor-not-allowed opacity-60" />
-            </div>
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+            <p className="text-sm text-blue-700">
+              <strong>Note:</strong> Full profile editing requires backend API support. Only basic fields are available.
+            </p>
           </div>
         </CardContent>
       </Card>
@@ -133,7 +80,7 @@ const AdminSettings = () => {
       </Card>
 
       <div className="flex justify-end">
-        <Button variant="hero" type="submit">Save Settings</Button>
+        <Button variant="hero" type="submit" disabled>Save Settings (Disabled)</Button>
       </div>
     </form>
   );

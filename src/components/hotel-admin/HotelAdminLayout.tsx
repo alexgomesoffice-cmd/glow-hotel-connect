@@ -1,16 +1,19 @@
-import { useState } from "react";
-import { Link, useLocation, Outlet } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Link, useLocation, Outlet, useNavigate } from "react-router-dom";
 import {
   Hotel, LayoutDashboard, BedDouble, Calendar, DollarSign,
   MessageSquare, Settings, LogOut, Menu, X, Bell,
-  ChevronDown,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { useToast } from "@/hooks/use-toast";
+import { setLoggedInUser } from "@/utils/auth";
+import { apiGet } from "@/utils/api";
 import NotificationPanel from "@/components/NotificationPanel";
 
 const sidebarItems = [
   { icon: LayoutDashboard, label: "Overview", path: "/hotel-admin" },
+  { icon: Hotel, label: "Manage Hotel", path: "/hotel-admin/update-hotel" },
   { icon: BedDouble, label: "Rooms", path: "/hotel-admin/rooms" },
   { icon: Calendar, label: "Reservations", path: "/hotel-admin/reservations" },
   { icon: DollarSign, label: "Revenue", path: "/hotel-admin/revenue" },
@@ -22,7 +25,44 @@ const HotelAdminLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
+  const [adminName, setAdminName] = useState("Hotel Admin");
+  const [adminInitials, setAdminInitials] = useState("HA");
+  const [adminRole, setAdminRole] = useState("Manager");
   const location = useLocation();
+  const navigate = useNavigate();
+  const { toast } = useToast();
+
+  // Fetch current hotel admin/sub-admin data
+  useEffect(() => {
+    const fetchAdminData = async () => {
+      try {
+        const response = await apiGet("/hotels/admin/me");
+        if (response.success && response.data) {
+          const name = response.data.name || "Hotel Admin";
+          setAdminName(name);
+          setAdminInitials(name.split(" ").map((n: string) => n[0]).join("").slice(0, 2).toUpperCase());
+          setAdminRole(response.data.role === "HOTEL_ADMIN" ? "Hotel Manager" : "Staff Member");
+        }
+      } catch (error) {
+        console.error("Failed to fetch admin data:", error);
+        // Fall back to default values
+      }
+    };
+
+    fetchAdminData();
+  }, []);
+
+  const handleLogout = () => {
+    // Clear all auth data
+    localStorage.removeItem("authToken");
+    localStorage.removeItem("userRole");
+    localStorage.removeItem("user");
+    localStorage.removeItem("hotelId");
+    setLoggedInUser(null);
+    
+    toast({ title: "Logged out", description: "You have been signed out successfully." });
+    navigate("/");
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -68,7 +108,10 @@ const HotelAdminLayout = () => {
         </nav>
 
         <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-border">
-          <button className="flex items-center gap-3 px-4 py-3 w-full rounded-xl text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors">
+          <button 
+            onClick={handleLogout}
+            className="flex items-center gap-3 px-4 py-3 w-full rounded-xl text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"
+          >
             <LogOut className="h-5 w-5 shrink-0" />
             {sidebarOpen && <span className="font-medium">Logout</span>}
           </button>
@@ -86,7 +129,7 @@ const HotelAdminLayout = () => {
               <button onClick={() => setSidebarOpen(!sidebarOpen)} className="hidden lg:flex p-2 hover:bg-secondary rounded-lg">
                 <Menu className="h-5 w-5" />
               </button>
-              <h2 className="text-lg font-semibold hidden sm:block">Hotel System Admin Panel</h2>
+              <h2 className="text-lg font-semibold hidden sm:block">Hotel Admin Panel</h2>
             </div>
             <div className="flex items-center gap-3">
               <div className="relative">
@@ -101,13 +144,12 @@ const HotelAdminLayout = () => {
               </div>
               <div className="flex items-center gap-3 pl-3 border-l border-border">
                 <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center">
-                  <span className="text-sm font-semibold text-primary-foreground">MG</span>
+                  <span className="text-sm font-semibold text-primary-foreground">{adminInitials}</span>
                 </div>
                 <div className="hidden sm:block">
-                  <p className="text-sm font-medium">Maria Garcia</p>
-                  <p className="text-xs text-muted-foreground">Hotel System Admin</p>
+                  <p className="text-sm font-medium">{adminName}</p>
+                  <p className="text-xs text-muted-foreground">{adminRole}</p>
                 </div>
-                <ChevronDown className="h-4 w-4 text-muted-foreground" />
               </div>
             </div>
           </div>

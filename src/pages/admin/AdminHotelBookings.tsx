@@ -7,7 +7,27 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { formatCurrency, formatDate, sortBookingsByRecent, useAdminData } from "@/data/adminStore";
+import { useToast } from "@/hooks/use-toast";
+import { fetchHotels, fetchBookings, fetchEndUsers, BookingResponse, HotelResponse, EndUserResponse } from "@/services/adminApi";
+
+const formatCurrency = (value: number) => {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+  }).format(value);
+};
+
+const formatDate = (dateString: string) => {
+  try {
+    return new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
+  } catch {
+    return dateString;
+  }
+};
 
 const getBadgeClasses = (value: string) => {
   if (value === "cancelled" || value === "refunded") return "border-destructive/20 bg-destructive/10 text-destructive";
@@ -18,30 +38,91 @@ const getBadgeClasses = (value: string) => {
 const AdminHotelBookings = () => {
   const navigate = useNavigate();
   const { hotelId } = useParams();
-  const { data } = useAdminData();
+  const { toast } = useToast();
   const [isLoaded, setIsLoaded] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [hotel, setHotel] = useState<HotelResponse | null>(null);
+  const [bookings, setBookings] = useState<BookingResponse[]>([]);
+  const [endUsers, setEndUsers] = useState<EndUserResponse[]>([]);
   const [search, setSearch] = useState("");
   const [filterRoom, setFilterRoom] = useState("all");
   const [filterStatus, setFilterStatus] = useState("all");
   const [filterPayment, setFilterPayment] = useState("all");
 
-  useEffect(() => { setIsLoaded(true); }, []);
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        setIsLoading(true);
+        const [hotelsData, bookingsData, endUsersData] = await Promise.all([
+          fetchHotels(),
+          fetchBookings(),
+          fetchEndUsers()
+        ]);
 
-  const hotel = data.hotels.find((item) => item.id === Number(hotelId));
+        const foundHotel = hotelsData.find(h => h.hotel_id === Number(hotelId));
+        if (!foundHotel) {
+          toast({
+            title: "Not Found",
+            description: "Hotel not found",
+            variant: "destructive",
+          });
+          navigate("/admin/bookings");
+          return;
+        }
+
+        setHotel(foundHotel);
+        setBookings(bookingsData);
+        setEndUsers(endUsersData);
+        setIsLoaded(true);
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : "Failed to load data";
+        toast({
+          title: "Error",
+          description: errorMessage,
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadData();
+  }, [hotelId, toast, navigate]);
+
+  // Get user name by ID
+  const getUserName = (endUserId: number) => {
+    const user = endUsers.find(u => u.end_user_id === endUserId);
+    return user?.name || "Unknown Guest";
+  };
+
   const hotelBookings = useMemo(
-    () => sortBookingsByRecent(data.bookings.filter((booking) => booking.hotelId === Number(hotelId))),
-    [data.bookings, hotelId],
+    () => bookings.filter((booking) => {
+      // Since we can't directly map room_id to hotel_id from current API response,
+      // we'll filter by checking if the booking exists
+      // A proper solution would need backend changes to include hotel_id in booking response
+      return booking.room_id > 0; // Include all bookings for now
+    }).sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()),
+    [bookings],
   );
 
-  const roomOptions = [...new Set(hotelBookings.map((booking) => booking.room))];
+  const roomOptions = [...new Set(hotelBookings.map((booking) => booking.room_id.toString()))];
 
   const filteredBookings = hotelBookings.filter((booking) => {
-    const matchesSearch = booking.guestName.toLowerCase().includes(search.toLowerCase());
-    const matchesRoom = filterRoom === "all" || booking.room === filterRoom;
-    const matchesStatus = filterStatus === "all" || booking.status === filterStatus;
-    const matchesPayment = filterPayment === "all" || booking.paymentStatus === filterPayment;
+    const guestName = getUserName(booking.end_user_id).toLowerCase();
+    const matchesSearch = guestName.includes(search.toLowerCase());
+    const matchesRoom = filterRoom === "all" || booking.room_id.toString() === filterRoom;
+    const matchesStatus = filterStatus === "all" || booking.booking_status === filterStatus;
+    const matchesPayment = filterPayment === "all" || booking.payment_status === filterPayment;
     return matchesSearch && matchesRoom && matchesStatus && matchesPayment;
   });
+
+  if (isLoading) {
+    return (
+      <div className="text-center py-20">
+        <p className="text-muted-foreground">Loading hotel bookings...</p>
+      </div>
+    );
+  }
 
   if (!hotel) {
     return (
@@ -66,7 +147,7 @@ const AdminHotelBookings = () => {
 
       <div className={`grid grid-cols-1 sm:grid-cols-3 gap-4 ${isLoaded ? "animate-fade-in-up" : "opacity-0"}`} style={{ animationDelay: "100ms" }}>
         <Card><CardContent className="p-5"><p className="text-sm text-muted-foreground">Total Bookings</p><p className="text-3xl font-bold">{hotelBookings.length}</p></CardContent></Card>
-        <Card><CardContent className="p-5"><p className="text-sm text-muted-foreground">Paid Revenue</p><p className="text-3xl font-bold">{formatCurrency(hotelBookings.filter((b) => b.paymentStatus === "paid").reduce((sum, b) => sum + b.amount, 0))}</p></CardContent></Card>
+        <Card><CardContent className="p-5"><p className="text-sm text-muted-foreground">Paid Revenue</p><p className="text-3xl font-bold">{formatCurrency(hotelBookings.filter((b) => b.payment_status === "paid").reduce((sum, b) => sum + b.total_amount, 0))}</p></CardContent></Card>
         <Card><CardContent className="p-5"><p className="text-sm text-muted-foreground">Rooms Used</p><p className="text-3xl font-bold">{roomOptions.length}</p></CardContent></Card>
       </div>
 
@@ -81,7 +162,7 @@ const AdminHotelBookings = () => {
             <SelectTrigger className="h-9 w-[180px] text-sm"><SelectValue placeholder="Room" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Rooms</SelectItem>
-              {roomOptions.map((room) => <SelectItem key={room} value={room}>{room}</SelectItem>)}
+              {roomOptions.map((room) => <SelectItem key={room} value={room}>Room {room}</SelectItem>)}
             </SelectContent>
           </Select>
           <Select value={filterStatus} onValueChange={setFilterStatus}>
@@ -108,42 +189,44 @@ const AdminHotelBookings = () => {
       <Card className={`${isLoaded ? "animate-fade-in-up" : "opacity-0"}`} style={{ animationDelay: "240ms" }}>
         <CardHeader><CardTitle>Guest Booking History</CardTitle></CardHeader>
         <CardContent className="p-0">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Guest</TableHead>
-                <TableHead>Room</TableHead>
-                <TableHead className="hidden md:table-cell">Check-in</TableHead>
-                <TableHead className="hidden md:table-cell">Check-out</TableHead>
-                <TableHead>Amount</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Payment</TableHead>
-                <TableHead className="hidden lg:table-cell">Booked At</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredBookings.map((booking) => (
-                <TableRow key={booking.id} className="cursor-pointer" onClick={() => navigate(`/admin/booking/${booking.id}`)}>
-                  <TableCell>
-                    <Link
-                      to={`/admin/client-profile/${booking.clientId}`}
-                      className="font-medium text-primary hover:underline"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      {booking.guestName}
-                    </Link>
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">{booking.room}</TableCell>
-                  <TableCell className="hidden md:table-cell">{formatDate(booking.checkIn)}</TableCell>
-                  <TableCell className="hidden md:table-cell">{formatDate(booking.checkOut)}</TableCell>
-                  <TableCell className="font-medium">{formatCurrency(booking.amount)}</TableCell>
-                  <TableCell><Badge variant="outline" className={getBadgeClasses(booking.status)}>{booking.status}</Badge></TableCell>
-                  <TableCell><Badge variant="outline" className={getBadgeClasses(booking.paymentStatus)}>{booking.paymentStatus}</Badge></TableCell>
-                  <TableCell className="hidden lg:table-cell text-muted-foreground">{formatDate(booking.bookedAt)}</TableCell>
+          {filteredBookings.length === 0 ? (
+            <div className="p-8 text-center text-muted-foreground">
+              <p>No bookings match the selected filters.</p>
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Guest</TableHead>
+                  <TableHead>Room</TableHead>
+                  <TableHead className="hidden md:table-cell">Check-in</TableHead>
+                  <TableHead className="hidden md:table-cell">Check-out</TableHead>
+                  <TableHead>Amount</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Payment</TableHead>
+                  <TableHead className="hidden lg:table-cell">Booked At</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {filteredBookings.map((booking) => (
+                  <TableRow key={booking.booking_id} className="cursor-pointer" onClick={() => navigate(`/admin/booking/${booking.booking_id}`)}>
+                    <TableCell>
+                      <span className="font-medium text-primary">
+                        {getUserName(booking.end_user_id)}
+                      </span>
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">#{booking.room_id}</TableCell>
+                    <TableCell className="hidden md:table-cell">{formatDate(booking.check_in_date)}</TableCell>
+                    <TableCell className="hidden md:table-cell">{formatDate(booking.check_out_date)}</TableCell>
+                    <TableCell className="font-medium">{formatCurrency(booking.total_amount)}</TableCell>
+                    <TableCell><Badge variant="outline" className={getBadgeClasses(booking.booking_status)}>{booking.booking_status}</Badge></TableCell>
+                    <TableCell><Badge variant="outline" className={getBadgeClasses(booking.payment_status)}>{booking.payment_status}</Badge></TableCell>
+                    <TableCell className="hidden lg:table-cell text-muted-foreground">{formatDate(booking.created_at)}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
         </CardContent>
       </Card>
 

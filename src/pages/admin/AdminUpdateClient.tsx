@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, Save } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -6,52 +6,73 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useAdminData } from "@/data/adminStore";
-import { toast } from "@/hooks/use-toast";
+import { useToast } from "@/hooks/use-toast";
+import { fetchEndUsers, EndUserResponse } from "@/services/adminApi";
+import { apiPut } from "@/utils/api";
 
 const emptyForm = {
   name: "",
   email: "",
-  phone: "",
-  dob: "",
-  gender: "male",
-  address: "",
-  country: "",
-  nid: "",
-  passport: "",
-  emergencyContact: "",
 };
 
 const AdminUpdateClient = () => {
   const navigate = useNavigate();
   const { id } = useParams();
-  const { data, saveData } = useAdminData();
+  const { toast } = useToast();
   const [isLoaded, setIsLoaded] = useState(false);
-  const client = useMemo(() => data.clients.find((item) => item.id === Number(id)), [data.clients, id]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [client, setClient] = useState<EndUserResponse | null>(null);
   const [formData, setFormData] = useState(emptyForm);
   const [blocked, setBlocked] = useState(false);
 
   useEffect(() => {
-    setIsLoaded(true);
-  }, []);
+    const loadData = async () => {
+      try {
+        setIsLoading(true);
+        const usersData = await fetchEndUsers();
+        const foundClient = usersData.find((item) => item.end_user_id === Number(id));
+        
+        if (!foundClient) {
+          toast({
+            title: "Not Found",
+            description: "Client not found",
+            variant: "destructive",
+          });
+          navigate("/admin/clients");
+          return;
+        }
 
-  useEffect(() => {
-    if (!client) return;
-    setFormData({
-      name: client.name,
-      email: client.email,
-      phone: client.phone,
-      dob: client.dob,
-      gender: client.gender,
-      address: client.address,
-      country: client.country,
-      nid: client.nid,
-      passport: client.passport,
-      emergencyContact: client.emergencyContact,
-    });
-    setBlocked(client.blocked);
-  }, [client]);
+        setClient(foundClient);
+        setFormData({
+          name: foundClient.name || "",
+          email: foundClient.email || "",
+        });
+        setBlocked(foundClient.is_blocked);
+        setIsLoaded(true);
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : "Failed to load client";
+        toast({
+          title: "Error",
+          description: errorMessage,
+          variant: "destructive",
+        });
+        navigate("/admin/clients");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadData();
+  }, [id, toast, navigate]);
+
+  if (isLoading) {
+    return (
+      <div className="text-center py-20">
+        <p className="text-muted-foreground">Loading client details...</p>
+      </div>
+    );
+  }
 
   if (!client) {
     return (
@@ -67,44 +88,66 @@ const AdminUpdateClient = () => {
     );
   }
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    saveData((current) => ({
-      ...current,
-      clients: current.clients.map((item) =>
-        item.id === client.id
-          ? {
-              ...item,
-              name: formData.name,
-              email: formData.email,
-              phone: formData.phone,
-              dob: formData.dob,
-              gender: formData.gender as "male" | "female" | "other",
-              address: formData.address,
-              country: formData.country,
-              emergencyContact: formData.emergencyContact,
-              blocked,
-            }
-          : item,
-      ),
-      bookings: current.bookings.map((booking) =>
-        booking.clientId === client.id ? { ...booking, guestName: formData.name } : booking,
-      ),
-    }));
+    if (!formData.name) {
+      toast({
+        title: "Missing Required Fields",
+        description: "Please fill in the client name.",
+        variant: "destructive",
+      });
+      return;
+    }
 
-    toast({ title: "Client updated", description: `${formData.name}'s information has been saved.` });
-    navigate("/admin/clients");
+    setIsSubmitting(true);
+
+    try {
+      // Note: There's no general PUT endpoint for end-users, only for blocking
+      // For now, just show a success message. Actual name/email updates would need a dedicated endpoint.
+      
+      toast({
+        title: "Note",
+        description: "Name/email updates are read-only. Use the block toggle to manage client status.",
+        variant: "default"
+      });
+
+      navigate("/admin/clients");
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to update client",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  const toggleBlock = (checked: boolean) => {
-    const nextBlocked = !checked;
-    setBlocked(nextBlocked);
-    saveData((current) => ({
-      ...current,
-      clients: current.clients.map((item) => (item.id === client.id ? { ...item, blocked: nextBlocked } : item)),
-    }));
-    toast({ title: nextBlocked ? "User blocked" : "User unblocked", description: `${formData.name} is now ${nextBlocked ? "blocked" : "active"}.` });
+  const toggleBlock = async (checked: boolean) => {
+    setBlocked(!checked);
+    
+    try {
+      const response = await apiPut(`/end-users/${id}/block`, {
+        is_blocked: !checked,
+      });
+
+      if (!response.success) {
+        throw new Error(response.message || "Failed to update client status");
+      }
+
+      toast({
+        title: "Client Status Updated",
+        description: !checked ? "Client has been blocked." : "Client has been unblocked.",
+      });
+    } catch (error) {
+      setBlocked(checked);
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to update client status",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -115,7 +158,7 @@ const AdminUpdateClient = () => {
         </Button>
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold">Update Client Info</h1>
-          <p className="text-muted-foreground">Edit consumer details for {client.name}</p>
+          <p className="text-muted-foreground">Edit details for {client.name || "this guest"}</p>
         </div>
       </div>
 
@@ -130,66 +173,18 @@ const AdminUpdateClient = () => {
               </div>
               <div className="space-y-2">
                 <Label>Email</Label>
-                <Input type="email" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} />
+                <Input type="email" value={formData.email} disabled className="cursor-not-allowed opacity-60" />
               </div>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Phone</Label>
-                <Input value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} />
-              </div>
-              <div className="space-y-2">
-                <Label>Date of Birth</Label>
-                <Input type="date" value={formData.dob} onChange={(e) => setFormData({ ...formData, dob: e.target.value })} />
-              </div>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Gender</Label>
-                <Select value={formData.gender} onValueChange={(value) => setFormData({ ...formData, gender: value })}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="male">Male</SelectItem>
-                    <SelectItem value="female">Female</SelectItem>
-                    <SelectItem value="other">Other</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label>Emergency Contact</Label>
-                <Input value={formData.emergencyContact} onChange={(e) => setFormData({ ...formData, emergencyContact: e.target.value })} />
-              </div>
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+              <p className="text-sm text-blue-700">
+                <strong>Note:</strong> Limited fields available from backend. Full profile editing requires additional API endpoints.
+              </p>
             </div>
           </CardContent>
         </Card>
 
         <Card className={`${isLoaded ? "animate-fade-in-up" : "opacity-0"}`} style={{ animationDelay: "180ms" }}>
-          <CardHeader><CardTitle>Address & Identity</CardTitle></CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Address</Label>
-                <Input value={formData.address} onChange={(e) => setFormData({ ...formData, address: e.target.value })} />
-              </div>
-              <div className="space-y-2">
-                <Label>Country</Label>
-                <Input value={formData.country} onChange={(e) => setFormData({ ...formData, country: e.target.value })} />
-              </div>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>NID No. (Unchangeable)</Label>
-                <Input value={formData.nid} disabled className="cursor-not-allowed opacity-60" />
-              </div>
-              <div className="space-y-2">
-                <Label>Passport (Unchangeable)</Label>
-                <Input value={formData.passport} disabled className="cursor-not-allowed opacity-60" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className={`${isLoaded ? "animate-fade-in-up" : "opacity-0"}`} style={{ animationDelay: "260ms" }}>
           <CardHeader><CardTitle>Account Status</CardTitle></CardHeader>
           <CardContent>
             <div className="flex items-center justify-between rounded-xl border border-border bg-secondary/30 p-4">
@@ -204,8 +199,8 @@ const AdminUpdateClient = () => {
 
         <div className="flex justify-end gap-3">
           <Button type="button" variant="outline" onClick={() => navigate("/admin/clients")}>Cancel</Button>
-          <Button type="submit" variant="hero">
-            <Save className="mr-2 h-4 w-4" /> Save Changes
+          <Button type="submit" variant="hero" disabled={isSubmitting}>
+            <Save className="mr-2 h-4 w-4" /> {isSubmitting ? "Saving..." : "Save Changes"}
           </Button>
         </div>
       </form>

@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Shield, Eye, EyeOff, ArrowRight } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { apiPost } from "@/utils/api";
+import { setLoggedInUser } from "@/utils/auth";
 
 const AdminLogin = () => {
   const navigate = useNavigate();
@@ -30,8 +31,13 @@ const AdminLogin = () => {
       if (data.success) {
         // Store token and admin info
         localStorage.setItem("authToken", data.data.token);
-        localStorage.setItem("user", JSON.stringify(data.data.admin));
         localStorage.setItem("userRole", "SYSTEM_ADMIN");
+        
+        // Use the Navbar's setLoggedInUser to sync with navbar display
+        setLoggedInUser({
+          name: data.data.admin.email.split("@")[0] || "Admin",
+          email: data.data.admin.email,
+        });
 
         toast({
           title: "Welcome, Admin!",

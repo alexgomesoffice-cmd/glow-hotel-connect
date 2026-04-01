@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Settings, Bell, Shield, Save } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,19 +9,19 @@ import { Input } from "@/components/ui/input";
 import { toast } from "@/hooks/use-toast";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { getLoggedInUser } from "@/components/Navbar";
+import { getLoggedInUser } from "@/utils/auth";
 import ConfirmDialog from "@/components/ConfirmDialog";
 
 const UserSettings = () => {
   const navigate = useNavigate();
-  const user = getLoggedInUser();
+  const user = useMemo(() => getLoggedInUser(), []);
   const [notifications, setNotifications] = useState(true);
   const [marketing, setMarketing] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
 
-  useEffect(() => { if (!user) navigate("/login"); }, []);
+  useEffect(() => { if (!user) navigate("/login"); }, [navigate, user?.email]);
   if (!user) return null;
 
   const handlePasswordChange = (e: React.FormEvent) => {

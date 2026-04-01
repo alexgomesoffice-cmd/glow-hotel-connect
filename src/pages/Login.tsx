@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Hotel, Eye, EyeOff, ArrowRight } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
-import { setLoggedInUser } from "@/components/Navbar";
+import { setLoggedInUser } from "@/utils/auth";
 import { apiPost } from "@/utils/api";
 
 const Login = () => {

@@ -1,61 +1,77 @@
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Save } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { getNextId, useAdminData } from "@/data/adminStore";
-import { toast } from "@/hooks/use-toast";
+import { useToast } from "@/hooks/use-toast";
+import { apiPost } from "@/utils/api";
 
 const AdminAddSystemAdmin = () => {
   const navigate = useNavigate();
-  const { data, saveData } = useAdminData();
+  const { toast } = useToast();
   const [isLoaded, setIsLoaded] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  
   const [formData, setFormData] = useState({
     name: "",
     email: "",
     password: "",
-    dob: "",
-    gender: "male",
-    address: "",
-    nid: "",
-    phone: "",
   });
 
   useEffect(() => {
     setIsLoaded(true);
   }, []);
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
+  const getAuthHeaders = () => {
+    const token = localStorage.getItem("authToken");
+    return {
+      "Content-Type": "application/json",
+      ...(token && { "Authorization": `Bearer ${token}` }),
+    };
+  };
 
-    if (!formData.name || !formData.email || !formData.password || !formData.nid) {
-      toast({ title: "Missing fields", description: "Please complete the required system admin details.", variant: "destructive" });
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!formData.name || !formData.email || !formData.password) {
+      toast({
+        title: "Missing Required Fields",
+        description: "Please fill in all required fields.",
+        variant: "destructive",
+      });
       return;
     }
 
-    saveData((current) => ({
-      ...current,
-      systemAdmins: [
-        ...current.systemAdmins,
-        {
-          id: getNextId(current.systemAdmins),
-          name: formData.name,
-          email: formData.email,
-          password: formData.password,
-          dob: formData.dob,
-          gender: formData.gender as "male" | "female" | "other",
-          address: formData.address,
-          nid: formData.nid,
-          phone: formData.phone,
-        },
-      ],
-    }));
+    setIsSubmitting(true);
 
-    toast({ title: "System admin created", description: `${formData.name} can now access the admin panel.` });
-    navigate("/admin");
+    try {
+      const response = await apiPost("/system-admin/create", {
+        name: formData.name,
+        email: formData.email,
+        password: formData.password,
+      });
+
+      if (response.success === false) {
+        throw new Error(response.message || "Failed to create system admin");
+      }
+
+      toast({
+        title: "System Admin Created Successfully",
+        description: `${formData.name} has been created as a system admin.`,
+      });
+
+      navigate("/admin");
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to create system admin",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -70,76 +86,53 @@ const AdminAddSystemAdmin = () => {
         </div>
       </div>
 
-      <Card className={`${isLoaded ? "animate-fade-in-up" : "opacity-0"}`} style={{ animationDelay: "100ms" }}>
-        <CardHeader>
-          <CardTitle>System Admin Information</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Name *</Label>
-                <Input value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} />
-              </div>
-              <div className="space-y-2">
-                <Label>Email *</Label>
-                <Input type="email" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} />
-              </div>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Password *</Label>
-                <Input type="password" value={formData.password} onChange={(e) => setFormData({ ...formData, password: e.target.value })} />
-              </div>
-              <div className="space-y-2">
-                <Label>Date of Birth</Label>
-                <Input type="date" value={formData.dob} onChange={(e) => setFormData({ ...formData, dob: e.target.value })} />
-              </div>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Gender</Label>
-                <Select value={formData.gender} onValueChange={(value) => setFormData({ ...formData, gender: value })}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="male">Male</SelectItem>
-                    <SelectItem value="female">Female</SelectItem>
-                    <SelectItem value="other">Other</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label>Phone</Label>
-                <Input value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} />
-              </div>
-            </div>
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <Card className={`${isLoaded ? "animate-fade-in-up" : "opacity-0"}`} style={{ animationDelay: "100ms" }}>
+          <CardHeader>
+            <CardTitle>Admin Information</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label>Address</Label>
-              <Input value={formData.address} onChange={(e) => setFormData({ ...formData, address: e.target.value })} />
+              <Label>Admin Name *</Label>
+              <Input
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                placeholder="Full name of the admin"
+              />
             </div>
-            <div className="space-y-2">
-              <Label>NID No. *</Label>
-              <Input value={formData.nid} onChange={(e) => setFormData({ ...formData, nid: e.target.value })} />
-            </div>
-            <div className="flex justify-end gap-3 pt-2">
-              <Button type="button" variant="outline" onClick={() => navigate("/admin")}>Cancel</Button>
-              <Button type="submit" variant="hero">
-                <Save className="mr-2 h-4 w-4" /> Save System Admin
-              </Button>
-            </div>
-          </form>
-        </CardContent>
-      </Card>
 
-      <Card className={`${isLoaded ? "animate-fade-in-up" : "opacity-0"}`} style={{ animationDelay: "180ms" }}>
-        <CardHeader>
-          <CardTitle>Current Admin Count</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-3xl font-bold">{data.systemAdmins.length}</p>
-          <p className="text-sm text-muted-foreground">Existing platform system admins</p>
-        </CardContent>
-      </Card>
+            <div className="space-y-2">
+              <Label>Email *</Label>
+              <Input
+                type="email"
+                value={formData.email}
+                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                placeholder="admin@example.com"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Password *</Label>
+              <Input
+                type="password"
+                value={formData.password}
+                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                placeholder="Secure password"
+              />
+            </div>
+          </CardContent>
+        </Card>
+
+        <div className="flex justify-end gap-3">
+          <Button type="button" variant="outline" onClick={() => navigate("/admin")}>
+            Cancel
+          </Button>
+          <Button type="submit" variant="hero" disabled={isSubmitting}>
+            <Save className="mr-2 h-4 w-4" />
+            {isSubmitting ? "Creating..." : "Create System Admin"}
+          </Button>
+        </div>
+      </form>
     </div>
   );
 };

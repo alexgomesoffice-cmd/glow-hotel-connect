@@ -1,25 +1,39 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
+import { apiGet, getImageUrl } from "@/utils/api";
 
-import barcelonaImg from "@/assets/destinations/barcelona.jpg";
-import londonImg from "@/assets/destinations/london.jpg";
-import tokyoImg from "@/assets/destinations/tokyo.jpg";
-import dubaiImg from "@/assets/destinations/dubai.jpg";
-import parisImg from "@/assets/destinations/paris.jpg";
-
-const destinations = [
-  { name: "Barcelona", country: "Spain", image: barcelonaImg, hotels: 2340 },
-  { name: "London", country: "United Kingdom", image: londonImg, hotels: 4521 },
-  { name: "Tokyo", country: "Japan", image: tokyoImg, hotels: 3890 },
-  { name: "Dubai", country: "UAE", image: dubaiImg, hotels: 1890 },
-  { name: "Paris", country: "France", image: parisImg, hotels: 3210 },
-];
+interface City {
+  id: number;
+  name: string;
+  image_url: string | null;
+}
 
 const DestinationsSection = () => {
   const [isVisible, setIsVisible] = useState(false);
+  const [destinations, setDestinations] = useState<City[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const sectionRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
+
+  const fetchDestinations = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      const response = await apiGet("/cities/destinations");
+      if (response.success && response.data) {
+        // Show only the first 5 cities in the home section
+        setDestinations(response.data.slice(0, 5));
+      }
+    } catch (error) {
+      console.error("Failed to fetch destinations:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchDestinations();
+  }, [fetchDestinations]);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -58,33 +72,56 @@ const DestinationsSection = () => {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-5">
-          {destinations.map((destination, index) => (
-            <div
-              key={destination.name}
-              onClick={() => navigate(`/destination/${encodeURIComponent(destination.name.toLowerCase())}`)}
-              className={`group relative rounded-2xl overflow-hidden cursor-pointer transition-all duration-500 hover:scale-[1.03] hover:-translate-y-2 ${isVisible ? "animate-fade-in-up" : "opacity-0"}`}
-              style={{ animationDelay: `${(index + 3) * 100}ms` }}
-            >
-              <div className="aspect-[4/5] overflow-hidden">
-                <img src={destination.image} alt={destination.name} className="w-full h-full object-cover transition-all duration-700 group-hover:scale-110 group-hover:brightness-110" />
-              </div>
-              <div className="absolute inset-0 bg-gradient-to-t from-background via-background/20 to-transparent opacity-80 group-hover:opacity-90 transition-opacity" />
-              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
-              <div className="absolute bottom-0 left-0 right-0 p-5 transition-transform duration-300 group-hover:translate-y-[-8px]">
-                <h3 className="text-xl font-semibold mb-1 group-hover:text-primary transition-colors">{destination.name}</h3>
-                <p className="text-sm text-muted-foreground mb-2">{destination.country}</p>
-                <div className="flex items-center gap-2">
-                  <span className="text-xs px-2 py-1 rounded-full bg-primary/20 text-primary font-medium group-hover:bg-primary/30 transition-colors">
-                    {destination.hotels.toLocaleString()} hotels
-                  </span>
+          {isLoading ? (
+            <div className="col-span-full text-center py-12">
+              <p className="text-muted-foreground">Loading destinations...</p>
+            </div>
+          ) : destinations.length === 0 ? (
+            <div className="col-span-full text-center py-12">
+              <p className="text-muted-foreground">No destinations available</p>
+            </div>
+          ) : (
+            destinations.map((destination, index) => (
+              <div
+                key={destination.id}
+                onClick={() => navigate(`/destination/${encodeURIComponent(destination.name.toLowerCase())}`)}
+                className={`group relative rounded-2xl overflow-hidden cursor-pointer transition-all duration-500 hover:scale-[1.03] hover:-translate-y-2 ${
+                  isVisible ? "animate-fade-in-up" : "opacity-0"
+                }`}
+                style={{ animationDelay: `${(index + 3) * 100}ms` }}
+              >
+                <div className="aspect-[4/5] overflow-hidden">
+                  {destination.image_url ? (
+                    <img
+                      src={getImageUrl(destination.image_url) || ""}
+                      alt={destination.name}
+                      className="w-full h-full object-cover transition-all duration-700 group-hover:scale-110 group-hover:brightness-110"
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
+                      <span className="text-muted-foreground">{destination.name}</span>
+                    </div>
+                  )}
+                </div>
+                <div className="absolute inset-0 bg-gradient-to-t from-background via-background/20 to-transparent opacity-80 group-hover:opacity-90 transition-opacity" />
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
+                <div className="absolute bottom-0 left-0 right-0 p-5 transition-transform duration-300 group-hover:translate-y-[-8px]">
+                  <h3 className="text-xl font-semibold mb-1 group-hover:text-primary transition-colors">
+                    {destination.name}
+                  </h3>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs px-2 py-1 rounded-full bg-primary/20 text-primary font-medium group-hover:bg-primary/30 transition-colors">
+                      Explore
+                    </span>
+                  </div>
+                </div>
+                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none">
+                  <div className="absolute inset-0 border-2 border-primary/40 rounded-2xl" />
+                  <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-primary/20 to-transparent" />
                 </div>
               </div>
-              <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none">
-                <div className="absolute inset-0 border-2 border-primary/40 rounded-2xl" />
-                <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-primary/20 to-transparent" />
-              </div>
-            </div>
-          ))}
+            ))
+          )}
         </div>
       </div>
     </section>

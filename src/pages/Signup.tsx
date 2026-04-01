@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Hotel, Eye, EyeOff, ArrowRight } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
-import { setLoggedInUser } from "@/components/Navbar";
+import { setLoggedInUser } from "@/utils/auth";
 import { apiPost } from "@/utils/api";
 
 const Signup = () => {
@@ -49,6 +49,12 @@ const Signup = () => {
           description: `Welcome to StayVista, ${data.data.user.name}. Redirecting to login...`,
         });
 
+        // Clear form
+        setName("");
+        setEmail("");
+        setPassword("");
+        setShowPassword(false);
+
         // Redirect to login after 1 second
         setTimeout(() => {
           navigate("/login");
@@ -62,11 +68,22 @@ const Signup = () => {
       }
     } catch (error) {
       console.error("Signup error:", error);
-      toast({
-        title: "Error",
-        description: error instanceof Error ? error.message : "Signup failed. Please try again.",
-        variant: "destructive",
-      });
+      const errorMessage = error instanceof Error ? error.message : "Signup failed. Please try again.";
+      
+      // Check if email already exists
+      if (errorMessage.includes("EMAIL_ALREADY_EXISTS") || errorMessage.includes("email already") || errorMessage.includes("409")) {
+        toast({
+          title: "Error",
+          description: "This email is already registered. Please use a different email or try logging in.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: errorMessage,
+          variant: "destructive",
+        });
+      }
     } finally {
       setIsLoading(false);
     }
@@ -109,7 +126,7 @@ const Signup = () => {
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
               </div>
-              <p className="text-xs text-muted-foreground mt-1.5">Must be at least 8 characters</p>
+              <p className="text-xs text-muted-foreground mt-1.5">Must be at least 6 characters</p>
             </div>
             <Button type="submit" variant="hero" className="w-full group" disabled={isLoading}>
               {isLoading ? "Creating account..." : "Create account"}

@@ -259,6 +259,8 @@ const HotelDetail = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [expandedRoomType, setExpandedRoomType] = useState<number | null>(null);
+  const [variationImageIndices, setVariationImageIndices] = useState<Record<number, number>>({});
+  const [selectedRoomCounts, setSelectedRoomCounts] = useState<Record<number, number>>({});
 
   // Fetch hotel data from backend
   useEffect(() => {

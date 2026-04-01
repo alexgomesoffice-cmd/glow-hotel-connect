@@ -96,6 +96,16 @@ interface BackendRoomType {
   }>;
 }
 
+interface RoomVariation {
+  room_details_id: number;
+  room_number: string;
+  bed_type: string;
+  max_occupancy: number;
+  smoking_allowed: boolean;
+  pet_allowed: boolean;
+  status: string;
+}
+
 interface Room {
   id: number;
   name: string;
@@ -106,6 +116,7 @@ interface Room {
   size: number;
   amenities: string[];
   image?: string | null;
+  variations?: RoomVariation[];
 }
 
 interface Hotel {
@@ -122,14 +133,6 @@ interface Hotel {
   amenities: string[];
   rooms: Room[];
 }
-
-const amenityIcons: Record<string, typeof Wifi> = {
-  "Free WiFi": Wifi,
-  "Gym": Dumbbell,
-  "Valet Parking": Car,
-  "Fine Dining": UtensilsCrossed,
-  "Free Parking": Car,
-};
 
 const HotelDetail = () => {
   const { id } = useParams();

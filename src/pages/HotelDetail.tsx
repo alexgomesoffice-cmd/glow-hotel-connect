@@ -134,6 +134,120 @@ interface Hotel {
   rooms: Room[];
 }
 
+const amenityIcons: Record<string, typeof Wifi> = {
+  "Free WiFi": Wifi,
+  "Free Wi-Fi": Wifi,
+  "Gym": Dumbbell,
+  "Gym / Fitness Center": Dumbbell,
+  "Valet Parking": Car,
+  "Parking": Car,
+  "Fine Dining": UtensilsCrossed,
+  "Restaurant": UtensilsCrossed,
+  "Free Parking": Car,
+};
+
+// ============================================================
+// DUMMY / FALLBACK DATA — shown when the backend API is unavailable
+// Based on the project's Prisma seed script structure
+// ============================================================
+const DUMMY_HOTEL: Hotel = {
+  id: 1,
+  name: "Grand Stay Hotel",
+  location: "Dhaka",
+  image: "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800",
+  price: 95,
+  rating: 4.8,
+  reviews: 234,
+  tags: ["Hotel", "Luxury"],
+  description: "A luxury 5-star hotel in the heart of Dhaka with world-class amenities. Experience unmatched comfort with our premium facilities, attentive service, and prime location near key attractions.",
+  hotelImages: [
+    "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800",
+    "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=800",
+    "https://images.unsplash.com/photo-1590490360182-c33d955f4e24?w=800",
+    "https://images.unsplash.com/photo-1618773928121-c32242e63f39?w=800",
+  ],
+  amenities: [
+    "Swimming Pool", "Gym / Fitness Center", "Free Wi-Fi", "Parking",
+    "Restaurant", "Bar / Lounge", "Spa & Wellness", "Room Service",
+    "24/7 Front Desk", "Laundry Service", "Airport Shuttle", "Elevator",
+  ],
+  rooms: [
+    {
+      id: 1,
+      name: "Deluxe Room",
+      description: "Spacious room with queen bed and city view",
+      price: 150.50,
+      capacity: 2,
+      beds: "Queen",
+      size: 35,
+      amenities: ["Free Wi-Fi", "Room Service", "Mini Bar"],
+      image: "https://images.unsplash.com/photo-1611892440504-42a792e24d32?w=600",
+      variations: [
+        { room_details_id: 1, room_number: "101", bed_type: "Queen", max_occupancy: 2, smoking_allowed: true, pet_allowed: false, status: "AVAILABLE" },
+        { room_details_id: 2, room_number: "102", bed_type: "Queen", max_occupancy: 2, smoking_allowed: false, pet_allowed: true, status: "AVAILABLE" },
+        { room_details_id: 3, room_number: "103", bed_type: "Queen", max_occupancy: 2, smoking_allowed: false, pet_allowed: false, status: "UNAVAILABLE" },
+        { room_details_id: 4, room_number: "104", bed_type: "Queen", max_occupancy: 2, smoking_allowed: true, pet_allowed: true, status: "MAINTENANCE" },
+        { room_details_id: 5, room_number: "105", bed_type: "Queen", max_occupancy: 2, smoking_allowed: false, pet_allowed: false, status: "AVAILABLE" },
+      ],
+    },
+    {
+      id: 2,
+      name: "Standard Room",
+      description: "Compact room, perfect for business travelers",
+      price: 95,
+      capacity: 2,
+      beds: "Queen",
+      size: 25,
+      amenities: ["Free Wi-Fi", "Work Desk"],
+      image: "https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=600",
+      variations: [
+        { room_details_id: 6, room_number: "201", bed_type: "Queen", max_occupancy: 2, smoking_allowed: false, pet_allowed: false, status: "AVAILABLE" },
+        { room_details_id: 7, room_number: "202", bed_type: "Queen", max_occupancy: 2, smoking_allowed: true, pet_allowed: false, status: "AVAILABLE" },
+        { room_details_id: 8, room_number: "203", bed_type: "Queen", max_occupancy: 2, smoking_allowed: false, pet_allowed: true, status: "UNAVAILABLE" },
+        { room_details_id: 9, room_number: "204", bed_type: "Queen", max_occupancy: 2, smoking_allowed: false, pet_allowed: false, status: "AVAILABLE" },
+        { room_details_id: 10, room_number: "205", bed_type: "Queen", max_occupancy: 2, smoking_allowed: true, pet_allowed: false, status: "MAINTENANCE" },
+      ],
+    },
+    {
+      id: 3,
+      name: "Suite",
+      description: "Premium suite with separate living area and marble bathroom",
+      price: 299.99,
+      capacity: 4,
+      beds: "King",
+      size: 65,
+      amenities: ["Free Wi-Fi", "Living Area", "Mini Bar", "Jacuzzi"],
+      image: "https://images.unsplash.com/photo-1591088398332-8a7791972843?w=600",
+      variations: [
+        { room_details_id: 11, room_number: "301", bed_type: "King", max_occupancy: 4, smoking_allowed: false, pet_allowed: true, status: "AVAILABLE" },
+        { room_details_id: 12, room_number: "302", bed_type: "King", max_occupancy: 4, smoking_allowed: false, pet_allowed: false, status: "AVAILABLE" },
+        { room_details_id: 13, room_number: "303", bed_type: "King", max_occupancy: 4, smoking_allowed: true, pet_allowed: false, status: "UNAVAILABLE" },
+        { room_details_id: 14, room_number: "304", bed_type: "King", max_occupancy: 4, smoking_allowed: false, pet_allowed: true, status: "AVAILABLE" },
+        { room_details_id: 15, room_number: "305", bed_type: "King", max_occupancy: 4, smoking_allowed: false, pet_allowed: false, status: "AVAILABLE" },
+      ],
+    },
+    {
+      id: 4,
+      name: "Budget Room",
+      description: "Budget-friendly room with essential amenities",
+      price: 75,
+      capacity: 2,
+      beds: "Twin",
+      size: 20,
+      amenities: ["Free Wi-Fi"],
+      image: "https://images.unsplash.com/photo-1595576508898-0ad5c879a061?w=600",
+      variations: [
+        { room_details_id: 16, room_number: "401", bed_type: "Twin", max_occupancy: 2, smoking_allowed: false, pet_allowed: false, status: "AVAILABLE" },
+        { room_details_id: 17, room_number: "402", bed_type: "Twin", max_occupancy: 2, smoking_allowed: false, pet_allowed: false, status: "AVAILABLE" },
+        { room_details_id: 18, room_number: "403", bed_type: "Twin", max_occupancy: 2, smoking_allowed: true, pet_allowed: false, status: "UNAVAILABLE" },
+        { room_details_id: 19, room_number: "404", bed_type: "Twin", max_occupancy: 2, smoking_allowed: false, pet_allowed: true, status: "AVAILABLE" },
+        { room_details_id: 20, room_number: "405", bed_type: "Twin", max_occupancy: 2, smoking_allowed: false, pet_allowed: false, status: "MAINTENANCE" },
+      ],
+    },
+  ],
+};
+// ============================================================
+
 const HotelDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();

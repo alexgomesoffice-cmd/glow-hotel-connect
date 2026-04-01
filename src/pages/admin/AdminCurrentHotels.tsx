@@ -135,7 +135,7 @@ const AdminCurrentHotels = () => {
                 <div className="flex items-center gap-1 text-sm text-muted-foreground"><UserCheck className="h-4 w-4" /> {hotel.owner_name || "No owner"}</div>
                 <div className="flex items-center justify-between text-sm">
                   <span className="flex items-center gap-1"><BedDouble className="h-4 w-4" /> Hotel</span>
-                  <span className="flex items-center gap-1"><Star className="h-4 w-4 text-primary" /> {hotel.star_rating || "N/A"}</span>
+                  <span className="flex items-center gap-1"><Star className="h-4 w-4 text-primary" /> {hotel.hotel_details?.star_rating || "N/A"}</span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-xs rounded-full bg-primary/10 px-2 py-1 text-primary font-medium">{hotel.approval_status}</span>

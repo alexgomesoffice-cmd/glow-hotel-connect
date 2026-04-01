@@ -60,7 +60,7 @@ const AdminBookings = () => {
     const matchesSearch = hotel.name.toLowerCase().includes(search.toLowerCase());
     const matchesCity = filterCity === "all" || hotel.city === filterCity;
     const matchesType = filterType === "all" || hotel.hotel_type === filterType;
-    const matchesStars = filterStars === "all" || hotel.star_rating === Number(filterStars);
+    const matchesStars = filterStars === "all" || hotel.hotel_details?.star_rating === Number(filterStars);
     return matchesSearch && matchesCity && matchesType && matchesStars;
   });
 

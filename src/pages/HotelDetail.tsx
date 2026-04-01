@@ -366,11 +366,14 @@ const HotelDetail = () => {
           setSelectedRoom(null);
           setHotel(transformedHotel);
         } else {
-          setError("Failed to load hotel data");
+          // Fallback to dummy data when API returns unsuccessful response
+          console.warn("API returned unsuccessful response, using dummy data");
+          setHotel(DUMMY_HOTEL);
         }
       } catch (err) {
-        console.error("Error fetching hotel:", err);
-        setError("Unable to load hotel information. Please try again.");
+        // Fallback to dummy data when backend is unreachable
+        console.warn("Backend unreachable, using dummy data:", err);
+        setHotel(DUMMY_HOTEL);
       } finally {
         setLoading(false);
       }

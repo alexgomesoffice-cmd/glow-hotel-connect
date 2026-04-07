@@ -823,10 +823,16 @@ const HotelDetail = () => {
                 </div>
               </div>
             </div>
-            <div className="flex items-baseline gap-1">
-              <span className="text-4xl font-bold text-gradient">${hotel.price}</span>
-              <span className="text-muted-foreground">/night</span>
-            </div>
+            <Button
+              variant="outline"
+              className="gap-2 rounded-full border-border/40 hover:bg-secondary/30 hover:border-primary/40 transition-all group/loc"
+              onClick={() => {
+                window.open(`https://maps.google.com/?q=${encodeURIComponent(hotel.name + ' ' + hotel.location)}`, '_blank');
+              }}
+            >
+              <MapPin className="h-4 w-4 text-primary group-hover/loc:scale-110 transition-transform" />
+              See Location
+            </Button>
           </div>
 
           <div className="grid lg:grid-cols-3 gap-8">

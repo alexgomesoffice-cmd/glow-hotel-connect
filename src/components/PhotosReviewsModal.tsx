@@ -244,7 +244,7 @@ const PhotosReviewsModal = ({
                     key={idx}
                     onClick={() => goToImage(idx)}
                     className={cn(
-                      "flex-shrink-0 rounded-3xl overflow-hidden border-2 transition-all duration-200",
+                      "flex-shrink-0 rounded-2xl overflow-hidden border-2 transition-all duration-200",
                       idx === currentImageIndex
                         ? "border-primary ring-1 ring-primary/30"
                         : "border-transparent hover:border-border/50"

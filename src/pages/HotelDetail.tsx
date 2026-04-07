@@ -40,6 +40,7 @@ import BookingConfirmation from "@/components/BookingConfirmation";
 import { cn } from "@/lib/utils";
 import { apiGet } from "@/utils/api";
 import { getLoggedInUser } from "@/utils/auth";
+import RoomDetailModal from "@/components/RoomDetailModal";
 
 interface HotelImage {
   image_url: string;
@@ -274,6 +275,7 @@ const HotelDetail = () => {
   const [selectedRoomCounts, setSelectedRoomCounts] = useState<Record<string, number>>({});
   const [filterAC, setFilterAC] = useState<'all' | 'ac' | 'non-ac'>('all');
   const [initialQueryApplied, setInitialQueryApplied] = useState(false);
+  const [roomDetailModal, setRoomDetailModal] = useState<{ room: Room; variation: RoomVariation } | null>(null);
   const [availabilityByRoomId, setAvailabilityByRoomId] = useState<Record<number, { available: number; reserved: number; booked: number; total_inventory: number; base_price: number }>>({});
   const [availabilityLoading, setAvailabilityLoading] = useState(false);
   const [availabilityError, setAvailabilityError] = useState<string | null>(null);
@@ -1058,7 +1060,10 @@ const HotelDetail = () => {
                                       )}
                                       <div className="flex flex-col md:flex-row">
                                         {/* Image Slider - Left Side */}
-                                        <div className="relative w-full md:w-48 h-48 md:h-auto flex-shrink-0 overflow-hidden group/img bg-secondary/10">
+                                        <div
+                                          className="relative w-full md:w-48 h-48 md:h-auto flex-shrink-0 overflow-hidden group/img bg-secondary/10 cursor-pointer"
+                                          onClick={(e) => { e.stopPropagation(); setRoomDetailModal({ room, variation }); }}
+                                        >
                                           {images.length > 0 ? (
                                             <>
                                               <img
@@ -1472,6 +1477,16 @@ const HotelDetail = () => {
 
       <Footer />
 
+      {/* Room Detail Modal */}
+      {roomDetailModal && (
+        <RoomDetailModal
+          isOpen={!!roomDetailModal}
+          onClose={() => setRoomDetailModal(null)}
+          room={roomDetailModal.room}
+          variation={roomDetailModal.variation}
+        />
+      )}
+
       {/* Booking Confirmation Modal */}
       {showBookingModal && checkIn && checkOut && (
         <BookingConfirmation
@@ -1482,7 +1497,7 @@ const HotelDetail = () => {
           checkIn={checkIn}
           checkOut={checkOut}
           guests={guests}
-          room={hotel.rooms[0]} // Pass a default room to satisfy the type requirement
+          room={hotel.rooms[0]}
           grandTotal={grandTotal}
         />
       )}

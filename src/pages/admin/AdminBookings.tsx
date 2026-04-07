@@ -60,7 +60,7 @@ const AdminBookings = () => {
     const matchesSearch = hotel.name.toLowerCase().includes(search.toLowerCase());
     const matchesCity = filterCity === "all" || hotel.city === filterCity;
     const matchesType = filterType === "all" || hotel.hotel_type === filterType;
-    const matchesStars = filterStars === "all" || hotel.star_rating === Number(filterStars);
+    const matchesStars = filterStars === "all" || hotel.hotel_details?.star_rating === Number(filterStars);
     return matchesSearch && matchesCity && matchesType && matchesStars;
   });
 
@@ -139,7 +139,7 @@ const AdminBookings = () => {
                     <TableCell className="font-medium text-primary">{hotel.name}</TableCell>
                     <TableCell>{hotel.city}</TableCell>
                     <TableCell className="hidden md:table-cell capitalize text-muted-foreground">{hotel.hotel_type}</TableCell>
-                    <TableCell className="hidden md:table-cell">{hotel.star_rating} ⭐</TableCell>
+                    <TableCell className="hidden md:table-cell">{hotel.hotel_details?.star_rating ?? "N/A"} ⭐</TableCell>
                     <TableCell>{bookingCountByHotel[hotel.hotel_id] || 0}</TableCell>
                     <TableCell className="hidden lg:table-cell">
                       <span className={`text-xs px-2 py-1 rounded-full ${hotel.approval_status === "approved" ? "bg-green-100 text-green-700" : "bg-yellow-100 text-yellow-700"}`}>

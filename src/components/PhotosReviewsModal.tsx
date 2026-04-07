@@ -129,159 +129,153 @@ const PhotosReviewsModal = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-w-[95vw] w-[95vw] max-h-[92vh] h-[92vh] p-0 gap-0 border-border/30 bg-background overflow-hidden">
+      <DialogContent className="max-w-[84vw] w-[84vw] max-h-[94vh] h-[94vh] p-0 gap-0 border-border/30 bg-background/95 shadow-2xl backdrop-blur-xl overflow-hidden rounded-[32px]">
         {/* Top Bar */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-border/30 bg-card/50 backdrop-blur-md">
-          <div className="flex items-center gap-4">
-            <h2 className="text-xl font-bold">{hotelName}</h2>
+        <div className="flex items-center justify-between px-6 border-b border-border/20 bg-card/60 backdrop-blur-md">
+          <div className="flex items-center gap-3">
+            <h2 className="text-lg font-semibold tracking-tight">{hotelName}</h2>
             <Button size="sm" className="rounded-full bg-primary text-primary-foreground hover:bg-primary/90 gap-1.5 text-sm font-semibold">
               Reserve now
             </Button>
           </div>
           <button
             onClick={onClose}
-            className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors group"
+            className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
           >
-            <span className="text-sm font-medium">Close</span>
-            <X className="w-5 h-5 group-hover:rotate-90 transition-transform duration-300" />
+            Close
           </button>
         </div>
 
-        {/* Category Tabs */}
-        <div className="px-6 py-3 border-b border-border/20 bg-card/30">
-          <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1">
-            {categories.map((cat, idx) => (
-              <button
-                key={cat.name}
-                onClick={() => {
-                  setSelectedCategory(cat.name);
-                  setCurrentImageIndex(0);
-                }}
-                className={cn(
-                  "flex flex-col items-center gap-1.5 flex-shrink-0 transition-all duration-300",
-                  selectedCategory === cat.name ? "opacity-100" : "opacity-50 hover:opacity-80"
-                )}
-              >
-                <div className={cn(
-                  "w-20 h-14 rounded-lg overflow-hidden border-2 transition-all duration-300",
-                  selectedCategory === cat.name
-                    ? "border-primary ring-2 ring-primary/30 scale-105"
-                    : "border-transparent"
-                )}>
-                  {cat.thumbnail ? (
-                    <img src={cat.thumbnail} alt={cat.name} className="w-full h-full object-cover" />
-                  ) : (
-                    <div className="w-full h-full bg-secondary/50 flex items-center justify-center">
-                      <ImageIcon className="w-5 h-5 text-muted-foreground/40" />
+        <div className="flex flex-1 overflow-hidden min-h-0" style={{ height: "calc(94vh - 110px)" }}>
+          <div className="flex-1 min-w-0 max-w-[calc(100%-320px)] flex flex-col overflow-hidden border-r border-border/20 bg-card/30">
+            {/* Category Tabs */}
+            <div className="px-6 border-b border-border/20 bg-card/30">
+              <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1">
+                {categories.map((cat, idx) => (
+                  <button
+                    key={cat.name}
+                    onClick={() => {
+                      setSelectedCategory(cat.name);
+                      setCurrentImageIndex(0);
+                    }}
+                    className={cn(
+                      "flex flex-col items-center gap-1.5 flex-shrink-0 transition-all duration-300",
+                      selectedCategory === cat.name ? "opacity-100" : "opacity-50 hover:opacity-80"
+                    )}
+                  >
+                    <div className={cn(
+                      "w-20 h-14 rounded-lg overflow-hidden border-2 transition-all duration-300",
+                      selectedCategory === cat.name
+                        ? "border-primary ring-2 ring-primary/30 scale-105"
+                        : "border-transparent"
+                    )}>
+                      {cat.thumbnail ? (
+                        <img src={cat.thumbnail} alt={cat.name} className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="w-full h-full bg-secondary/50 flex items-center justify-center">
+                          <ImageIcon className="w-5 h-5 text-muted-foreground/40" />
+                        </div>
+                      )}
                     </div>
-                  )}
-                </div>
-                <span className={cn(
-                  "text-xs font-medium max-w-[80px] truncate transition-colors",
-                  selectedCategory === cat.name ? "text-primary" : "text-muted-foreground"
-                )}>
-                  {cat.name}
-                </span>
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Main Content — Images Left, Reviews Right */}
-        <div className="flex flex-1 overflow-hidden" style={{ height: "calc(92vh - 140px)" }}>
-          {/* Left: Image Gallery */}
-          <div className="flex-1 overflow-y-auto p-6 scrollbar-hide">
-            {/* Featured large image with navigation */}
-            <div className="relative w-full aspect-[16/10] rounded-2xl overflow-hidden mb-4 group bg-secondary/20">
-              {images.length > 0 ? (
-                <>
-                  <div className="relative w-full h-full">
-                    {images.map((img, idx) => (
-                      <img
-                        key={idx}
-                        src={img}
-                        alt={`${hotelName} photo ${idx + 1}`}
-                        className={cn(
-                          "absolute inset-0 w-full h-full object-cover transition-all duration-500",
-                          idx === currentImageIndex
-                            ? "opacity-100 scale-100"
-                            : "opacity-0 scale-105"
-                        )}
-                      />
-                    ))}
-                  </div>
-
-                  {/* Nav arrows */}
-                  {images.length > 1 && (
-                    <>
-                      <button
-                        onClick={prevImage}
-                        className="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-background/70 backdrop-blur-md border border-border/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 hover:bg-background hover:scale-110 shadow-lg"
-                      >
-                        <ChevronLeft className="w-5 h-5" />
-                      </button>
-                      <button
-                        onClick={nextImage}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-background/70 backdrop-blur-md border border-border/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 hover:bg-background hover:scale-110 shadow-lg"
-                      >
-                        <ChevronRight className="w-5 h-5" />
-                      </button>
-                    </>
-                  )}
-
-                  {/* Image counter */}
-                  <div className="absolute top-3 right-3 px-3 py-1.5 rounded-full bg-background/60 backdrop-blur-md text-xs font-medium">
-                    {currentImageIndex + 1} / {images.length}
-                  </div>
-                </>
-              ) : (
-                <div className="w-full h-full flex items-center justify-center">
-                  <ImageIcon className="w-16 h-16 text-muted-foreground/30" />
-                </div>
-              )}
+                    <span className={cn(
+                      "text-xs font-medium max-w-[80px] truncate transition-colors",
+                      selectedCategory === cat.name ? "text-primary" : "text-muted-foreground"
+                    )}>
+                      {cat.name}
+                    </span>
+                  </button>
+                ))}
+              </div>
             </div>
 
-            {/* Image grid below */}
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-              {images.map((img, idx) => (
-                <button
-                  key={idx}
-                  onClick={() => goToImage(idx)}
-                  className={cn(
-                    "relative aspect-[4/3] rounded-xl overflow-hidden group/thumb transition-all duration-300 border-2",
-                    idx === currentImageIndex
-                      ? "border-primary ring-2 ring-primary/20 scale-[1.02]"
-                      : "border-transparent hover:border-border/50"
-                  )}
-                >
-                  <img
-                    src={img}
-                    alt={`Photo ${idx + 1}`}
-                    className="w-full h-full object-cover transition-transform duration-500 group-hover/thumb:scale-110"
-                  />
-                  <div className={cn(
-                    "absolute inset-0 transition-opacity duration-300",
-                    idx === currentImageIndex
-                      ? "bg-primary/10"
-                      : "bg-background/0 group-hover/thumb:bg-background/20"
-                  )} />
-                </button>
-              ))}
+            <div className="flex-1 overflow-y-auto scrollbar-hide">
+              {/* Featured large image with navigation */}
+              <div className="relative w-full h-full rounded-2xl overflow-hidden mb-4 group bg-secondary/20">
+                {images.length > 0 ? (
+                  <>
+                    <div className="relative w-full h-full">
+                      {images.map((img, idx) => (
+                        <img
+                          key={idx}
+                          src={img}
+                          alt={`${hotelName} photo ${idx + 1}`}
+                          className={cn(
+                            "absolute inset-0 w-full h-full object-contain transition-all duration-500",
+                            idx === currentImageIndex
+                              ? "opacity-100 scale-100"
+                              : "opacity-0 scale-105"
+                          )}
+                        />
+                      ))}
+                    </div>
+
+                    {images.length > 1 && (
+                      <>
+                        <button
+                          onClick={prevImage}
+                          className="absolute left-3 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-background/90 border border-border/20 flex items-center justify-center text-foreground shadow-xl hover:bg-background transition opacity-0 group-hover:opacity-100"
+                        >
+                          <ChevronLeft className="w-5 h-5" />
+                        </button>
+                        <button
+                          onClick={nextImage}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-background/90 border border-border/20 flex items-center justify-center text-foreground shadow-xl hover:bg-background transition opacity-0 group-hover:opacity-100"
+                        >
+                          <ChevronRight className="w-5 h-5" />
+                        </button>
+                      </>
+                    )}
+
+                    <div className="absolute bottom-4 left-4 px-3 py-1 rounded-full bg-black/40 text-xs font-medium text-white backdrop-blur-sm">
+                      {currentImageIndex + 1} / {images.length}
+                    </div>
+                  </>
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center">
+                    <ImageIcon className="w-16 h-16 text-muted-foreground/30" />
+                  </div>
+                )}
+              </div>
+
+              {/* Thumbnail strip */}
+              <div className="flex items-center gap-2 overflow-x-auto pb-1 px-2">
+                {images.map((img, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => goToImage(idx)}
+                    className={cn(
+                      "flex-shrink-0 rounded-3xl overflow-hidden border-2 transition-all duration-200",
+                      idx === currentImageIndex
+                        ? "border-primary ring-1 ring-primary/30"
+                        : "border-transparent hover:border-border/50"
+                    )}
+                  >
+                    <img
+                      src={img}
+                      alt={`Thumbnail ${idx + 1}`}
+                      className="w-24 h-16 object-cover"
+                    />
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
 
           {/* Right: Reviews Panel */}
-          <div className="w-[380px] border-l border-border/30 bg-card/30 flex flex-col overflow-hidden flex-shrink-0 hidden lg:flex">
+          <div className="w-[320px] border-l border-border/20 bg-card/50 flex flex-col overflow-hidden flex-shrink-0 h-full">
             {/* Rating header */}
-            <div className="p-5 border-b border-border/20">
-              <div className="flex items-center gap-3 mb-3">
-                <div className="w-12 h-12 rounded-xl bg-primary flex items-center justify-center text-primary-foreground font-bold text-lg">
-                  {rating.toFixed(1)}
+            <div className="p-4 border-b border-border/20">
+              <div className="flex items-start justify-between gap-3 mb-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-2xl bg-primary flex items-center justify-center text-primary-foreground font-bold text-lg shadow-sm">
+                    {rating.toFixed(1)}
+                  </div>
+                  <div>
+                    <div className="font-semibold text-base">{getRatingLabel(rating)}</div>
+                    <div className="text-xs text-muted-foreground">{reviewCount.toLocaleString()} reviews</div>
+                  </div>
                 </div>
-                <div>
-                  <div className="font-bold text-lg">{getRatingLabel(rating)}</div>
-                  <div className="text-sm text-muted-foreground">{reviewCount.toLocaleString()} reviews</div>
-                </div>
+                <div className="text-[10px] uppercase tracking-[0.24em] text-muted-foreground mt-1">Guest score</div>
               </div>
 
               {/* Rating bars */}
@@ -294,7 +288,7 @@ const PhotosReviewsModal = ({
                 ].map((bar) => (
                   <div key={bar.label} className="flex items-center gap-2">
                     <span className="text-xs text-muted-foreground w-20">{bar.label}</span>
-                    <div className="flex-1 h-1.5 rounded-full bg-secondary/50 overflow-hidden">
+                    <div className="flex-1 h-1.5 rounded-full bg-secondary/40 overflow-hidden">
                       <div
                         className="h-full rounded-full bg-gradient-to-r from-primary to-accent transition-all duration-1000 ease-out"
                         style={{ width: `${bar.value * 100}%` }}
@@ -328,7 +322,7 @@ const PhotosReviewsModal = ({
                       <div>
                         <div className="text-sm font-semibold">{review.name}</div>
                         <div className="text-xs text-muted-foreground flex items-center gap-1">
-                          🏳️ {review.country}
+                           {review.country}
                         </div>
                       </div>
                     </div>

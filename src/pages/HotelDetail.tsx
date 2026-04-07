@@ -40,6 +40,7 @@ import BookingConfirmation from "@/components/BookingConfirmation";
 import { cn } from "@/lib/utils";
 import { apiGet } from "@/utils/api";
 import { getLoggedInUser } from "@/utils/auth";
+import RoomDetailModal from "@/components/RoomDetailModal";
 
 interface HotelImage {
   image_url: string;

@@ -756,13 +756,14 @@ const HotelDetail = () => {
               variant="glass"
               size="sm"
               className="absolute bottom-4 right-4 gap-2"
+              onClick={() => setShowPhotosReviews(true)}
             >
               <ImageIcon className="h-4 w-4" />
-              Show all Photos and Reviews
+              Show all Photos & Reviews
             </Button>
           </div>
           <div className="hidden sm:grid grid-cols-4 grid-rows-2 gap-2 mb-8 rounded-3xl overflow-hidden animate-fade-in h-[400px] lg:h-[500px] relative">
-            <div className="col-span-2 row-span-2 relative group cursor-pointer" onClick={() => setActiveImageIndex(0)}>
+            <div className="col-span-2 row-span-2 relative group cursor-pointer" onClick={() => setShowPhotosReviews(true)}>
               <img
                 src={galleryImages[0]}
                 alt={hotel.name}
@@ -774,7 +775,7 @@ const HotelDetail = () => {
               <div
                 key={idx}
                 className="relative group cursor-pointer overflow-hidden"
-                onClick={() => setActiveImageIndex(idx + 1)}
+                onClick={() => setShowPhotosReviews(true)}
               >
                 <img
                   src={img}
@@ -788,9 +789,10 @@ const HotelDetail = () => {
               variant="glass"
               size="sm"
               className="absolute bottom-4 right-4 gap-2"
+              onClick={() => setShowPhotosReviews(true)}
             >
               <ImageIcon className="h-4 w-4" />
-              Show all photos and Reviews
+              Show all Photos & Reviews
             </Button>
           </div>
 

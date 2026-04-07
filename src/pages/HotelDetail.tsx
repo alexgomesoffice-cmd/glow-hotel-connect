@@ -280,6 +280,7 @@ const HotelDetail = () => {
   const [availabilityByRoomId, setAvailabilityByRoomId] = useState<Record<number, { available: number; reserved: number; booked: number; total_inventory: number; base_price: number }>>({});
   const [availabilityLoading, setAvailabilityLoading] = useState(false);
   const [availabilityError, setAvailabilityError] = useState<string | null>(null);
+  const [showPhotosReviews, setShowPhotosReviews] = useState(false);
   const location = useLocation();
 
   const filteredRooms = useMemo(() => {

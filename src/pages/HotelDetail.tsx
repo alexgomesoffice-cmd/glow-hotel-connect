@@ -756,7 +756,7 @@ const HotelDetail = () => {
               className="absolute bottom-4 right-4 gap-2"
             >
               <ImageIcon className="h-4 w-4" />
-              Show all photos
+              Show all Photos and Reviews
             </Button>
           </div>
           <div className="hidden sm:grid grid-cols-4 grid-rows-2 gap-2 mb-8 rounded-3xl overflow-hidden animate-fade-in h-[400px] lg:h-[500px] relative">
@@ -788,7 +788,7 @@ const HotelDetail = () => {
               className="absolute bottom-4 right-4 gap-2"
             >
               <ImageIcon className="h-4 w-4" />
-              Show all photos
+              Show all photos and Reviews
             </Button>
           </div>
 

@@ -41,6 +41,7 @@ import { cn } from "@/lib/utils";
 import { apiGet } from "@/utils/api";
 import { getLoggedInUser } from "@/utils/auth";
 import RoomDetailModal from "@/components/RoomDetailModal";
+import PhotosReviewsModal from "@/components/PhotosReviewsModal";
 
 interface HotelImage {
   image_url: string;
@@ -279,6 +280,7 @@ const HotelDetail = () => {
   const [availabilityByRoomId, setAvailabilityByRoomId] = useState<Record<number, { available: number; reserved: number; booked: number; total_inventory: number; base_price: number }>>({});
   const [availabilityLoading, setAvailabilityLoading] = useState(false);
   const [availabilityError, setAvailabilityError] = useState<string | null>(null);
+  const [showPhotosReviews, setShowPhotosReviews] = useState(false);
   const location = useLocation();
 
   const filteredRooms = useMemo(() => {
@@ -754,13 +756,14 @@ const HotelDetail = () => {
               variant="glass"
               size="sm"
               className="absolute bottom-4 right-4 gap-2"
+              onClick={() => setShowPhotosReviews(true)}
             >
               <ImageIcon className="h-4 w-4" />
-              Show all Photos and Reviews
+              Show all Photos & Reviews
             </Button>
           </div>
           <div className="hidden sm:grid grid-cols-4 grid-rows-2 gap-2 mb-8 rounded-3xl overflow-hidden animate-fade-in h-[400px] lg:h-[500px] relative">
-            <div className="col-span-2 row-span-2 relative group cursor-pointer" onClick={() => setActiveImageIndex(0)}>
+            <div className="col-span-2 row-span-2 relative group cursor-pointer" onClick={() => setShowPhotosReviews(true)}>
               <img
                 src={galleryImages[0]}
                 alt={hotel.name}
@@ -772,7 +775,7 @@ const HotelDetail = () => {
               <div
                 key={idx}
                 className="relative group cursor-pointer overflow-hidden"
-                onClick={() => setActiveImageIndex(idx + 1)}
+                onClick={() => setShowPhotosReviews(true)}
               >
                 <img
                   src={img}
@@ -786,9 +789,10 @@ const HotelDetail = () => {
               variant="glass"
               size="sm"
               className="absolute bottom-4 right-4 gap-2"
+              onClick={() => setShowPhotosReviews(true)}
             >
               <ImageIcon className="h-4 w-4" />
-              Show all photos and Reviews
+              Show all Photos & Reviews
             </Button>
           </div>
 
@@ -819,10 +823,16 @@ const HotelDetail = () => {
                 </div>
               </div>
             </div>
-            <div className="flex items-baseline gap-1">
-              <span className="text-4xl font-bold text-gradient">${hotel.price}</span>
-              <span className="text-muted-foreground">/night</span>
-            </div>
+            <Button
+              variant="outline"
+              className="gap-2 rounded-full border-border/40 hover:bg-secondary/30 hover:border-primary/40 transition-all group/loc"
+              onClick={() => {
+                window.open(`https://maps.google.com/?q=${encodeURIComponent(hotel.name + ' ' + hotel.location)}`, '_blank');
+              }}
+            >
+              <MapPin className="h-4 w-4 text-primary group-hover/loc:scale-110 transition-transform" />
+              See Location
+            </Button>
           </div>
 
           <div className="grid lg:grid-cols-3 gap-8">
@@ -1486,6 +1496,20 @@ const HotelDetail = () => {
           variation={roomDetailModal.variation}
         />
       )}
+
+      {/* Photos & Reviews Modal */}
+      <PhotosReviewsModal
+        isOpen={showPhotosReviews}
+        onClose={() => setShowPhotosReviews(false)}
+        hotelName={hotel.name}
+        images={galleryImages}
+        rating={hotel.rating}
+        reviewCount={hotel.reviews}
+        roomCategories={hotel.rooms.map(r => ({
+          name: r.name,
+          thumbnail: r.variations?.[0]?.images?.[0] || r.image || "",
+        }))}
+      />
 
       {/* Booking Confirmation Modal */}
       {showBookingModal && checkIn && checkOut && (

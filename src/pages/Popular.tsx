@@ -52,7 +52,7 @@ const Popular = () => {
   const sortedHotels = [...hotels].sort((a, b) => {
     switch (sortBy) {
       case "rating":
-        return (b.hotel_details?.star_rating || 0) - (a.hotel_details?.star_rating || 0);
+        return (Number(b.hotel_details?.star_rating) || 0) - (Number(a.hotel_details?.star_rating) || 0);
       // Add price/reviews sorting if available in backend
       default:
         return 0;

@@ -275,6 +275,7 @@ const HotelDetail = () => {
   const [selectedRoomCounts, setSelectedRoomCounts] = useState<Record<string, number>>({});
   const [filterAC, setFilterAC] = useState<'all' | 'ac' | 'non-ac'>('all');
   const [initialQueryApplied, setInitialQueryApplied] = useState(false);
+  const [roomDetailModal, setRoomDetailModal] = useState<{ room: Room; variation: RoomVariation } | null>(null);
   const [availabilityByRoomId, setAvailabilityByRoomId] = useState<Record<number, { available: number; reserved: number; booked: number; total_inventory: number; base_price: number }>>({});
   const [availabilityLoading, setAvailabilityLoading] = useState(false);
   const [availabilityError, setAvailabilityError] = useState<string | null>(null);

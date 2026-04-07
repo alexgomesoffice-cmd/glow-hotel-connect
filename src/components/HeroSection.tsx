@@ -9,7 +9,7 @@ const collageImages = [hotel1, hotel2, hotel3, hotel4, heroImage];
 
 const HeroSection = () => {
   return (
-    <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
+    <section className="relative min-h-screen flex items-center justify-center overflow-hidden pt-12">
       {/* Photo Collage Background */}
       <div className="absolute inset-0 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-1">
         {collageImages.map((image, index) => (

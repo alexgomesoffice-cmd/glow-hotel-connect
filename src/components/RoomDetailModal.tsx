@@ -78,7 +78,6 @@ const facilityIcons: Record<string, typeof Wifi> = {
   "Safe": Lock,
   "Bathrobe": Shirt,
   "Shower": ShowerHead,
-  "Private Bathroom": ShowerHead,
   "City View": Eye,
 };
 
@@ -139,7 +138,6 @@ const RoomDetailModal = ({ isOpen, onClose, room, variation }: RoomDetailModalPr
     room.size > 0 ? `${room.size} m²` : null,
     allAmenities.find(a => /city view|sea view|garden view|view/i.test(a)),
     allAmenities.find(a => /air conditioner|ac/i.test(a)) ? "Air conditioning" : null,
-    allAmenities.find(a => /private bathroom|bathroom/i.test(a)) ? "Private bathroom" : null,
     allAmenities.find(a => /tv|flat-screen/i.test(a)) ? "Flat-screen TV" : null,
     allAmenities.find(a => /mini bar|minibar/i.test(a)) ? "Minibar" : null,
     allAmenities.find(a => /wi-fi|wifi/i.test(a)) ? "Free WiFi" : null,
@@ -163,20 +161,6 @@ const RoomDetailModal = ({ isOpen, onClose, room, variation }: RoomDetailModalPr
               {room.name} — {variation.bed_type} Bed
             </DialogTitle>
           </DialogHeader>
-
-          {/* Highlight badges */}
-          <div className="flex flex-wrap gap-2 mb-5">
-            {highlights.map((h, i) => (
-              <span
-                key={i}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-secondary/60 border border-border/30 text-xs font-medium text-foreground animate-fade-in"
-                style={{ animationDelay: `${i * 50}ms` }}
-              >
-                <Check className="w-3 h-3 text-primary" />
-                {h}
-              </span>
-            ))}
-          </div>
         </div>
 
         {/* Image Gallery */}
@@ -312,28 +296,6 @@ const RoomDetailModal = ({ isOpen, onClose, room, variation }: RoomDetailModalPr
           {room.description && (
             <div>
               <p className="text-sm text-muted-foreground leading-relaxed">{room.description}</p>
-            </div>
-          )}
-
-          {/* Bathroom amenities */}
-          {bathroomAmenities.length > 0 && (
-            <div>
-              <h4 className="text-sm font-bold mb-3 flex items-center gap-2">
-                <ShowerHead className="w-4 h-4 text-primary" />
-                In your private bathroom:
-              </h4>
-              <div className="grid grid-cols-2 gap-x-6 gap-y-1.5">
-                {bathroomAmenities.map((amenity, i) => (
-                  <div
-                    key={i}
-                    className="flex items-center gap-2 text-sm text-muted-foreground animate-fade-in"
-                    style={{ animationDelay: `${i * 30}ms` }}
-                  >
-                    <Check className="w-3.5 h-3.5 text-primary flex-shrink-0" />
-                    <span>{amenity}</span>
-                  </div>
-                ))}
-              </div>
             </div>
           )}
 

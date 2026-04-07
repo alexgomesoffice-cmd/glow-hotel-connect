@@ -1497,6 +1497,20 @@ const HotelDetail = () => {
         />
       )}
 
+      {/* Photos & Reviews Modal */}
+      <PhotosReviewsModal
+        isOpen={showPhotosReviews}
+        onClose={() => setShowPhotosReviews(false)}
+        hotelName={hotel.name}
+        images={galleryImages}
+        rating={hotel.rating}
+        reviewCount={hotel.reviews}
+        roomCategories={hotel.rooms.map(r => ({
+          name: r.name,
+          thumbnail: r.variations?.[0]?.images?.[0] || r.image || "",
+        }))}
+      />
+
       {/* Booking Confirmation Modal */}
       {showBookingModal && checkIn && checkOut && (
         <BookingConfirmation

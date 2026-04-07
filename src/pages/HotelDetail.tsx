@@ -41,6 +41,7 @@ import { cn } from "@/lib/utils";
 import { apiGet } from "@/utils/api";
 import { getLoggedInUser } from "@/utils/auth";
 import RoomDetailModal from "@/components/RoomDetailModal";
+import PhotosReviewsModal from "@/components/PhotosReviewsModal";
 
 interface HotelImage {
   image_url: string;

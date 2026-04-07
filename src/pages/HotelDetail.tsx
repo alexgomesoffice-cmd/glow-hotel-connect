@@ -1477,6 +1477,16 @@ const HotelDetail = () => {
 
       <Footer />
 
+      {/* Room Detail Modal */}
+      {roomDetailModal && (
+        <RoomDetailModal
+          isOpen={!!roomDetailModal}
+          onClose={() => setRoomDetailModal(null)}
+          room={roomDetailModal.room}
+          variation={roomDetailModal.variation}
+        />
+      )}
+
       {/* Booking Confirmation Modal */}
       {showBookingModal && checkIn && checkOut && (
         <BookingConfirmation
@@ -1487,7 +1497,7 @@ const HotelDetail = () => {
           checkIn={checkIn}
           checkOut={checkOut}
           guests={guests}
-          room={hotel.rooms[0]} // Pass a default room to satisfy the type requirement
+          room={hotel.rooms[0]}
           grandTotal={grandTotal}
         />
       )}

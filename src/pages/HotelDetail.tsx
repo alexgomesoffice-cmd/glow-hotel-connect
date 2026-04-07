@@ -1060,7 +1060,10 @@ const HotelDetail = () => {
                                       )}
                                       <div className="flex flex-col md:flex-row">
                                         {/* Image Slider - Left Side */}
-                                        <div className="relative w-full md:w-48 h-48 md:h-auto flex-shrink-0 overflow-hidden group/img bg-secondary/10">
+                                        <div
+                                          className="relative w-full md:w-48 h-48 md:h-auto flex-shrink-0 overflow-hidden group/img bg-secondary/10 cursor-pointer"
+                                          onClick={(e) => { e.stopPropagation(); setRoomDetailModal({ room, variation }); }}
+                                        >
                                           {images.length > 0 ? (
                                             <>
                                               <img

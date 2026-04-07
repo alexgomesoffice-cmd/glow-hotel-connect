@@ -24,10 +24,21 @@ interface RoomDetail {
   base_price: number;
   description: string;
   room_size?: string;
+  image_url?: string;
+  room_amenities?: Array<{
+    amenity: {
+      id: number;
+      name: string;
+    };
+  }>;
 }
 
 interface RoomTypeWithDetails {
+  hotel_room_id?: number;
   room_type: string;
+  base_price: number;
+  description?: string;
+  room_size?: string;
   room_amenities?: Array<{
     amenity: {
       id: number;
@@ -122,13 +133,35 @@ const HotelAdminEditRoom = () => {
         const types = Array.from(new Set(roomsResponse.data.rooms.map((r: RoomDetail) => r.room_type))) as string[];
         setAvailableRoomTypes(types.sort());
 
-        // Fetch room type details to get amenities and images
+        // Set amenities from the physical room data
+        if (room.room_amenities && room.room_amenities.length > 0) {
+          const amenityIds = room.room_amenities.map((ra) => String(ra.amenity.id));
+          console.log("Loaded amenity IDs from physical room:", amenityIds);
+          setSelectedAmenities(amenityIds);
+        } else {
+          console.log("No amenities found for this physical room");
+        }
+
+        // Set images for this physical room
+        // Priority: Physical room's own image > Room type images
+        const roomImages: string[] = [];
+
+        // Add physical room's specific image if it exists
+        if (room.image_url) {
+          roomImages.push(room.image_url);
+          console.log("Physical room has its own image:", room.image_url);
+        }
+
+        // Fetch room type details to get shared images
         const roomTypesResponse = await apiGet(`/rooms?hotel_id=${hotelResponse.data.hotel_id}&skip=0&take=100`);
-        
         if (roomTypesResponse.success && roomTypesResponse.data?.rooms) {
+          // Debug: log all available room types and the current room_type
+          console.log("Available room types from backend:", roomTypesResponse.data.rooms.map((r: RoomTypeWithDetails) => r.room_type));
+
+          // Try to find the room type (case-insensitive, trimmed)
           const roomTypeData = roomTypesResponse.data.rooms.find(
-            (r: RoomTypeWithDetails & { hotel_room_id?: number }) => r.room_type === room.room_type
-          ) as RoomTypeWithDetails & { hotel_room_id?: number } | undefined;
+            (r: RoomTypeWithDetails) => r.room_type.trim().toLowerCase() === room.room_type.trim().toLowerCase()
+          ) as RoomTypeWithDetails | undefined;
 
           if (roomTypeData) {
             // Store the hotel_room_id for later use in updates
@@ -136,26 +169,39 @@ const HotelAdminEditRoom = () => {
               setHotelRoomId(roomTypeData.hotel_room_id);
             }
 
-            // Set existing amenities
-            if (roomTypeData.room_amenities && roomTypeData.room_amenities.length > 0) {
-              const amenityIds = roomTypeData.room_amenities.map((ra) => String(ra.amenity.id));
-              console.log("Loaded amenity IDs from backend:", amenityIds);
-              console.log("Full amenities data:", roomTypeData.room_amenities);
-              setSelectedAmenities(amenityIds);
+            // Add room type images if physical room doesn't have its own image
+            if (!room.image_url && roomTypeData.hotel_room_images && roomTypeData.hotel_room_images.length > 0) {
+              const typeImageUrls = roomTypeData.hotel_room_images.map((img) => img.image_url);
+              roomImages.push(...typeImageUrls);
+              console.log("Using room type images:", typeImageUrls.length);
+            } else if (room.image_url) {
+              console.log("Physical room has its own image, skipping room type images");
             } else {
-              console.log("No amenities found for this room");
+              console.log("No images found for this room type");
             }
 
-            // Set existing images
-            if (roomTypeData.hotel_room_images && roomTypeData.hotel_room_images.length > 0) {
-              const imageUrls = roomTypeData.hotel_room_images.map((img) => img.image_url);
-              console.log("Loaded images count:", imageUrls.length);
-              setExistingPhotos(imageUrls);
-              setPreviewPhotos(imageUrls);
-            } else {
-              console.log("No images found for this room");
-            }
+            // Populate room type form data from room type data
+            setRoomTypeFormData({
+              room_type: roomTypeData.room_type,
+              base_price: String(roomTypeData.base_price),
+              max_occupancy: String(room.max_occupancy), // Keep from physical room
+              description: roomTypeData.description || "",
+              room_size: roomTypeData.room_size || ""
+            });
+          } else {
+            // No matching room type found - this should not happen with correct data
+            console.error("No matching roomTypeData found for room_type:", room.room_type, "Available types:", roomTypesResponse.data.rooms.map(r => r.room_type));
+            throw new Error("Room type data not found in backend. Please ensure the room type exists.");
           }
+        }
+
+        // Set the images for display
+        if (roomImages.length > 0) {
+          setExistingPhotos(roomImages);
+          setPreviewPhotos(roomImages);
+          console.log("Total images for this room:", roomImages.length);
+        } else {
+          console.log("No images found for this physical room or its room type");
         }
 
         setRoomData(room);
@@ -168,13 +214,6 @@ const HotelAdminEditRoom = () => {
           status: room.status,
           room_type: room.room_type,
           base_price: String(room.base_price),
-          description: room.description || "",
-          room_size: room.room_size || ""
-        });
-        setRoomTypeFormData({
-          room_type: room.room_type,
-          base_price: String(room.base_price),
-          max_occupancy: String(room.max_occupancy),
           description: room.description || "",
           room_size: room.room_size || ""
         });
@@ -202,11 +241,12 @@ const HotelAdminEditRoom = () => {
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         const data = await response.json();
         if (data.success && data.data && Array.isArray(data.data)) {
-          const mappedAmenities = (data.data as AmenityResponse[]).map((amenity) => ({
+          const roomAmenities = data.data.filter((amenity: any) => amenity.context === "ROOM");
+          const mappedAmenities = (roomAmenities as AmenityResponse[]).map((amenity) => ({
             id: String(amenity.id),
             name: amenity.name
           }));
-          console.log("Available amenities loaded:", mappedAmenities);
+          console.log("Available room amenities loaded:", mappedAmenities);
           setAvailableAmenities(mappedAmenities);
         }
       } catch (error) {
@@ -329,25 +369,39 @@ const HotelAdminEditRoom = () => {
         )
       );
 
-      // Combine existing images with new ones
-      const allImages = [...existingPhotos, ...newImageUrls];
+      // Handle images: New uploads become specific to this physical room
+      let physicalRoomImageUrl = roomData.image_url; // Keep existing physical room image
 
-      // API Call 1: Update room type with amenities and images
+      if (newImageUrls.length > 0) {
+        // If new images uploaded, use the first one as the physical room's specific image
+        // This replaces any existing physical room image
+        physicalRoomImageUrl = newImageUrls[0];
+        console.log("Setting physical room specific image:", physicalRoomImageUrl);
+      }
+
+      // Update preview photos: show physical room image + any additional new images
+      const updatedPreviewPhotos = [];
+      if (physicalRoomImageUrl) {
+        updatedPreviewPhotos.push(physicalRoomImageUrl);
+      }
+      // Add any additional new images beyond the first
+      if (newImageUrls.length > 1) {
+        updatedPreviewPhotos.push(...newImageUrls.slice(1));
+      }
+
+      // For display purposes, update the preview
+      setPreviewPhotos(updatedPreviewPhotos);
+
+      // API Call 1: Update room type (without images since they're now per physical room)
       const roomTypePayload = {
         room_type: roomTypeFormData.room_type,
         base_price: parseFloat(roomTypeFormData.base_price),
         description: roomTypeFormData.description,
-        room_size: roomTypeFormData.room_size,
-        amenities: selectedAmenities, // ✅ Include amenities
-        images: allImages // ✅ Include all images
+        room_size: roomTypeFormData.room_size
+        // No images - images are now per physical room
       };
 
-      console.log("Submitting room update with:", {
-        amenities: selectedAmenities,
-        imageCount: allImages.length,
-        existingImagesCount: existingPhotos.length,
-        newImagesCount: newImageUrls.length
-      });
+      console.log("Submitting room update - room type without images, physical room with image");
 
       const roomTypeResponse = await apiPut(`/rooms/${hotelRoomId}`, roomTypePayload);
 
@@ -355,14 +409,16 @@ const HotelAdminEditRoom = () => {
         throw new Error(roomTypeResponse.message || "Failed to update room type");
       }
 
-      // API Call 2: Update physical room details
+      // API Call 2: Update physical room details with amenities and specific image
       const physicalRoomPayload = {
         room_number: formData.room_number,
         bed_type: formData.bed_type,
         max_occupancy: parseInt(formData.max_occupancy),
         smoking_allowed: formData.smoking_allowed,
         pet_allowed: formData.pet_allowed,
-        status: formData.status
+        status: formData.status,
+        image_url: physicalRoomImageUrl, // Physical room specific image
+        amenities: selectedAmenities // ✅ Include amenities (now per physical room)
       };
 
       const physicalRoomResponse = await apiPut(
@@ -418,6 +474,36 @@ const HotelAdminEditRoom = () => {
           <p className="text-muted-foreground">Update room details and settings</p>
         </div>
       </div>
+
+      {/* Existing Images Preview */}
+      {existingPhotos.length > 0 && (
+        <Card className="animate-fade-in-up" style={{ animationDelay: "100ms" }}>
+          <CardHeader>
+            <CardTitle>Current Room Images</CardTitle>
+            <p className="text-sm text-muted-foreground">
+              {roomData?.image_url ? "Specific images for this room" : "Shared images from room type"}
+            </p>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              {existingPhotos.map((photo, index) => (
+                <div key={index} className="relative group">
+                  <img
+                    src={photo}
+                    alt={`Existing ${index + 1}`}
+                    className="w-full h-32 object-cover rounded-lg border"
+                  />
+                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors rounded-lg flex items-center justify-center">
+                    <span className="text-white text-xs font-medium opacity-0 group-hover:opacity-100 transition-opacity">
+                      {roomData?.image_url && index === 0 ? "Room Specific" : "Shared"}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Room Details Section */}
@@ -656,6 +742,7 @@ const HotelAdminEditRoom = () => {
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                   {previewPhotos.map((photo, index) => {
                     const isExisting = index < existingPhotos.length;
+                    const isRoomSpecific = roomData?.image_url && isExisting && index === 0;
                     return (
                       <div key={index} className="relative group">
                         <img
@@ -663,13 +750,18 @@ const HotelAdminEditRoom = () => {
                           alt={`Preview ${index + 1}`}
                           className="w-full h-32 object-cover rounded-lg"
                         />
-                        {isExisting && (
+                        {isRoomSpecific && (
+                          <span className="absolute top-1 left-1 bg-blue-500/90 text-white text-xs px-2 py-1 rounded">
+                            Room Specific
+                          </span>
+                        )}
+                        {isExisting && !isRoomSpecific && (
                           <span className="absolute top-1 left-1 bg-green-500/90 text-white text-xs px-2 py-1 rounded">
-                            Existing
+                            Shared
                           </span>
                         )}
                         {!isExisting && (
-                          <span className="absolute top-1 left-1 bg-blue-500/90 text-white text-xs px-2 py-1 rounded">
+                          <span className="absolute top-1 left-1 bg-purple-500/90 text-white text-xs px-2 py-1 rounded">
                             New
                           </span>
                         )}

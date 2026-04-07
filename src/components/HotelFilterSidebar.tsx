@@ -8,7 +8,8 @@ export type HotelSearchFilters = {
   priceRange: [number, number];
   selectedRatings: number[];
   selectedHotelTypes: string[];
-  selectedAmenities: string[];
+  selectedHotelAmenities: string[];
+  selectedRoomAmenities: string[];
   selectedRoomTypes: string[];
   selectedBedTypes: string[];
 };
@@ -18,12 +19,14 @@ type HotelFilterSidebarProps = {
   priceMax?: number;
   ratingOptions?: number[];
   hotelTypeOptions?: string[];
-  amenityOptions?: string[];
+  hotelAmenityOptions?: string[];
+  roomAmenityOptions?: string[];
   roomTypeOptions?: string[];
   bedTypeOptions?: string[];
   initialSelectedRatings?: number[];
   initialSelectedHotelTypes?: string[];
-  initialSelectedAmenities?: string[];
+  initialSelectedHotelAmenities?: string[];
+  initialSelectedRoomAmenities?: string[];
   initialSelectedRoomTypes?: string[];
   initialSelectedBedTypes?: string[];
   onApply?: (filters: HotelSearchFilters) => void;
@@ -34,12 +37,14 @@ const HotelFilterSidebar = ({
   priceMax = 0,
   ratingOptions = [],
   hotelTypeOptions = [],
-  amenityOptions = [],
+  hotelAmenityOptions = [],
+  roomAmenityOptions = [],
   roomTypeOptions = [],
   bedTypeOptions = [],
   initialSelectedRatings = [],
   initialSelectedHotelTypes = [],
-  initialSelectedAmenities = [],
+  initialSelectedHotelAmenities = [],
+  initialSelectedRoomAmenities = [],
   initialSelectedRoomTypes = [],
   initialSelectedBedTypes = [],
   onApply = () => undefined,
@@ -55,14 +60,16 @@ const HotelFilterSidebar = ({
     price: true,
     rating: true,
     hotelType: true,
-    amenities: true,
+    hotelAmenities: true,
+    roomAmenities: true,
     roomTypes: true,
     bedTypes: true,
   });
 
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 1000]);
   const [selectedRatings, setSelectedRatings] = useState<number[]>(initialSelectedRatings);
-  const [selectedAmenities, setSelectedAmenities] = useState<string[]>(initialSelectedAmenities);
+  const [selectedHotelAmenities, setSelectedHotelAmenities] = useState<string[]>(initialSelectedHotelAmenities);
+  const [selectedRoomAmenities, setSelectedRoomAmenities] = useState<string[]>(initialSelectedRoomAmenities);
   const [selectedHotelTypes, setSelectedHotelTypes] = useState<string[]>(initialSelectedHotelTypes);
   const [selectedRoomTypes, setSelectedRoomTypes] = useState<string[]>(initialSelectedRoomTypes);
   const [selectedBedTypes, setSelectedBedTypes] = useState<string[]>(initialSelectedBedTypes);
@@ -71,7 +78,8 @@ const HotelFilterSidebar = ({
   useEffect(() => {
     setPriceRange([0, 1000]);
     setSelectedRatings([]);
-    setSelectedAmenities([]);
+    setSelectedHotelAmenities([]);
+    setSelectedRoomAmenities([]);
   }, [safeMin, safeMax]);
 
   // Sync initial selections from URL / hero search once options are available.
@@ -89,17 +97,22 @@ const HotelFilterSidebar = ({
       if (initialSelectedRatings.length) {
         setSelectedRatings(initialSelectedRatings);
       }
-      if (initialSelectedAmenities.length) {
-        setSelectedAmenities(initialSelectedAmenities);
+      if (initialSelectedHotelAmenities.length) {
+        setSelectedHotelAmenities(initialSelectedHotelAmenities);
+      }
+      if (initialSelectedRoomAmenities.length) {
+        setSelectedRoomAmenities(initialSelectedRoomAmenities);
       }
       initialSet.current = true;
     }
-  }, [initialSelectedHotelTypes, initialSelectedRoomTypes, initialSelectedBedTypes, initialSelectedRatings, initialSelectedAmenities]);
+  }, [initialSelectedHotelTypes, initialSelectedRoomTypes, initialSelectedBedTypes, initialSelectedRatings, initialSelectedHotelAmenities, initialSelectedRoomAmenities]);
 
   const toggleRating = (r: number) =>
     setSelectedRatings((prev) => (prev.includes(r) ? prev.filter((x) => x !== r) : [...prev, r]));
-  const toggleAmenity = (a: string) =>
-    setSelectedAmenities((prev) => (prev.includes(a) ? prev.filter((x) => x !== a) : [...prev, a]));
+  const toggleHotelAmenity = (a: string) =>
+    setSelectedHotelAmenities((prev) => (prev.includes(a) ? prev.filter((x) => x !== a) : [...prev, a]));
+  const toggleRoomAmenity = (a: string) =>
+    setSelectedRoomAmenities((prev) => (prev.includes(a) ? prev.filter((x) => x !== a) : [...prev, a]));
 
   const applyFilters = () => {
     const actualMin = effectiveMin + (priceRange[0] / 1000) * (effectiveMax - effectiveMin);
@@ -107,8 +120,9 @@ const HotelFilterSidebar = ({
     onApply({
       priceRange: [actualMin, actualMax],
       selectedRatings,
-      selectedAmenities,
       selectedHotelTypes,
+      selectedHotelAmenities,
+      selectedRoomAmenities,
       selectedRoomTypes,
       selectedBedTypes,
     });
@@ -211,19 +225,12 @@ const HotelFilterSidebar = ({
                   className="flex items-center gap-2 cursor-pointer text-sm hover:text-foreground transition-all duration-200 hover:translate-x-1"
                 >
                   <Checkbox checked={selectedHotelTypes.includes(t)} onCheckedChange={(v) => {
-
                     const isChecked = !!v;
-
                     setSelectedHotelTypes((prev) =>
-
                       isChecked
-
                         ? [...new Set([...prev, t])]
-
                         : prev.filter((x) => x !== t)
-
                     );
-
                   }} />
                   {t}
                 </label>
@@ -243,19 +250,12 @@ const HotelFilterSidebar = ({
                   className="flex items-center gap-2 cursor-pointer text-sm hover:text-foreground transition-all duration-200 hover:translate-x-1"
                 >
                   <Checkbox checked={selectedRoomTypes.includes(t)} onCheckedChange={(v) => {
-
                     const isChecked = !!v;
-
                     setSelectedRoomTypes((prev) =>
-
                       isChecked
-
                         ? [...new Set([...prev, t])]
-
                         : prev.filter((x) => x !== t)
-
                     );
-
                   }} />
                   {t}
                 </label>
@@ -275,19 +275,12 @@ const HotelFilterSidebar = ({
                   className="flex items-center gap-2 cursor-pointer text-sm hover:text-foreground transition-all duration-200 hover:translate-x-1"
                 >
                   <Checkbox checked={selectedBedTypes.includes(t)} onCheckedChange={(v) => {
-
                     const isChecked = !!v;
-
                     setSelectedBedTypes((prev) =>
-
                       isChecked
-
                         ? [...new Set([...prev, t])]
-
                         : prev.filter((x) => x !== t)
-
                     );
-
                   }} />
                   {t}
                 </label>
@@ -296,23 +289,43 @@ const HotelFilterSidebar = ({
           )}
         </div>
 
-           {/* Amenities */}
-        <div className="animate-fade-in-up" style={{ animationDelay: "300ms" }}>
-          {renderSectionHeader("amenities", "Amenities")}
-          {expanded.amenities && (
+        {/* Room Amenities */}
+        <div className="animate-fade-in-up" style={{ animationDelay: "330ms" }}>
+          {renderSectionHeader("roomAmenities", "Room Amenities")}
+          {expanded.roomAmenities && (
             <div className="space-y-2">
-              {amenityOptions.map((a) => (
+              {(roomAmenityOptions || []).map((a) => (
                 <label
                   key={a}
                   className="flex items-center gap-2 cursor-pointer text-sm hover:text-foreground transition-all duration-200 hover:translate-x-1"
                 >
-                  <Checkbox checked={selectedAmenities.includes(a)} onCheckedChange={() => toggleAmenity(a)} />
+                  <Checkbox checked={selectedRoomAmenities.includes(a)} onCheckedChange={() => toggleRoomAmenity(a)} />
                   {a}
                 </label>
               ))}
             </div>
           )}
         </div>
+
+        {/* Hotel Amenities */}
+        <div className="animate-fade-in-up" style={{ animationDelay: "300ms" }}>
+          {renderSectionHeader("hotelAmenities", "Hotel Amenities")}
+          {expanded.hotelAmenities && (
+            <div className="space-y-2">
+              {(hotelAmenityOptions || []).map((a) => (
+                <label
+                  key={a}
+                  className="flex items-center gap-2 cursor-pointer text-sm hover:text-foreground transition-all duration-200 hover:translate-x-1"
+                >
+                  <Checkbox checked={selectedHotelAmenities.includes(a)} onCheckedChange={() => toggleHotelAmenity(a)} />
+                  {a}
+                </label>
+              ))}
+            </div>
+          )}
+        </div>
+
+        
 
         <Button
           className="w-full transition-transform duration-200 hover:scale-[1.02]"

@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { apiPost, apiGet } from "@/utils/api";
 import { fetchHotelTypeOptions, type EnumOption } from "@/services/publicHotelApi";
@@ -46,6 +47,8 @@ const AdminAddHotel = () => {
   const [cities, setCities] = useState<City[]>([]);
   const [citiesLoading, setCitiesLoading] = useState(true);
   const [hotelTypeOptions, setHotelTypeOptions] = useState<EnumOption[]>([]);
+  const [availableAmenities, setAvailableAmenities] = useState<{ id: string; name: string }[]>([]);
+  const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
   
   const [formData, setFormData] = useState<FormData>({
     name: "",
@@ -70,6 +73,7 @@ const AdminAddHotel = () => {
   useEffect(() => {
     setIsLoaded(true);
     fetchCities();
+    fetchAmenities();
     const run = async () => {
       try {
         const opts = await fetchHotelTypeOptions();
@@ -117,6 +121,27 @@ const AdminAddHotel = () => {
     }
   }, [toast]);
 
+  const fetchAmenities = useCallback(async () => {
+    try {
+      const response = await apiGet("/hotels/amenities");
+      if (response.success && response.data) {
+        const mappedAmenities = response.data.map((amenity: any) => ({
+          id: String(amenity.id),
+          name: amenity.name,
+        }));
+        setAvailableAmenities(mappedAmenities);
+        console.log("✅ Hotel amenities loaded from backend:", mappedAmenities.length, "items");
+      }
+    } catch (error) {
+      console.error("Failed to fetch amenities:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load amenities",
+        variant: "destructive",
+      });
+    }
+  }, [toast]);
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
@@ -130,6 +155,14 @@ const AdminAddHotel = () => {
       ...prev,
       [name]: value,
     }));
+  };
+
+  const toggleAmenity = (amenityId: string) => {
+    setSelectedAmenities((prev) =>
+      prev.includes(amenityId)
+        ? prev.filter((id) => id !== amenityId)
+        : [...prev, amenityId]
+    );
   };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -190,6 +223,12 @@ const AdminAddHotel = () => {
       // Convert images to base64 URLs
       const imageUrls = imagePreviews;
 
+      // Convert selected amenity IDs to names
+      const selectedAmenityNames = selectedAmenities.map(id => {
+        const amenity = availableAmenities.find(a => a.id === id);
+        return amenity ? amenity.name : null;
+      }).filter(Boolean);
+
       // Create hotel payload 
       const payload = {
         name: formData.name,
@@ -198,6 +237,7 @@ const AdminAddHotel = () => {
         zip_code: formData.zipCode,
         hotel_type: formData.hotel_type,
         email: formData.email,
+        star_rating: formData.star_rating ? Number(formData.star_rating) : undefined,
         emergency_contact1: formData.emergency_contact1,
         emergency_contact2: formData.emergency_contact2,
         owner_name: formData.owner_name,
@@ -206,6 +246,7 @@ const AdminAddHotel = () => {
           reception_no2: formData.reception_no2,
           star_rating: formData.star_rating ? Number(formData.star_rating) : undefined,
         },
+        amenities: selectedAmenityNames,
         images: imageUrls,
         admin: {
           name: formData.admin_name,
@@ -445,6 +486,36 @@ const AdminAddHotel = () => {
                 />
               </div>
             </div>
+          </CardContent>
+        </Card>
+
+        {/* Hotel Amenities */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Hotel Amenities</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {availableAmenities.length > 0 ? (
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                {availableAmenities.map((amenity) => (
+                  <div key={amenity.id} className="flex items-center gap-2.5">
+                    <Checkbox
+                      id={`amenity-${amenity.id}`}
+                      checked={selectedAmenities.includes(amenity.id)}
+                      onCheckedChange={() => toggleAmenity(amenity.id)}
+                    />
+                    <Label
+                      htmlFor={`amenity-${amenity.id}`}
+                      className="cursor-pointer font-normal"
+                    >
+                      {amenity.name}
+                    </Label>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-muted-foreground">Loading amenities...</p>
+            )}
           </CardContent>
         </Card>
 

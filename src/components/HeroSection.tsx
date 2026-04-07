@@ -39,13 +39,6 @@ const HeroSection = () => {
       {/* Content */}
       <div className="relative z-10 container mx-auto px-4 sm:px-6 lg:px-8 pt-8">
         <div className="text-center mb-12">
-          {/* Badge */}
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass mb-8 animate-fade-in-down group cursor-pointer hover:bg-card/90 transition-all duration-300">
-            <span className="w-2 h-2 bg-accent rounded-full animate-pulse" />
-            <span className="text-sm font-medium text-muted-foreground group-hover:text-foreground transition-colors">
-              Over 1,480,086 rooms worldwide
-            </span>
-          </div>
 
           {/* Main Heading */}
           <h1

@@ -12,7 +12,10 @@ export interface PublicHotel {
   hotel_rooms?: {
     base_price: number | string;
     room_type?: string | null;
-    hotel_room_details?: Array<{ bed_type?: string | null }>;
+    hotel_room_details?: Array<{
+      bed_type?: string | null;
+      room_amenities?: { amenity: { name: string } }[];
+    }>;
   }[];
   // ...add more fields as needed for the card
 }
@@ -63,4 +66,22 @@ export async function fetchPublicHotels(params?: {
     throw new Error(response.message || "Failed to fetch hotels");
   }
   return response.hotels || [];
+}
+
+export interface SearchSuggestion {
+  id: number;
+  name: string;
+  city?: string;
+  type: 'hotel' | 'city';
+}
+
+export async function fetchSearchSuggestions(query: string): Promise<{
+  hotels: SearchSuggestion[];
+  cities: SearchSuggestion[];
+}> {
+  const response = await apiGet(`/meta/search-suggestions?q=${encodeURIComponent(query)}`);
+  if (response.success === false) {
+    throw new Error(response.message || "Failed to fetch search suggestions");
+  }
+  return response.data || { hotels: [], cities: [] };
 }

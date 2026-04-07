@@ -25,7 +25,7 @@ type MyBooking = {
 
 const statusColors: Record<string, string> = {
   reserved: "bg-amber-500/10 text-amber-600 border-amber-500/20",
-  booked: "bg-emerald-500/10 text-emerald-700 border-emerald-500/20",
+  confirmed: "bg-emerald-500/10 text-emerald-700 border-emerald-500/20",
   expired: "bg-muted text-muted-foreground border-border",
   cancelled: "bg-destructive/10 text-destructive border-destructive/20",
   checked_in: "bg-blue-500/10 text-blue-700 border-blue-500/20",
@@ -35,12 +35,14 @@ const statusColors: Record<string, string> = {
 
 const mapStatus = (status: string) => {
   const key = status.toLowerCase();
-  if (key === "confirmed") return "booked";
-  if (key === "pending") return "reserved";
-  if (key === "completed") return "checked_out";
-  if (key === "checked-in") return "checked_in";
+  if (key === "confirmed" || key === "booked") return "confirmed";
+  if (key === "pending" || key === "reserved") return "reserved";
+  if (key === "completed" || key === "checked_out") return "checked_out";
+  if (key === "checked-in" || key === "checked_in") return "checked_in";
   if (key === "checked-out") return "checked_out";
-  if (key === "no show" || key === "no_show") return "no_show";
+  if (key === "no show" || key === "no_show" || key === "no-show") return "no_show";
+  if (key === "expired") return "expired";
+  if (key === "cancelled") return "cancelled";
   return key;
 };
 
@@ -109,7 +111,10 @@ const MyBookings = () => {
                   <CardContent className="p-5">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                       <div className="flex-1">
-                        <h3 className="font-semibold text-lg mb-1">{booking.hotel_name || `Hotel #${booking.hotel_id}`}</h3>
+                        <div className="flex items-center justify-between mb-2">
+                          <h3 className="font-semibold text-lg">{booking.hotel_name || `Hotel #${booking.hotel_id}`}</h3>
+                          <span className="text-sm font-mono text-muted-foreground">#{booking.booking_reference}</span>
+                        </div>
                         <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
                           <span className="flex items-center gap-1"><MapPin className="h-3.5 w-3.5" /> {booking.location || "Location"}</span>
                           <span className="flex items-center gap-1"><Calendar className="h-3.5 w-3.5" /> {booking.check_in} → {booking.check_out}</span>

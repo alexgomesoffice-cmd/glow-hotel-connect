@@ -96,13 +96,14 @@ const HotelAdminAddRoom = () => {
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         const data = await response.json();
         if (data.success && data.data && Array.isArray(data.data)) {
+          const roomAmenities = data.data.filter((amenity: any) => amenity.context === "ROOM");
           // Map backend response to component format
-          const mappedAmenities = (data.data as AmenityResponse[]).map((amenity) => ({
+          const mappedAmenities = (roomAmenities as AmenityResponse[]).map((amenity) => ({
             id: String(amenity.id),
             name: amenity.name
           }));
           setAvailableAmenities(mappedAmenities);
-          console.log("✅ Amenities loaded from backend:", mappedAmenities.length, "items");
+          console.log("✅ Room amenities loaded from backend:", mappedAmenities.length, "items");
         } else {
           throw new Error("No amenities data");
         }

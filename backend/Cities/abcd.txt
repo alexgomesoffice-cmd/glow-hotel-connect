@@ -1,0 +1,38 @@
+alright, now we'll be working on booking a hotel room.
+
+a user can browse the web withought logging in, can see room types and everything,. there are two things, room reserve for 30 mins if nt paid the room will be freed, and another option is booking via payment. (not gonna impliment yet).
+
+my rooms has room types and physical room, but there is a little thing i mean confusion that each room type may have varieties of room with different price. but on the front end im only fetching room type for available room. i wont touch it at this moment, i want to make my booking flow work
+
+so when a user tries to reserve, he must be logged in, if not logged in he will be sent to the log in page and after log in he will be brought back to the page where he was.
+
+look at my backend schema,
+
+enum BookingStatus {
+RESERVED
+BOOKED
+EXPIRED
+CANCELLED
+CHECKED_IN
+CHECKED_OUT
+NO_SHOW
+}
+
+enum TrackerStatus {
+RESERVED
+BOOKED
+EXPIRED
+CANCELLED
+CHECKED_IN
+CHECKED_OUT
+}
+
+enum RoomStatus {
+AVAILABLE
+UNAVAILABLE
+MAINTENANCE
+}
+
+i dont know which does what, there are md files that may be explain, read those, but before you start do anything make sure to be ver much clear with me. and discuss first, ask as many questions as you need to and inform me how all those are working, booking status, tracker status so that we both can be clear and firm with it.
+
+lets start working as i have asked you to

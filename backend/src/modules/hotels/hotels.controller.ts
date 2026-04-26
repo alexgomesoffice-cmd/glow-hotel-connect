@@ -1,0 +1,671 @@
+/**
+ * FILE: src/modules/hotels/hotels.controller.ts
+ * PURPOSE: HTTP request/response handlers for hotel operations
+ *
+ * WHAT IT DOES:
+ * - Handles POST /create to create new hotels
+ * - Handles GET /:id to retrieve hotel details
+ * - Handles GET / to list hotels with filters
+ * - Handles PUT /:id to update hotel info
+ * - Handles PUT /:id/approval to change approval status
+ * - Handles DELETE /:id to soft delete hotel
+ *
+ * USAGE:
+ * import { createHotelController, getHotelController } from './hotels.controller';
+ * router.post('/create', authenticate, createHotelController);
+ * router.get('/:id', getHotelController);
+ */
+
+import type { Request, Response, NextFunction } from "express";
+import {
+  createHotel,
+  createHotelWithDetails,
+  getHotel,
+  listHotels,
+  listAmenities,
+  updateHotel,
+  updateHotelApprovalStatus,
+  deleteHotel,
+  getHotelTypeOptions,
+  getRoomTypeOptions,
+  getBedTypeOptions,
+  getSearchSuggestions,
+} from "./hotels.service";
+import { getHotelAdmin, getHotelAdminAssignedHotel } from "./hotelAdmin.service";
+import {
+  validateCreateHotelInput,
+  validateUpdateHotelInput,
+  validateHotelId,
+  validateApprovalStatus,
+} from "./hotels.validation";
+
+/**
+ * Handles POST /api/hotels/create request
+ *
+ * REQUIRES: Authentication (system admin only)
+ *
+ * REQUEST BODY:
+ * {
+ *   "name": "Grand Hotel",
+ *   "email": "info@grandhotel.com",
+ *   "city": "Dhaka",
+ *   "address": "123 Main St",
+ *   "star_rating": 4.5
+ * }
+ *
+ * @async
+ * @param {Request} req - Express request object
+ * @param {Response} res - Express response object
+ * @param {NextFunction} next - Express next middleware function
+ * @returns {void}
+ */
+export async function createHotelController(
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    // Check authentication
+    if (!req.actor) {
+      res.status(401).json({
+        success: false,
+        message: "Unauthorized",
+        error: { code: "UNAUTHORIZED" },
+      });
+      return;
+    }
+
+    const hotelData = req.body;
+
+    // Validate input
+    const validation = validateCreateHotelInput(hotelData);
+    if (!validation.isValid) {
+      res.status(400).json({
+        success: false,
+        message: "Validation failed",
+        error: { code: "VALIDATION_ERROR", details: validation.errors },
+      });
+      return;
+    }
+
+    // If amenities/images/admin provided use the richer creator
+    const needsDetails = hotelData.amenities || hotelData.images || hotelData.admin;
+
+    // optional admin validation when admin details are provided
+    if (hotelData.admin) {
+      const adminErrors: string[] = [];
+      const { name, email, password } = hotelData.admin;
+      if (!name || typeof name !== "string") {
+        adminErrors.push("Admin name is required and must be a string");
+      }
+      if (!email || typeof email !== "string") {
+        adminErrors.push("Admin email is required and must be a string");
+      } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        adminErrors.push("Admin email is invalid");
+      }
+      if (!password || typeof password !== "string") {
+        adminErrors.push("Admin password is required and must be a string");
+      }
+      if (adminErrors.length) {
+        res.status(400).json({
+          success: false,
+          message: "Validation failed",
+          error: { code: "VALIDATION_ERROR", details: adminErrors },
+        });
+        return;
+      }
+    }
+
+    const hotel = needsDetails
+      ? await createHotelWithDetails(hotelData, req.actor.id)
+      : await createHotel(hotelData, req.actor.id);
+
+    // Return success
+    res.status(201).json({
+      success: true,
+      message: "Hotel created successfully",
+      data: hotel,
+    });
+  } catch (error: any) {
+    // log for debugging
+    console.error("createHotelController error", error);
+    // handle specific errors thrown during creation
+    if (error.message === "EMAIL_ALREADY_EXISTS") {
+      res.status(400).json({
+        success: false,
+        message: "Email already exists",
+        error: { code: "EMAIL_ALREADY_EXISTS" },
+      });
+      return;
+    }
+
+    // Unexpected error
+    res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      error: { code: "SERVER_ERROR" },
+    });
+  }
+}
+
+/**
+ * Handles GET /api/hotels/:id request
+ *
+ * URL PARAMS:
+ * id - Hotel ID
+ *
+ * @async
+ * @param {Request} req - Express request object
+ * @param {Response} res - Express response object
+ * @param {NextFunction} next - Express next middleware function
+ * @returns {void}
+ */
+export async function getHotelController(
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    const hotelId = parseInt((req.params.id as string) || "0", 10);
+
+    // Validate hotel ID
+    const validation = validateHotelId(hotelId);
+    if (!validation.isValid) {
+      res.status(400).json({
+        success: false,
+        message: "Validation failed",
+        error: { code: "VALIDATION_ERROR", details: validation.errors },
+      });
+      return;
+    }
+
+    // Call service
+    const hotel = await getHotel(hotelId);
+
+    // Return success
+    res.status(200).json({
+      success: true,
+      message: "Hotel retrieved successfully",
+      data: hotel,
+    });
+  } catch (error: any) {
+    // Handle service errors
+    if (error.message === "HOTEL_NOT_FOUND") {
+      res.status(404).json({
+        success: false,
+        message: "Hotel not found",
+        error: { code: "HOTEL_NOT_FOUND" },
+      });
+      return;
+    }
+
+    // Unexpected error
+    res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      error: { code: "SERVER_ERROR" },
+    });
+  }
+}
+
+/**
+ * Handles GET /api/hotels/amenities request
+ *
+ * @async
+ * @param {Request} req - Express request object
+ * @param {Response} res - Express response object
+ * @param {NextFunction} next - Express next middleware function
+ * @returns {void}
+ */
+export async function listAmenitiesController(
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    const amenities = await listAmenities();
+    res.status(200).json({
+      success: true,
+      message: "Amenities fetched successfully",
+      data: amenities,
+    });
+  } catch (error) {
+    console.error("listAmenitiesController error", error);
+    res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      error: { code: "SERVER_ERROR" },
+    });
+  }
+}
+
+/**
+ * Handles GET /api/hotels request
+ *
+ * QUERY PARAMS:
+ * skip - Records to skip (default: 0)
+ * take - Records to return (default: 10, max: 100)
+ * approval_status - Filter by status (DRAFT, PENDING_APPROVAL, PUBLISHED, REJECTED)
+ * city - Filter by city name
+ * hotel_type - Filter by hotel type
+ *
+ * @async
+ * @param {Request} req - Express request object
+ * @param {Response} res - Express response object
+ * @param {NextFunction} next - Express next middleware function
+ * @returns {void}
+ */
+export async function listHotelsController(
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    // Parse pagination
+    const skip = Math.max(0, parseInt(req.query.skip as string) || 0);
+    const take = Math.min(100, Math.max(1, parseInt(req.query.take as string) || 10));
+
+    // Parse filters
+    const filters: any = {};
+    if (req.query.approval_status) filters.approval_status = req.query.approval_status;
+    if (req.query.city) filters.city = req.query.city;
+    if (req.query.hotel_type) filters.hotel_type = req.query.hotel_type;
+
+    // Call service
+    const result = await listHotels(filters, skip, take);
+
+    // Return success
+    res.status(200).json({
+      success: true,
+      message: "Hotels retrieved successfully",
+      data: result,
+    });
+  } catch (error: any) {
+    // Unexpected error
+    res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      error: { code: "SERVER_ERROR" },
+    });
+  }
+}
+
+/**
+ * Handles PUT /api/hotels/:id request
+ *
+ * REQUIRES: Authentication (system admin only)
+ *
+ * URL PARAMS:
+ * id - Hotel ID
+ *
+ * REQUEST BODY:
+ * {
+ *   "name": "Updated Hotel Name",
+ *   "star_rating": 4.8
+ * }
+ *
+ * @async
+ * @param {Request} req - Express request object
+ * @param {Response} res - Express response object
+ * @param {NextFunction} next - Express next middleware function
+ * @returns {void}
+ */
+export async function updateHotelController(
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    // Check authentication
+    if (!req.actor) {
+      res.status(401).json({
+        success: false,
+        message: "Unauthorized",
+        error: { code: "UNAUTHORIZED" },
+      });
+      return;
+    }
+
+    const hotelId = parseInt((req.params.id as string) || "0", 10);
+
+    // Validate hotel ID
+    const idValidation = validateHotelId(hotelId);
+    if (!idValidation.isValid) {
+      res.status(400).json({
+        success: false,
+        message: "Validation failed",
+        error: { code: "VALIDATION_ERROR", details: idValidation.errors },
+      });
+      return;
+    }
+
+    // Validate update data
+    const dataValidation = validateUpdateHotelInput(req.body);
+    if (!dataValidation.isValid) {
+      res.status(400).json({
+        success: false,
+        message: "Validation failed",
+        error: { code: "VALIDATION_ERROR", details: dataValidation.errors },
+      });
+      return;
+    }
+
+    // If logged-in actor is hotel admin, verify hotel ownership
+    if (req.actor.role === "HOTEL_ADMIN") {
+      const hotelAdmin = await getHotelAdmin(req.actor.id);
+      if (!hotelAdmin || hotelAdmin.hotel_id !== hotelId) {
+        res.status(403).json({
+          success: false,
+          message: "Forbidden: You can only manage your assigned hotel",
+          error: { code: "FORBIDDEN" },
+        });
+        return;
+      }
+    }
+
+    // Call service
+    const updated = await updateHotel(hotelId, req.body);
+
+    // Return success
+    res.status(200).json({
+      success: true,
+      message: "Hotel updated successfully",
+      data: updated,
+    });
+  } catch (error: any) {
+    // Handle service errors
+    if (error.message === "HOTEL_NOT_FOUND") {
+      res.status(404).json({
+        success: false,
+        message: "Hotel not found",
+        error: { code: "HOTEL_NOT_FOUND" },
+      });
+      return;
+    }
+
+    // Unexpected error
+    console.error("Hotel update error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      error: { code: "SERVER_ERROR", details: error.message },
+    });
+  }
+}
+
+/**
+ * Handles PUT /api/hotels/:id/approval request
+ *
+ * REQUIRES: Authentication (system admin or hotel admin for their assigned hotel)
+ *
+ * URL PARAMS:
+ * id - Hotel ID
+ *
+ * REQUEST BODY:
+ * {
+ *   "approval_status": "PUBLISHED"
+ * }
+ *
+ * @async
+ * @param {Request} req - Express request object
+ * @param {Response} res - Express response object
+ * @param {NextFunction} next - Express next middleware function
+ * @returns {void}
+ */
+export async function updateApprovalStatusController(
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    // Check authentication
+    if (!req.actor) {
+      res.status(401).json({
+        success: false,
+        message: "Unauthorized",
+        error: { code: "UNAUTHORIZED" },
+      });
+      return;
+    }
+
+    const hotelId = parseInt((req.params.id as string) || "0", 10);
+    const { approval_status } = req.body;
+
+    // Validate hotel ID
+    const idValidation = validateHotelId(hotelId);
+    if (!idValidation.isValid) {
+      res.status(400).json({
+        success: false,
+        message: "Validation failed",
+        error: { code: "VALIDATION_ERROR", details: idValidation.errors },
+      });
+      return;
+    }
+
+    // Validate approval status
+    const statusValidation = validateApprovalStatus(approval_status);
+    if (!statusValidation.isValid) {
+      res.status(400).json({
+        success: false,
+        message: "Validation failed",
+        error: { code: "VALIDATION_ERROR", details: statusValidation.errors },
+      });
+      return;
+    }
+
+    // Authorization check
+    if (req.actor.role === "SYSTEM_ADMIN") {
+      // System admins can update any hotel
+    } else if (req.actor.role === "HOTEL_ADMIN") {
+      // Hotel admins can only update their assigned hotel
+      try {
+        const assignedHotel = await getHotelAdminAssignedHotel(req.actor.id);
+        if (assignedHotel.hotel_id !== hotelId) {
+          res.status(403).json({
+            success: false,
+            message: "You can only update your assigned hotel",
+            error: { code: "FORBIDDEN" },
+          });
+          return;
+        }
+      } catch (authError: any) {
+        if (authError.message === "ADMIN_NOT_FOUND" || authError.message === "HOTEL_NOT_FOUND") {
+          res.status(403).json({
+            success: false,
+            message: "Hotel admin not found or not assigned to a hotel",
+            error: { code: "FORBIDDEN" },
+          });
+          return;
+        }
+        throw authError; // Re-throw unexpected errors
+      }
+    } else {
+      // Other roles cannot update approval status
+      res.status(403).json({
+        success: false,
+        message: "Insufficient permissions",
+        error: { code: "FORBIDDEN" },
+      });
+      return;
+    }
+
+    // Call service
+    const updated = await updateHotelApprovalStatus(
+      hotelId, 
+      approval_status, 
+      req.actor.role === "SYSTEM_ADMIN" ? req.actor.id : undefined
+    );
+
+    // Return success
+    res.status(200).json({
+      success: true,
+      message: "Hotel approval status updated successfully",
+      data: updated,
+    });
+  } catch (error: any) {
+    // Handle service errors
+    if (error.message === "HOTEL_NOT_FOUND") {
+      res.status(404).json({
+        success: false,
+        message: "Hotel not found",
+        error: { code: "HOTEL_NOT_FOUND" },
+      });
+      return;
+    }
+
+    if (error.message === "ADMIN_NOT_FOUND") {
+      res.status(403).json({
+        success: false,
+        message: "Hotel admin not found",
+        error: { code: "FORBIDDEN" },
+      });
+      return;
+    }
+
+    // Unexpected error
+    res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      error: { code: "SERVER_ERROR" },
+    });
+  }
+}
+
+/**
+ * Handles DELETE /api/hotels/:id request
+ *
+ * REQUIRES: Authentication (system admin only)
+ *
+ * URL PARAMS:
+ * id - Hotel ID to delete
+ *
+ * @async
+ * @param {Request} req - Express request object
+ * @param {Response} res - Express response object
+ * @param {NextFunction} next - Express next middleware function
+ * @returns {void}
+ */
+export async function deleteHotelController(
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    // Check authentication
+    if (!req.actor) {
+      res.status(401).json({
+        success: false,
+        message: "Unauthorized",
+        error: { code: "UNAUTHORIZED" },
+      });
+      return;
+    }
+
+    const hotelId = parseInt((req.params.id as string) || "0", 10);
+
+    // Validate hotel ID
+    const validation = validateHotelId(hotelId);
+    if (!validation.isValid) {
+      res.status(400).json({
+        success: false,
+        message: "Validation failed",
+        error: { code: "VALIDATION_ERROR", details: validation.errors },
+      });
+      return;
+    }
+
+    // Call service
+    const result = await deleteHotel(hotelId);
+
+    // Return success
+    res.status(200).json({
+      success: true,
+      message: result.message,
+      data: { hotel_id: result.hotel_id },
+    });
+  } catch (error: any) {
+    // Handle service errors
+    if (error.message === "HOTEL_NOT_FOUND") {
+      res.status(404).json({
+        success: false,
+        message: "Hotel not found",
+        error: { code: "HOTEL_NOT_FOUND" },
+      });
+      return;
+    }
+
+    // Unexpected error
+    res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      error: { code: "SERVER_ERROR" },
+    });
+  }
+}
+
+/**
+ * GET /api/meta/hotel-types
+ * Public enum option list for hero + filters.
+ */
+export function listHotelTypesController(req: Request, res: Response) {
+  res.status(200).json({
+    success: true,
+    message: "Hotel types fetched successfully",
+    data: getHotelTypeOptions(),
+  });
+}
+
+/**
+ * GET /api/meta/room-types
+ * Public enum option list for hero + filters.
+ */
+export function listRoomTypesController(req: Request, res: Response) {
+  res.status(200).json({
+    success: true,
+    message: "Room types fetched successfully",
+    data: getRoomTypeOptions(),
+  });
+}
+
+/**
+ * GET /api/meta/bed-types
+ * Public enum option list for hero + filters.
+ */
+export function listBedTypesController(req: Request, res: Response) {
+  res.status(200).json({
+    success: true,
+    message: "Bed types fetched successfully",
+    data: getBedTypeOptions(),
+  });
+}
+
+/**
+ * GET /api/meta/search-suggestions
+ * Public search suggestions for hero search box
+ * @query {q: string} - Search query
+ * @returns {hotels: [], cities: []}
+ */
+export async function listSearchSuggestionsController(req: Request, res: Response) {
+  try {
+    const query = (req.query.q as string) || '';
+    if (!query || query.length < 2) {
+      return res.status(200).json({
+        success: true,
+        data: { hotels: [], cities: [] },
+      });
+    }
+
+    const suggestions = await getSearchSuggestions(query);
+    res.status(200).json({
+      success: true,
+      message: "Search suggestions fetched successfully",
+      data: suggestions,
+    });
+  } catch (error) {
+    console.error("Error fetching search suggestions:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch search suggestions",
+    });
+  }
+}

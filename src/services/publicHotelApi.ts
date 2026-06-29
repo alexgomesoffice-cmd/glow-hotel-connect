@@ -1,4 +1,5 @@
 import { apiGet } from "@/utils/api";
+import { DUMMY_PUBLIC_HOTELS } from "@/data/dummyHotels";
 
 export interface PublicHotel {
   hotel_id: number;

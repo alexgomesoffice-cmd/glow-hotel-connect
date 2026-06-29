@@ -3,20 +3,20 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Car, MapPin, Star, Fuel, Users, Settings2 } from "lucide-react";
+import { MapPin, Star, Fuel, Users, Settings2 } from "lucide-react";
 
 const cars = [
-  { id: 1, name: "Tesla Model 3", type: "Electric", price: 89, rating: 4.9, seats: 5, fuel: "Electric", transmission: "Auto", image: "https://images.unsplash.com/photo-1560958089-b8a1929cea89?w=600" },
-  { id: 2, name: "BMW 3 Series", type: "Sedan", price: 75, rating: 4.7, seats: 5, fuel: "Petrol", transmission: "Auto", image: "https://images.unsplash.com/photo-1555215695-3004980ad54e?w=600" },
-  { id: 3, name: "Mercedes GLE", type: "SUV", price: 120, rating: 4.8, seats: 7, fuel: "Diesel", transmission: "Auto", image: "https://images.unsplash.com/photo-1606611013016-969c19ba27ae?w=600" },
-  { id: 4, name: "Audi A4", type: "Sedan", price: 70, rating: 4.6, seats: 5, fuel: "Petrol", transmission: "Auto", image: "https://images.unsplash.com/photo-1606664515524-ed2f786a0bd6?w=600" },
-  { id: 5, name: "Range Rover Sport", type: "SUV", price: 150, rating: 4.9, seats: 5, fuel: "Diesel", transmission: "Auto", image: "https://images.unsplash.com/photo-1606016159991-dfe4f2746ad5?w=600" },
-  { id: 6, name: "Porsche 911", type: "Sports", price: 200, rating: 5.0, seats: 2, fuel: "Petrol", transmission: "Auto", image: "https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=600" },
+  { id: 1, name: "Toyota Premio", type: "Sedan", price: 4500, rating: 4.7, seats: 5, fuel: "Octane", transmission: "Auto", location: "Dhaka", image: "https://images.unsplash.com/photo-1621007947382-bb3c3994e3fb?w=600" },
+  { id: 2, name: "Toyota Noah", type: "Microbus", price: 6000, rating: 4.8, seats: 11, fuel: "Diesel", transmission: "Auto", location: "Dhaka", image: "https://images.unsplash.com/photo-1632245889029-e406faaa34cd?w=600" },
+  { id: 3, name: "Toyota Allion", type: "Sedan", price: 4000, rating: 4.6, seats: 5, fuel: "Octane", transmission: "Auto", location: "Chattogram", image: "https://images.unsplash.com/photo-1550355291-bbee04a92027?w=600" },
+  { id: 4, name: "Toyota Hiace", type: "Microbus", price: 7500, rating: 4.7, seats: 15, fuel: "Diesel", transmission: "Manual", location: "Cox's Bazar", image: "https://images.unsplash.com/photo-1559416523-140ddc3d238c?w=600" },
+  { id: 5, name: "Mitsubishi Pajero", type: "SUV", price: 9000, rating: 4.9, seats: 7, fuel: "Diesel", transmission: "Auto", location: "Sylhet", image: "https://images.unsplash.com/photo-1606016159991-dfe4f2746ad5?w=600" },
+  { id: 6, name: "Toyota Axio", type: "Sedan", price: 3500, rating: 4.5, seats: 5, fuel: "Octane", transmission: "Auto", location: "Dhaka", image: "https://images.unsplash.com/photo-1549924231-f129b911e442?w=600" },
 ];
 
 const CarRental = () => {
   const [filter, setFilter] = useState("All");
-  const types = ["All", "Electric", "Sedan", "SUV", "Sports"];
+  const types = ["All", "Sedan", "SUV", "Microbus"];
   const filtered = filter === "All" ? cars : cars.filter(c => c.type === filter);
 
   return (
@@ -26,10 +26,10 @@ const CarRental = () => {
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12 animate-fade-in-up">
             <h1 className="text-4xl sm:text-5xl font-bold mb-4">
-              Rent Your <span className="text-gradient">Dream Car</span>
+              Rent a Car in <span className="text-gradient">Bangladesh</span>
             </h1>
             <p className="text-muted-foreground text-lg max-w-xl mx-auto">
-              Premium vehicles at unbeatable prices. Drive in style wherever you go.
+              Reliable vehicles with experienced drivers for your journey across Bangladesh.
             </p>
           </div>
 
@@ -67,6 +67,9 @@ const CarRental = () => {
                   <div className="absolute top-3 right-3 glass px-3 py-1 rounded-full text-xs font-medium">
                     {car.type}
                   </div>
+                  <div className="absolute top-3 left-3 glass px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1">
+                    <MapPin className="h-3 w-3" /> {car.location}
+                  </div>
                 </div>
                 <CardContent className="p-5">
                   <div className="flex items-center justify-between mb-3">
@@ -83,7 +86,7 @@ const CarRental = () => {
                   </div>
                   <div className="flex items-center justify-between">
                     <div>
-                      <span className="text-2xl font-bold text-gradient">${car.price}</span>
+                      <span className="text-2xl font-bold text-gradient">৳{car.price}</span>
                       <span className="text-sm text-muted-foreground">/day</span>
                     </div>
                     <Button variant="hero" size="sm">Rent Now</Button>

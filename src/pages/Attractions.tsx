@@ -5,12 +5,15 @@ import { Button } from "@/components/ui/button";
 import { MapPin, Star, Clock, Ticket } from "lucide-react";
 
 const attractions = [
-  { id: 1, name: "Eiffel Tower", location: "Paris, France", price: 25, rating: 4.8, duration: "2-3 hrs", category: "Landmark", image: "https://images.unsplash.com/photo-1511739001486-6bfe10ce65f4?w=600" },
-  { id: 2, name: "Burj Khalifa", location: "Dubai, UAE", price: 40, rating: 4.9, duration: "1-2 hrs", category: "Landmark", image: "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?w=600" },
-  { id: 3, name: "Shibuya Crossing", location: "Tokyo, Japan", price: 0, rating: 4.7, duration: "1 hr", category: "Experience", image: "https://images.unsplash.com/photo-1542051841857-5f90071e7989?w=600" },
-  { id: 4, name: "Sagrada Familia", location: "Barcelona, Spain", price: 26, rating: 4.9, duration: "2-3 hrs", category: "Architecture", image: "https://images.unsplash.com/photo-1583779457711-ab081d9e2985?w=600" },
-  { id: 5, name: "Tower Bridge", location: "London, UK", price: 12, rating: 4.6, duration: "1-2 hrs", category: "Landmark", image: "https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?w=600" },
-  { id: 6, name: "Grand Canyon", location: "Arizona, USA", price: 35, rating: 5.0, duration: "Full day", category: "Nature", image: "https://images.unsplash.com/photo-1474044159687-1ee9f3a51722?w=600" },
+  { id: 1, name: "Cox's Bazar Beach", location: "Cox's Bazar, Chattogram", price: 0, rating: 4.8, duration: "Full day", category: "Beach", image: "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=600" },
+  { id: 2, name: "Sundarbans Mangrove Forest", location: "Khulna", price: 1500, rating: 4.9, duration: "2-3 days", category: "Nature", image: "https://images.unsplash.com/photo-1544735716-392fe2489ffa?w=600" },
+  { id: 3, name: "Lalbagh Fort", location: "Old Dhaka, Dhaka", price: 20, rating: 4.6, duration: "1-2 hrs", category: "Heritage", image: "https://images.unsplash.com/photo-1599661046289-e31897846e41?w=600" },
+  { id: 4, name: "Sajek Valley", location: "Rangamati, Chattogram", price: 800, rating: 4.9, duration: "2 days", category: "Mountain", image: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600" },
+  { id: 5, name: "Ahsan Manzil", location: "Old Dhaka, Dhaka", price: 25, rating: 4.5, duration: "1-2 hrs", category: "Heritage", image: "https://images.unsplash.com/photo-1564507592333-c60657eea523?w=600" },
+  { id: 6, name: "Sixty Dome Mosque", location: "Bagerhat, Khulna", price: 30, rating: 4.7, duration: "1-2 hrs", category: "Heritage", image: "https://images.unsplash.com/photo-1564769662533-4f00a87b4056?w=600" },
+  { id: 7, name: "Saint Martin's Island", location: "Cox's Bazar, Chattogram", price: 1200, rating: 4.8, duration: "1-2 days", category: "Beach", image: "https://images.unsplash.com/photo-1559494007-9f5847c49d94?w=600" },
+  { id: 8, name: "Ratargul Swamp Forest", location: "Sylhet", price: 500, rating: 4.6, duration: "Half day", category: "Nature", image: "https://images.unsplash.com/photo-1437482078695-73f5ca6c96e2?w=600" },
+  { id: 9, name: "Jaflong", location: "Sylhet", price: 600, rating: 4.7, duration: "Full day", category: "Nature", image: "https://images.unsplash.com/photo-1470770841072-f978cf4d019e?w=600" },
 ];
 
 const Attractions = () => {
@@ -21,10 +24,10 @@ const Attractions = () => {
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12 animate-fade-in-up">
             <h1 className="text-4xl sm:text-5xl font-bold mb-4">
-              Explore <span className="text-gradient">Attractions</span>
+              Explore <span className="text-gradient">Bangladesh</span>
             </h1>
             <p className="text-muted-foreground text-lg max-w-xl mx-auto">
-              Discover iconic landmarks, hidden gems, and unforgettable experiences worldwide.
+              Discover iconic landmarks, breathtaking nature, and rich heritage across Bangladesh.
             </p>
           </div>
 
@@ -55,7 +58,7 @@ const Attractions = () => {
                   </p>
                   <div className="flex items-center gap-4 text-sm text-muted-foreground mb-4">
                     <span className="flex items-center gap-1"><Clock className="h-3.5 w-3.5" /> {a.duration}</span>
-                    <span className="flex items-center gap-1"><Ticket className="h-3.5 w-3.5" /> {a.price === 0 ? "Free" : `$${a.price}`}</span>
+                    <span className="flex items-center gap-1"><Ticket className="h-3.5 w-3.5" /> {a.price === 0 ? "Free" : `৳${a.price}`}</span>
                   </div>
                   <Button variant="hero" size="sm" className="w-full">Book Tickets</Button>
                 </CardContent>

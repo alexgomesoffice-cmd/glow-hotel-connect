@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Star, Heart, MapPin, ArrowRight } from "lucide-react";
+import { Star, Heart, MapPin, ArrowRight, BedDouble } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { fetchPublicHotels, PublicHotel } from "@/services/publicHotelApi";
 
@@ -34,9 +34,12 @@ const FeaturedHotels = () => {
     setError(null);
     fetchPublicHotels()
       .then((data) => {
-        // Sort by star rating and take top 4
-        const sorted = [...data].sort((a, b) => (b.hotel_details?.star_rating || 0) - (a.hotel_details?.star_rating || 0));
-        setHotels(sorted.slice(0, 4));
+        const sorted = [...data].sort(
+          (a, b) =>
+            Number(b.hotel_details?.star_rating || 0) -
+            Number(a.hotel_details?.star_rating || 0)
+        );
+        setHotels(sorted.slice(0, 6));
         setLoading(false);
       })
       .catch((err) => {
@@ -60,7 +63,6 @@ const FeaturedHotels = () => {
 
   return (
     <section ref={sectionRef} className="py-24 relative overflow-hidden bg-secondary/20">
-      {/* Background decorations */}
       <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-border to-transparent" />
       <div className="absolute top-1/3 -left-40 w-80 h-80 bg-accent/10 rounded-full blur-3xl" />
 
@@ -73,7 +75,7 @@ const FeaturedHotels = () => {
                 isVisible ? "animate-fade-in-up" : "opacity-0"
               }`}
             >
-              Hotels loved by <span className="text-gradient">guests</span>
+              Featured <span className="text-gradient">hotels</span>
             </h2>
             <p
               className={`text-muted-foreground max-w-lg ${
@@ -81,7 +83,7 @@ const FeaturedHotels = () => {
               }`}
               style={{ animationDelay: "100ms" }}
             >
-              Top-rated stays with exceptional reviews and unforgettable experiences
+              Hand-picked stays with exceptional amenities, top ratings, and a range of room options
             </p>
           </div>
           <button
@@ -91,102 +93,183 @@ const FeaturedHotels = () => {
             }`}
             style={{ animationDelay: "200ms" }}
           >
-            View all loved hotels
+            View all hotels
             <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
           </button>
         </div>
 
         {/* Hotels Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {error && (
-            <div className="col-span-4 text-center py-16">
+            <div className="col-span-full text-center py-16">
               <p className="text-xl font-semibold mb-2 text-destructive">{error}</p>
               <p className="text-muted-foreground">Try again later</p>
             </div>
           )}
           {!error && loading && (
-            <div className="col-span-4 text-center py-16">
+            <div className="col-span-full text-center py-16">
               <p className="text-xl font-semibold mb-2">Loading hotels...</p>
             </div>
           )}
           {!error && !loading && hotels.map((hotel, index) => {
-            const coverImg = hotel.hotel_images?.find(img => img.is_cover)?.image_url || hotel.hotel_images?.[0]?.image_url || "https://via.placeholder.com/400x300?text=No+Image";
+            const coverImg =
+              hotel.hotel_images?.find((img) => img.is_cover)?.image_url ||
+              hotel.hotel_images?.[0]?.image_url ||
+              "https://via.placeholder.com/600x400?text=No+Image";
+
+            const amenities =
+              hotel.hotel_amenities?.map((a) => a.amenity.name).filter(Boolean) || [];
+
+            const roomTypes = Array.from(
+              new Set(
+                (hotel.hotel_rooms || [])
+                  .map((r) => r.room_type)
+                  .filter((t): t is string => Boolean(t))
+              )
+            );
+
+            const minPrice =
+              hotel.hotel_rooms && hotel.hotel_rooms.length > 0
+                ? Math.min(...hotel.hotel_rooms.map((r) => Number(r.base_price)))
+                : null;
+
             return (
               <div
                 key={hotel.hotel_id}
                 onClick={() => handleCardClick(hotel.hotel_id)}
-                className={`group relative rounded-2xl overflow-hidden bg-card border border-border hover:border-primary/30 transition-all duration-500 cursor-pointer hover:scale-[1.02] hover:-translate-y-3 ${
+                className={`group relative flex flex-col rounded-2xl overflow-hidden bg-card border border-border hover:border-primary/40 transition-all duration-500 cursor-pointer hover:-translate-y-2 hover:shadow-[var(--shadow-elevated)] ${
                   isVisible ? "animate-fade-in-up" : "opacity-0"
                 }`}
                 style={{ animationDelay: `${(index + 2) * 100}ms` }}
               >
-                {/* Image Container */}
-                <div className="relative aspect-[4/3] overflow-hidden">
+                {/* Image */}
+                <div className="relative aspect-[16/10] overflow-hidden">
                   <img
                     src={coverImg}
                     alt={hotel.name}
-                    className="w-full h-full object-cover transition-all duration-700 group-hover:scale-110 group-hover:brightness-105"
+                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                   />
-                  {/* Animated shine overlay */}
-                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/15 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
-                  {/* Like Button */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
+
+                  {/* Hotel Type - top left */}
+                  {hotel.hotel_type && (
+                    <div className="absolute top-4 left-4 px-3 py-1.5 rounded-full bg-primary/90 backdrop-blur-sm text-xs font-semibold text-primary-foreground uppercase tracking-wide z-10">
+                      {hotel.hotel_type}
+                    </div>
+                  )}
+
+                  {/* Wishlist */}
                   <button
                     onClick={(e) => toggleLike(e, hotel.hotel_id)}
                     className="absolute top-4 right-4 p-2.5 rounded-full glass transition-all duration-300 hover:scale-125 active:scale-95 z-10"
+                    aria-label="Add to wishlist"
                   >
                     <Heart
                       className={`h-5 w-5 transition-all duration-300 ${
                         likedHotels.includes(hotel.hotel_id)
                           ? "fill-destructive text-destructive scale-110"
-                          : "text-foreground hover:text-destructive"
+                          : "text-white hover:text-destructive"
                       }`}
                     />
                   </button>
-                  {/* Rating Badge */}
+
+                  {/* Rating */}
                   {hotel.hotel_details?.star_rating && (
-                    <div className="absolute top-4 left-4 flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary/90 backdrop-blur-sm group-hover:scale-105 transition-transform z-10">
-                      <Star className="h-4 w-4 fill-primary-foreground text-primary-foreground animate-pulse" />
-                      <span className="text-sm font-semibold text-primary-foreground">
-                        {hotel.hotel_details.star_rating}
-                      </span>
+                    <div className="absolute bottom-4 left-4 flex items-center gap-1 px-2.5 py-1 rounded-lg bg-background/90 backdrop-blur-sm z-10">
+                      <Star className="h-3.5 w-3.5 fill-primary text-primary" />
+                      <span className="text-sm font-bold">{hotel.hotel_details.star_rating}</span>
                     </div>
                   )}
                 </div>
+
                 {/* Content */}
-                <div className="p-5">
-                  <h3 className="text-lg font-semibold mb-2 group-hover:text-primary transition-colors line-clamp-1">
+                <div className="flex flex-col flex-1 p-5">
+                  <h3 className="text-lg font-bold mb-1 line-clamp-1 group-hover:text-primary transition-colors">
                     {hotel.name}
                   </h3>
-                  <div className="flex items-center gap-1.5 text-muted-foreground mb-4">
-                    <MapPin className="h-4 w-4 group-hover:text-primary transition-colors" />
-                    <span className="text-sm">{hotel.city || hotel.address || "Unknown"}</span>
+                  <div className="flex items-center gap-1.5 text-muted-foreground mb-3">
+                    <MapPin className="h-4 w-4" />
+                    <span className="text-sm line-clamp-1">
+                      {hotel.city || hotel.address || "Unknown"}
+                    </span>
                   </div>
-                  <div className="flex items-end justify-between">
-                    <div>
-                      {hotel.hotel_rooms && hotel.hotel_rooms.length > 0 ? (
-                        <>
-                          <span className="text-2xl font-bold text-gradient">
-                            ${hotel.hotel_rooms
-                              .map((room) => room.base_price)
-                              .reduce((min, price) => price < min ? price : min, hotel.hotel_rooms[0].base_price)}
+
+                  {/* Description */}
+                  {hotel.hotel_details?.description && (
+                    <p className="text-sm text-muted-foreground line-clamp-2 mb-4">
+                      {hotel.hotel_details.description}
+                    </p>
+                  )}
+
+                  {/* Amenities */}
+                  {amenities.length > 0 && (
+                    <div className="flex flex-wrap gap-2 mb-4">
+                      {amenities.slice(0, 4).map((a) => (
+                        <span
+                          key={a}
+                          className="px-2.5 py-1 rounded-md bg-secondary text-xs text-secondary-foreground"
+                        >
+                          {a}
+                        </span>
+                      ))}
+                      {amenities.length > 4 && (
+                        <span className="px-2.5 py-1 rounded-md bg-secondary text-xs text-muted-foreground">
+                          +{amenities.length - 4} more
+                        </span>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Room types */}
+                  {roomTypes.length > 0 && (
+                    <div className="mb-4">
+                      <div className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground mb-2">
+                        <BedDouble className="h-3.5 w-3.5" />
+                        Room types
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        {roomTypes.slice(0, 3).map((t) => (
+                          <span
+                            key={t}
+                            className="px-2.5 py-1 rounded-full border border-border text-xs"
+                          >
+                            {t}
                           </span>
+                        ))}
+                        {roomTypes.length > 3 && (
+                          <span className="px-2.5 py-1 rounded-full border border-border text-xs text-muted-foreground">
+                            +{roomTypes.length - 3}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Footer */}
+                  <div className="mt-auto pt-4 border-t border-border flex items-end justify-between">
+                    <div>
+                      {minPrice !== null ? (
+                        <>
+                          <span className="text-xs text-muted-foreground">from </span>
+                          <span className="text-xl font-bold text-gradient">${minPrice}</span>
                           <span className="text-sm text-muted-foreground">/night</span>
                         </>
                       ) : (
-                        <span className="text-sm text-muted-foreground">No rooms available</span>
+                        <span className="text-sm text-muted-foreground">No rooms</span>
                       )}
                     </div>
+                    <Button
+                      variant="hero"
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleCardClick(hotel.hotel_id);
+                      }}
+                    >
+                      View Details
+                    </Button>
                   </div>
                 </div>
-                {/* View Details Overlay - no blur, keeps zoom visible */}
-                <div className="absolute inset-0 flex items-center justify-center bg-background/70 opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none">
-                  <Button variant="hero" size="lg" className="scale-90 group-hover:scale-100 transition-transform duration-300 shadow-xl pointer-events-auto">
-                    View Details
-                  </Button>
-                </div>
-                {/* Hover border glow */}
-                <div className="absolute inset-0 border-2 border-transparent group-hover:border-primary/30 rounded-2xl transition-colors pointer-events-none" />
-                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none bg-gradient-to-t from-primary/5 via-transparent to-transparent rounded-2xl" />
               </div>
             );
           })}

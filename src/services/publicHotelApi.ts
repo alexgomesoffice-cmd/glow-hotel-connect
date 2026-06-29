@@ -51,7 +51,7 @@ export async function fetchPublicHotels(params?: {
   check_out?: string;
   guests?: number;
   rooms?: number;
-}) {
+}): Promise<PublicHotel[]> {
   const queryParams = new URLSearchParams();
   if (params?.location) queryParams.append("location", params.location);
   if (params?.check_in) queryParams.append("check_in", params.check_in);
@@ -60,12 +60,37 @@ export async function fetchPublicHotels(params?: {
   if (params?.rooms) queryParams.append("rooms", String(params.rooms));
 
   const endpoint = `/end-users/hotels${queryParams.toString() ? `?${queryParams.toString()}` : ""}`;
-  const response = await apiGet(endpoint);
-  console.log("Fetch Public Hotels Response:", response);
-  if (response.success === false) {
-    throw new Error(response.message || "Failed to fetch hotels");
+
+  try {
+    const response = await apiGet(endpoint);
+    console.log("Fetch Public Hotels Response:", response);
+    if (response.success === false) {
+      throw new Error(response.message || "Failed to fetch hotels");
+    }
+    const hotels: PublicHotel[] = response.hotels || [];
+    // If the backend returns no hotels, fall back to dummy data so the UI stays populated.
+    if (!hotels.length) {
+      return filterDummyHotels(params?.location);
+    }
+    return hotels;
+  } catch (error) {
+    // DUMMY DATA FALLBACK — backend unreachable (e.g. local API not running).
+    console.warn("fetchPublicHotels: using dummy hotel data fallback.", error);
+    return filterDummyHotels(params?.location);
   }
-  return response.hotels || [];
+}
+
+// Filters the dummy hotels by location (city/name) when provided.
+function filterDummyHotels(location?: string): PublicHotel[] {
+  if (!location) return DUMMY_PUBLIC_HOTELS;
+  const q = location.trim().toLowerCase();
+  const filtered = DUMMY_PUBLIC_HOTELS.filter(
+    (h) =>
+      h.city?.toLowerCase().includes(q) ||
+      h.name.toLowerCase().includes(q) ||
+      h.address?.toLowerCase().includes(q)
+  );
+  return filtered.length ? filtered : DUMMY_PUBLIC_HOTELS;
 }
 
 export interface SearchSuggestion {

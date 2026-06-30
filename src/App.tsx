@@ -12,6 +12,7 @@ import DestinationHotels from "./pages/DestinationHotels";
 import Popular from "./pages/Popular";
 import CarRental from "./pages/CarRental";
 import Attractions from "./pages/Attractions";
+import Blog from "./pages/Blog";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import AdminLogin from "./pages/AdminLogin";
@@ -71,6 +72,7 @@ const App = () => (
             <Route path="/popular" element={<Popular />} />
             <Route path="/car-rental" element={<CarRental />} />
             <Route path="/attractions" element={<Attractions />} />
+            <Route path="/blog" element={<Blog />} />
             <Route path="/login" element={<Login />} />
             <Route path="/admin-login" element={<AdminLogin />} />
             <Route path="/hotel-admin-login" element={<HotelAdminLogin />} />

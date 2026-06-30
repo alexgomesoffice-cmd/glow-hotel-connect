@@ -44,6 +44,7 @@ const Navbar = () => {
     { name: "Stay", path: "/" },
     { name: "Car Rental", path: "/car-rental" },
     { name: "Attractions", path: "/attractions" },
+    { name: "Blog", path: "/blog" },
   ];
 
   const initials = user ? user.name.split(" ").map((n: string) => n[0]).join("").slice(0, 2).toUpperCase() : "";

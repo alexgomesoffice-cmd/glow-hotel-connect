@@ -119,14 +119,6 @@ const Login = () => {
             height={1280}
           />
           <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent" />
-          <div className="absolute bottom-4 left-4">
-            <div className="flex items-center gap-2">
-              <div className="bg-gradient-to-r from-primary to-accent p-2 rounded-lg">
-                <Hotel className="h-5 w-5 text-primary-foreground" />
-              </div>
-              <span className="text-xl font-bold text-primary-foreground">StayVista</span>
-            </div>
-          </div>
         </div>
 
         <div className="relative z-10 w-full max-w-md animate-fade-in-up">

@@ -86,9 +86,7 @@ const Login = () => {
       </div>
 
       {/* Right form side */}
-      <div className="w-full lg:w-1/2 min-h-screen flex flex-col items-center justify-center p-6 relative overflow-hidden">
-        <div className="absolute top-0 left-1/4 w-96 h-96 bg-primary/10 rounded-full blur-3xl" />
-        <div className="absolute bottom-0 right-1/4 w-80 h-80 bg-accent/10 rounded-full blur-3xl" />
+      <div className="w-full lg:w-1/2 min-h-screen flex flex-col items-center justify-center p-6 relative lg:bg-card/80 lg:backdrop-blur-xl lg:rounded-l-3xl lg:border-l lg:border-border/30 lg:shadow-2xl">
 
         {/* Mobile image banner */}
         <div className="lg:hidden w-full max-w-md h-44 mb-6 relative rounded-2xl overflow-hidden animate-fade-in-down">

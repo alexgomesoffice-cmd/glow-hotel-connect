@@ -75,32 +75,13 @@ const Login = () => {
         <div className="absolute inset-0 bg-gradient-to-br from-background/80 via-background/30 to-transparent" />
 
         <div className="absolute top-8 left-8 z-10 animate-fade-in-down">
-          <Link to="/" className="flex items-center gap-3 group">
-            <div className="relative">
-              <div className="absolute inset-0 bg-gradient-to-r from-primary to-accent rounded-xl blur-lg opacity-50 group-hover:opacity-75 transition-opacity" />
-              <div className="relative bg-gradient-to-r from-primary to-accent p-2.5 rounded-xl">
-                <Hotel className="h-6 w-6 text-primary-foreground" />
-              </div>
-            </div>
-            <span className="text-2xl font-bold text-primary-foreground">StayVista</span>
+          <Link
+            to="/"
+            className="inline-flex items-center gap-3 bg-gradient-to-r from-primary to-accent pl-2.5 pr-4 py-2 rounded-full shadow-lg shadow-primary/20 hover:opacity-90 hover:shadow-primary/30 transition-all"
+          >
+            <Hotel className="h-5 w-5 text-primary-foreground" />
+            <span className="text-lg font-bold text-primary-foreground">StayVista</span>
           </Link>
-        </div>
-
-        <div className="absolute bottom-8 left-8 right-8 z-10 animate-fade-in-up delay-200">
-          <div className="glass rounded-2xl p-6 max-w-md">
-            <p className="text-foreground font-medium text-lg leading-relaxed">
-              "StayVista made our vacation truly special. The easiest way to discover and book the finest stays in Bangladesh."
-            </p>
-            <div className="mt-4 flex items-center gap-3">
-              <div className="h-10 w-10 rounded-full bg-gradient-to-r from-primary to-accent flex items-center justify-center text-primary-foreground font-semibold text-sm">
-                SR
-              </div>
-              <div>
-                <p className="text-sm font-medium text-foreground">Sadia Rahman</p>
-                <p className="text-xs text-muted-foreground">Frequent traveler</p>
-              </div>
-            </div>
-          </div>
         </div>
       </div>
 

@@ -100,39 +100,18 @@ const Signup = () => {
         <div className="absolute inset-0 bg-gradient-to-br from-background/80 via-background/30 to-transparent" />
 
         <div className="absolute top-8 left-8 z-10 animate-fade-in-down">
-          <Link to="/" className="flex items-center gap-3 group">
-            <div className="relative">
-              <div className="absolute inset-0 bg-gradient-to-r from-primary to-accent rounded-xl blur-lg opacity-50 group-hover:opacity-75 transition-opacity" />
-              <div className="relative bg-gradient-to-r from-primary to-accent p-2.5 rounded-xl">
-                <Hotel className="h-6 w-6 text-primary-foreground" />
-              </div>
-            </div>
-            <span className="text-2xl font-bold text-primary-foreground">StayVista</span>
+          <Link
+            to="/"
+            className="inline-flex items-center gap-3 bg-gradient-to-r from-primary to-accent pl-2.5 pr-4 py-2 rounded-full shadow-lg shadow-primary/20 hover:opacity-90 hover:shadow-primary/30 transition-all"
+          >
+            <Hotel className="h-5 w-5 text-primary-foreground" />
+            <span className="text-lg font-bold text-primary-foreground">StayVista</span>
           </Link>
-        </div>
-
-        <div className="absolute bottom-8 left-8 right-8 z-10 animate-fade-in-up delay-200">
-          <div className="glass rounded-2xl p-6 max-w-md">
-            <p className="text-foreground font-medium text-lg leading-relaxed">
-              "Join thousands of travelers who trust StayVista to find the perfect stay, every time."
-            </p>
-            <div className="mt-4 flex items-center gap-3">
-              <div className="h-10 w-10 rounded-full bg-gradient-to-r from-primary to-accent flex items-center justify-center text-primary-foreground font-semibold text-sm">
-                AK
-              </div>
-              <div>
-                <p className="text-sm font-medium text-foreground">Asif Karim</p>
-                <p className="text-xs text-muted-foreground">Explorer & food lover</p>
-              </div>
-            </div>
-          </div>
         </div>
       </div>
 
       {/* Right form side */}
-      <div className="w-full lg:w-1/2 min-h-screen flex flex-col items-center justify-center p-6 relative overflow-hidden">
-        <div className="absolute top-0 right-1/4 w-96 h-96 bg-accent/10 rounded-full blur-3xl" />
-        <div className="absolute bottom-0 left-1/4 w-80 h-80 bg-primary/10 rounded-full blur-3xl" />
+      <div className="w-full lg:w-1/2 min-h-screen flex flex-col items-center justify-center p-6 relative lg:bg-card/80 lg:backdrop-blur-xl lg:rounded-l-3xl lg:border-l lg:border-border/30 lg:shadow-2xl">
 
         {/* Mobile image banner */}
         <div className="lg:hidden w-full max-w-md h-44 mb-6 relative rounded-2xl overflow-hidden animate-fade-in-down">

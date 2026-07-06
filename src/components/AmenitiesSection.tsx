@@ -72,7 +72,7 @@ const categories: Category[] = [
   {
     id: "services",
     label: "Services",
-    icon: Concierge,
+    icon: ConciergeBell,
     keywords: ["concierge", "24/7", "front desk", "reception", "housekeeping", "laundry", "dry cleaning", "shuttle", "airport", "valet", "parking", "room service", "bell", "porter", "tour", "ticketing", "luggage"],
     accentColor: "text-violet-400",
   },
@@ -173,7 +173,7 @@ const iconMappings: Record<string, React.ComponentType<{ className?: string }>> 
   "Minibar": Refrigerator,
   "Refrigerator": Refrigerator,
   "Fridge": Refrigerator,
-  "Safe": Safe,
+  "Safe": Vault,
   "Private Bathroom": Bath,
   "Bathrobe": Bath,
   "Work Desk": Zap,

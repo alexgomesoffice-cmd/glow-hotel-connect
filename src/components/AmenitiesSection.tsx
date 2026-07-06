@@ -330,7 +330,7 @@ export function AmenitySection({ amenities, className }: AmenitySectionProps) {
                       <button className="w-full flex items-center justify-between p-4 text-left group">
                         <div className="flex items-center gap-3">
                           <div className="flex items-center justify-center w-9 h-9 rounded-lg bg-background/60 border border-border/50">
-                            <CategoryIcon className={cn("h-4.5 w-4.5", group.accentColor)} />
+                            <CategoryIcon className="h-4.5 w-4.5 text-primary" />
                           </div>
                           <div>
                             <h3 className="font-semibold text-sm">{group.label}</h3>

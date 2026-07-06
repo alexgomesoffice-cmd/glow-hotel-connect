@@ -854,28 +854,7 @@ const HotelDetail = () => {
               </Card>
 
               {/* Amenities */}
-              <Card className="glass border-border/50 animate-fade-in-up" style={{ animationDelay: "100ms" }}>
-                <CardHeader>
-                  <CardTitle>What this place offers</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                    {hotel.amenities.map((amenity, index) => {
-                      const IconComponent = amenityIcons[amenity] || Check;
-                      return (
-                        <div
-                          key={amenity}
-                          className="flex items-center gap-3 p-3 rounded-xl bg-secondary/30 hover:bg-secondary/50 transition-all duration-300 cursor-default group animate-fade-in"
-                          style={{ animationDelay: `${index * 50}ms` }}
-                        >
-                          <IconComponent className="h-5 w-5 text-accent group-hover:scale-110 transition-transform" />
-                          <span className="text-sm">{amenity}</span>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </CardContent>
-              </Card>
+              <AmenitySection amenities={hotel.amenities} />
 
               {/* Rooms Section — Booking.com Style */}
               <div className="animate-fade-in-up" style={{ animationDelay: "200ms" }}>

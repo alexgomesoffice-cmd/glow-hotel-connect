@@ -37,6 +37,7 @@ import {
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import BookingConfirmation from "@/components/BookingConfirmation";
+import AmenitySection from "@/components/AmenitiesSection";
 import { cn } from "@/lib/utils";
 import { apiGet } from "@/utils/api";
 import { getLoggedInUser } from "@/utils/auth";

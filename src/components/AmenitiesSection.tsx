@@ -51,7 +51,6 @@ interface Category {
   label: string;
   icon: React.ComponentType<{ className?: string }>;
   keywords: string[];
-  accentColor: string;
 }
 
 const categories: Category[] = [

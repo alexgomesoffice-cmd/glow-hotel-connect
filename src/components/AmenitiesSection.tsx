@@ -17,7 +17,7 @@ import {
   Wind,
   Snowflake,
   Refrigerator,
-  Safe,
+  Vault,
   Bath,
   Bed,
   Users,

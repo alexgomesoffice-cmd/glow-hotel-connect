@@ -154,18 +154,6 @@ interface Hotel {
   rooms: Room[];
 }
 
-const amenityIcons: Record<string, typeof Wifi> = {
-  "Free WiFi": Wifi,
-  "Free Wi-Fi": Wifi,
-  "Gym": Dumbbell,
-  "Gym / Fitness Center": Dumbbell,
-  "Valet Parking": Car,
-  "Parking": Car,
-  "Fine Dining": UtensilsCrossed,
-  "Restaurant": UtensilsCrossed,
-  "Free Parking": Car,
-};
-
 // ============================================================
 // DUMMY / FALLBACK DATA — shown when the backend API is unavailable
 // Based on the project's Prisma seed script structure

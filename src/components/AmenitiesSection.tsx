@@ -8,7 +8,7 @@ import {
   UtensilsCrossed,
   Coffee,
   Wine,
-  Concierge,
+  ConciergeBell,
   Clock,
   Car,
   Plane,

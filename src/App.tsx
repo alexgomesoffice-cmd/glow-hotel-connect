@@ -23,24 +23,22 @@ import SearchHotels from "./pages/SearchHotels";
 import UserProfile from "./pages/UserProfile";
 import MyBookings from "./pages/MyBookings";
 import UserSettings from "./pages/UserSettings";
-import AdminLayout from "./components/admin/AdminLayout";
-import AdminDashboardHome from "./pages/admin/AdminDashboardHome";
-import AdminAddHotel from "./pages/admin/AdminAddHotel";
-import AdminCurrentHotels from "./pages/admin/AdminCurrentHotels";
-import AdminUpdateHotel from "./pages/admin/AdminUpdateHotel";
-import AdminEraseHotel from "./pages/admin/AdminEraseHotel";
+import OpsShell from "./components/admin/ops/OpsShell";
+import OpsDashboard from "./pages/admin/ops/OpsDashboard";
+import OpsWorkQueue from "./pages/admin/ops/OpsWorkQueue";
+import OpsCaseReview from "./pages/admin/ops/OpsCaseReview";
+import OpsHotels from "./pages/admin/ops/OpsHotels";
+import OpsHotelWorkspace from "./pages/admin/ops/OpsHotelWorkspace";
+import OpsCatalog from "./pages/admin/ops/OpsCatalog";
+import OpsPlatformSettings from "./pages/admin/ops/OpsPlatformSettings";
 import AdminClientList from "./pages/admin/AdminClientList";
 import AdminUpdateClient from "./pages/admin/AdminUpdateClient";
 import AdminClientHistory from "./pages/admin/AdminClientHistory";
 import AdminClientProfile from "./pages/admin/AdminClientProfile";
-import AdminEraseClient from "./pages/admin/AdminEraseClient";
-import AdminBookings from "./pages/admin/AdminBookings";
-import AdminHotelBookings from "./pages/admin/AdminHotelBookings";
 import AdminBookingDetail from "./pages/admin/AdminBookingDetail";
 import AdminAllBookings from "./pages/admin/AdminAllBookings";
 import AdminAddSystemAdmin from "./pages/admin/AdminAddSystemAdmin";
-import AdminAnalytics from "./pages/admin/AdminAnalytics";
-import AdminSettings from "./pages/admin/AdminSettings";
+import AdminHotelBookings from "./pages/admin/AdminHotelBookings";
 import HotelAdminLayout from "./components/hotel-admin/HotelAdminLayout";
 import HotelAdminOverview from "./pages/hotel-admin/HotelAdminOverview";
 import HotelAdminRooms from "./pages/hotel-admin/HotelAdminRooms";
@@ -83,24 +81,27 @@ const App = () => (
             <Route path="/my-bookings" element={<MyBookings />} />
             <Route path="/user-settings" element={<UserSettings />} />
 
-            <Route path="/admin" element={<ProtectedRoute element={<AdminLayout />} requiredRole="SYSTEM_ADMIN" />}>
-              <Route index element={<AdminDashboardHome />} />
-              <Route path="add-hotel" element={<AdminAddHotel />} />
-              <Route path="add-system-admin" element={<AdminAddSystemAdmin />} />
-              <Route path="hotels" element={<AdminCurrentHotels />} />
-              <Route path="update-hotel/:id" element={<AdminUpdateHotel />} />
-              <Route path="erase-hotel" element={<AdminEraseHotel />} />
+            <Route path="/admin" element={<ProtectedRoute element={<OpsShell />} requiredRole="SYSTEM_ADMIN" />}>
+              <Route index element={<OpsDashboard />} />
+              <Route path="work-queue" element={<OpsWorkQueue />} />
+              <Route path="cases/:id" element={<OpsCaseReview />} />
+              <Route path="hotels" element={<OpsHotels />} />
+              <Route path="hotels/:id" element={<OpsHotelWorkspace />} />
+              <Route path="all-bookings" element={<OpsWorkQueue />} />
+              <Route path="bookings" element={<OpsWorkQueue />} />
+              <Route path="bookings/hotel/:hotelId" element={<AdminHotelBookings />} />
+              <Route path="booking/:bookingId" element={<AdminBookingDetail />} />
               <Route path="clients" element={<AdminClientList />} />
               <Route path="update-client/:id" element={<AdminUpdateClient />} />
               <Route path="client-history/:id" element={<AdminClientHistory />} />
               <Route path="client-profile/:clientId" element={<AdminClientProfile />} />
-              <Route path="erase-client" element={<AdminEraseClient />} />
-              <Route path="bookings" element={<AdminBookings />} />
-              <Route path="bookings/hotel/:hotelId" element={<AdminHotelBookings />} />
-              <Route path="booking/:bookingId" element={<AdminBookingDetail />} />
-              <Route path="all-bookings" element={<AdminAllBookings />} />
-              <Route path="analytics" element={<AdminAnalytics />} />
-              <Route path="settings" element={<AdminSettings />} />
+              <Route path="catalog/cities" element={<OpsCatalog kind="cities" />} />
+              <Route path="catalog/hotel-types" element={<OpsCatalog kind="hotel-types" />} />
+              <Route path="catalog/amenities" element={<OpsCatalog kind="amenities" />} />
+              <Route path="catalog/bed-types" element={<OpsCatalog kind="bed-types" />} />
+              <Route path="system-admins" element={<AdminAddSystemAdmin />} />
+              <Route path="platform-settings" element={<OpsPlatformSettings />} />
+              <Route path="all-bookings-legacy" element={<AdminAllBookings />} />
             </Route>
 
             <Route path="/hotel-admin" element={<ProtectedRoute element={<HotelAdminLayout />} requiredRole="HOTEL_ADMIN" />}>

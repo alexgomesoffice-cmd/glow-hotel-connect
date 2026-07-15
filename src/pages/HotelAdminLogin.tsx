@@ -100,6 +100,22 @@ const HotelAdminLogin = () => {
               {isLoading ? "Signing in..." : "Sign in as Hotel Admin"}
               <ArrowRight className="h-4 w-4 ml-2 group-hover:translate-x-1 transition-transform" />
             </Button>
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full"
+              onClick={() => {
+                const demo = { hotel_admin_id: 1, name: "Demo Hotel Manager", email: "manager@grandstay.com", hotel_id: 1 };
+                localStorage.setItem("authToken", "dev-bypass-hotel-admin");
+                localStorage.setItem("user", JSON.stringify(demo));
+                localStorage.setItem("userRole", "HOTEL_ADMIN");
+                localStorage.setItem("hotelId", String(demo.hotel_id));
+                toast({ title: "Dev bypass", description: "Logged in as Hotel Admin (demo)." });
+                navigate("/hotel-admin");
+              }}
+            >
+              Continue as Demo Hotel Admin (Dev Bypass)
+            </Button>
           </form>
 
           <div className="mt-6 pt-6 border-t border-border/50 space-y-3">

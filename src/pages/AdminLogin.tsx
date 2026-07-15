@@ -105,6 +105,20 @@ const AdminLogin = () => {
               {isLoading ? "Signing in..." : "Sign in as Admin"}
               <ArrowRight className="h-4 w-4 ml-2 group-hover:translate-x-1 transition-transform" />
             </Button>
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full"
+              onClick={() => {
+                localStorage.setItem("authToken", "dev-bypass-system-admin");
+                localStorage.setItem("userRole", "SYSTEM_ADMIN");
+                setLoggedInUser({ name: "Demo Admin", email: "admin@stayvista.com" });
+                toast({ title: "Dev bypass", description: "Logged in as System Admin (demo)." });
+                navigate("/admin");
+              }}
+            >
+              Continue as Demo Admin (Dev Bypass)
+            </Button>
           </form>
 
           <div className="mt-6 pt-6 border-t border-border/50 space-y-3">

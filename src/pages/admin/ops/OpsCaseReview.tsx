@@ -28,7 +28,7 @@ import {
   TextDiffBlock,
 } from "@/components/admin/ops/RequestedChangesDiff";
 import { Button } from "@/components/ui/button";
-import { ConfirmDialog } from "@/components/ConfirmDialog";
+import ConfirmDialog from "@/components/ConfirmDialog";
 import { useToast } from "@/hooks/use-toast";
 
 const OpsCaseReview = () => {

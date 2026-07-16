@@ -1,149 +1,191 @@
-# System Admin CMS — Enterprise Redesign
+# System Admin CMS — Workflow Redesign
 
-Rebuild `/admin/*` from a CRUD dashboard into a **trust & operations platform**. System Admins review, approve, and monitor — they never edit hotels. The heart is a **Work Queue** of Cases (like Gmail/Linear) and a **Case Review Workspace** with GitHub-PR-style diffs.
-
-All existing frontend logic stays behind `localStorage` / dummy data — no backend contract changes. Hotel Admin dashboard is untouched.
+Keep the current visual language (Ops shell, tokens, spacing, primitives). All changes are workflow, data-model, and page-content.
 
 ---
 
-## Design language
+## 1. Data model changes (`src/data/adminCases.ts` + new `adminDrafts.ts`)
 
-- Dense tables, thin dividers, `text-sm`/`text-xs`, generous horizontal padding, tight vertical rhythm.
-- Neutral zinc/slate palette; single accent for primary actions; semantic colors only for status (amber/red/emerald/blue).
-- No gradients, no shadow-lg cards, no oversized rounded corners (`rounded-md` max on interactive, `rounded-none` on table shells).
-- Monospaced (`font-mono`) for IDs, case numbers, timestamps, diffs.
-- Sticky headers everywhere; drawers (shadcn `Sheet`) for edits instead of new routes.
-- Keyboard: `⌘K` command palette, `j/k` row nav in tables, `e` to open case, `a` approve, `r` reject.
+Replace the current "many independent cases" model with a **one-draft-per-hotel** model.
 
----
+- Remove: `priority`, `assignee`, `slaHours` (keep `createdAt` for waiting only), reviewer.
+- `Case` becomes a **Draft** with:
+  - `id`, `number`, `hotelId`, `hotelName`, `hotelCity`
+  - `submittedBy`, `submittedByEmail`
+  - `createdAt`, `lastUpdatedAt`
+  - `status`: `pending | approved | rejected`
+  - `changeType`: `property_update | registration | legal | identity | bank | publication | protected_field`
+  - `fields[]` — each with `state: pending | rejected | approved`, `label`, `current`, `requested`
+  - `descriptionDiff`, `amenities`, `gallery`, `rooms` — each item independently rejectable
+  - `timeline[]`, `notes[]`, `documents[]`
+- Add `PROTECTED_FIELDS` constant (Hotel Name, Business Name, Owner Name/NID/Passport, Trade License, BRN, TIN, VAT, Bank Account/Routing, Ownership, Country, Hotel Type).
+- Add `STANDARD_FIELDS` list for reference.
+- Seed 8–12 drafts across pending/approved/rejected.
 
-## New shell (replaces `AdminLayout.tsx`)
-
-```text
-┌─ Sidebar (240px, collapsible→56px) ─┬─ TopBar (48px, sticky) ────────────┐
-│ StayVista · Ops                      │ Breadcrumbs   ⌘K search  + New  🔔 │
-│                                      ├────────────────────────────────────┤
-│ Dashboard                            │                                    │
-│ Work Queue           ● 12            │        Content region              │
-│ Hotels                               │        (max-w-none, px-6)          │
-│ Bookings                             │                                    │
-│ Users                                │                                    │
-│ ─── CATALOG ───                      │                                    │
-│ Cities · Hotel Types ·               │                                    │
-│ Amenities · Bed Types                │                                    │
-│ ─── PLATFORM ───                     │                                    │
-│ System Admins                        │                                    │
-│ Platform Settings                    │                                    │
-└──────────────────────────────────────┴────────────────────────────────────┘
-```
-
-Sidebar items: Dashboard, **Work Queue** (with pending count badge), Hotels, Bookings, Users, group `CATALOG` (Cities, Hotel Types, Amenities, Bed Types), group `PLATFORM` (System Admins, Platform Settings). Everything else removed from nav.
-
-TopBar: breadcrumbs (left), `⌘K` command palette input (center, shadcn `Command`), Quick Create menu, notifications popover, admin avatar menu.
+Also add `src/data/adminActivityLog.ts` (activity entries) and `src/data/adminBookings.ts` (platform-wide bookings) with dummy data.
 
 ---
 
-## Pages
+## 2. Work Queue (`OpsWorkQueue.tsx`)
 
-### 1. Dashboard — work-first, not analytics
-Grid of operational tiles, no vanity charts:
-- **Today's Tasks** — assigned to me, count + list of top 5 cases.
-- **Pending Reviews** by bucket: Hotels Waiting Approval, Pending Documents, Expired Licenses (numbers + "Open queue →").
-- **Revenue Today / Bookings Today** — single-line KPIs, sparkline only.
-- **Latest Activities** — 10-row activity feed.
-- **Recent Hotels** — last 5 onboarded.
-- **Quick Actions** — Create System Admin, Add City, Broadcast Notice.
+Rebuild the tabs and columns.
 
-### 2. Work Queue — the heart
-Gmail-style inbox of **Cases**. Tabs across top: `All · Registrations · Property · Legal · Identity · Bank · Publication · Urgent`. Secondary filter bar: Status, Priority, Assignee, Search.
-
-Table columns (no cards, full-width, zebra off, hoverable rows):
-`Priority · Case # · Type · Hotel · Submitted By · Created · Waiting · Assignee · Status · ⋯`
-
-- Priority = colored dot + label (P1/P2/P3).
-- Waiting = live-computed duration, red past SLA.
-- Row click → Case Review Workspace (drawer on md, full route `/admin/cases/:id` on desktop).
-- Bulk select → assign / change priority.
-
-### 3. Case Review Workspace `/admin/cases/:id`
-Two-column, sticky action panel on the right (360px):
-
-**Header strip**: Case # · Type badge · Hotel · Owner · Submitted By · Priority · Waiting · Status · Reviewer.
-
-**Left (scrolls)**:
-- **Case Summary** — one paragraph auto-generated from case type.
-- **Requested Changes** — the PR-diff view (see below).
-- **Supporting Documents** — thumbnail list, click opens lightbox.
-- **Timeline** — GitHub-style events (submitted, assigned, comment, approved).
-- **Internal Notes / Comments** — threaded, admin-only.
-
-**Right sticky panel**: primary `Approve` / `Reject` / `Request More Info`, plus Assign, Priority, Status, Reviewer selects, and a compact case history.
-
-**Requested Changes diff component** (new, reusable):
-- Only fields that changed. Each field row: label, `Current` (muted, strike on removal) → `Requested` (highlighted).
-- Description: character-level diff (green add / red remove backgrounds).
-- Amenities: two chip lists — `+ Added` (emerald), `− Removed` (red).
-- Gallery: three sections — Added (thumbs w/ green ring), Removed (thumbs w/ red ring + strike), Reordered (before/after order strip).
-- Rooms/pricing: table of only modified rooms, `old → new` per cell.
-- Feels like a GitHub PR file view.
-
-### 4. Hotels — CRM, not approval
-Sticky filter bar + dense table:
-`Hotel (logo+name+city) · Verification · Pending Cases · Health · Revenue (30d) · Subscription · Status · ⋯`
-Row click → Hotel Workspace.
-
-### 5. Hotel Workspace `/admin/hotels/:id`
-Header: hotel name, city, status badges (**Published / Draft / Pending Review**), quick actions overflow.
-Tabs: `Overview · Property · Rooms · Bookings · Staff · Commercial · Activity`.
-
-- **Overview**: compact KPI grid — Hotel Status, Verification, Pending Cases (→ Work Queue filtered), Owner, Hotel Admin, Subscription, Revenue, Health. Then Latest Activity + Latest Documents + Quick Actions (Suspend, Publish, Feature, Reset Password, Deactivate) — all gated by ConfirmDialog.
-- **Property**: accordion (General, Location, Contacts, Policies, Amenities, Gallery). Read-only; "Edit" opens a shadcn `Sheet` drawer.
-- **Rooms**: inner tabs Room Types / Rooms / Pricing / Availability — dense tables.
-- **Bookings**: reuse existing hotel bookings table, restyled dense.
-- **Staff**: Owner card, Hotel Admin card, Sub Admins table. Row actions: Block, Deactivate, Reset Password, Force Logout, View Login History.
-- **Commercial**: Subscription, Advertisement, Featured toggle, Invoices, Payments, Commission — sectioned lists.
-- **Activity**: GitHub-style vertical timeline of every event.
-
-### 6. Bookings (top-level) — dense global table, filters by hotel/status/date; row → existing `AdminBookingDetail`.
-### 7. Users — existing client list restyled dense; row → `AdminClientProfile`.
-### 8. Catalog pages (Cities, Hotel Types, Amenities, Bed Types) — identical pattern: sticky header with search + `+ New`, dense table, edit in drawer.
-### 9. System Admins — existing list, restyled.
-### 10. Platform Settings — sectioned form (Branding, Commission, Email, Feature Flags).
+- **Tabs (status only):** Pending · Approved · Rejected · All.
+- **Filter bar:** Search, Change Type (dropdown), Hotel, City, Date range, Waiting time, Sort.
+- **Remove:** priority dot, assignee column/filter, urgent tab, "More" button.
+- **Table columns:** Case ID · Hotel · Change Type · Submitted By · Submitted · Waiting · Status · Actions (view).
+- Sort default: FIFO (oldest pending first).
 
 ---
 
-## Versioning UX
+## 3. Case Review (`OpsCaseReview.tsx`)
 
-Every hotel carries a status badge set: `Published`, `Draft`, `Pending Review`, `Rejected`, `Archived`. When a Draft Case exists, Property tab shows a banner "Draft under review — editing locked" and the Edit button is disabled. Cases page shows which version they reference.
+Keep layout, remove sidebars we don't support.
+
+- **Remove from right rail:** Assignment card, Priority selector, Reviewer, Status selector.
+- **Keep:** Case Summary, Requested Changes diffs, Documents, Timeline, Internal Notes, Case History.
+- **Header strip:** remove PriorityDot; keep waiting + status + version.
+
+**Field-level review (biggest change):**
+
+- Each pending field row shows **only a single "Reject this field" (X) button** — no per-field approve.
+- Rejected fields become greyed out with a "Rejected — will not be published" badge; can be un-rejected before submit.
+- Same pattern for description, amenity add/remove items, gallery adds/removes, and room/price rows — each item independently rejectable.
+- Field state tracked locally: `pending | rejected` while reviewing.
+
+**Bottom sticky action bar (replaces sidebar actions):**
+
+- `Approve Remaining Changes` — publishes all still-pending fields, keeps rejected ones on Live.
+- `Reject Entire Request` — rejects the whole draft.
+- Confirm via existing `ConfirmDialog`.
+
+Update `RequestedChangesDiff.tsx` primitives to accept an `onReject(fieldKey)` and render the rejected/greyed state.
 
 ---
 
-## Technical details
+## 4. Draft + 24h cooldown model (client-side simulation)
 
-**New / restructured files**
-- `src/components/admin/shell/AdminShell.tsx` — replaces `AdminLayout.tsx` (kept as thin re-export for compat).
-- `src/components/admin/shell/Sidebar.tsx`, `TopBar.tsx`, `CommandPalette.tsx`, `Breadcrumbs.tsx`.
-- `src/components/admin/common/DataTable.tsx` — dense sortable table wrapper (shadcn Table + TanStack-lite via existing patterns), `StatusBadge.tsx`, `PriorityDot.tsx`, `WaitingTime.tsx`, `KbdHint.tsx`, `EmptyState.tsx`, `SectionHeader.tsx`, `SideDrawer.tsx` (Sheet preset).
-- `src/components/admin/cases/CaseHeader.tsx`, `CaseActionPanel.tsx`, `CaseTimeline.tsx`, `RequestedChangesDiff.tsx` (with sub-parts `TextDiff`, `AmenitiesDiff`, `GalleryDiff`, `RoomsDiff`), `DocumentsList.tsx`, `InternalNotes.tsx`.
-- `src/components/admin/hotel-workspace/HotelWorkspaceLayout.tsx` + one file per tab (`OverviewTab.tsx`, `PropertyTab.tsx`, `RoomsTab.tsx`, `BookingsTab.tsx`, `StaffTab.tsx`, `CommercialTab.tsx`, `ActivityTab.tsx`).
-- `src/pages/admin/WorkQueue.tsx`, `CaseReview.tsx`, `HotelWorkspace.tsx`, `Catalog/{Cities,HotelTypes,Amenities,BedTypes}.tsx`, `PlatformSettings.tsx`.
-- `src/data/adminCases.ts` — dummy Cases + diff payloads seeded from existing dummy hotels; `src/data/adminActivity.ts`.
+In `adminDrafts.ts`:
 
-**Reused as-is** (restyled where needed, no logic changes): `AdminBookingDetail`, `AdminClientProfile`, `AdminClientList`, `AdminAllBookings`, `AdminAddSystemAdmin`, `ConfirmDialog`, `NotificationPanel`, `adminApi.ts`.
+- Helper `getPendingDraftForHotel(hotelId)` — returns the single pending draft or null.
+- Helper `mergeIntoDraft(hotelId, patch)` — replaces per-field latest values (description overwrites description; amenities merge; gallery merges; rooms upsert). Never creates a second draft.
+- Track `lastSubmittedAt` per hotel; `canSubmitPropertyUpdate(hotelId)` returns false within 24h.
+- Protected-field edits create a separate `protected_field` change type entry.
 
-**Routing** (`src/App.tsx`): new routes `/admin/work-queue`, `/admin/cases/:id`, `/admin/hotels/:id` (Workspace, replaces detail scatter), `/admin/catalog/{cities|hotel-types|amenities|bed-types}`, `/admin/platform-settings`. Legacy routes redirect to new ones so nothing breaks.
+This is dummy/local logic — no backend. Just the shape so UI reflects the workflow.
 
-**Design tokens** (`src/index.css`): add `--surface`, `--surface-2`, `--border-strong`, `--diff-add`, `--diff-remove`, `--priority-p1/p2/p3` HSL vars; keep existing brand tokens. No gradient utilities added.
+---
 
-**Deletions from sidebar only** (files kept, just unlinked from nav): AddHotel, EraseHotel, EraseClient, Analytics, standalone Settings — their functionality is folded into Hotel Workspace and Platform Settings.
+## 5. Hotel Workspace (`OpsHotelWorkspace.tsx`)
 
-**Out of scope**: backend/Prisma changes, Hotel Admin panel, public site, real WebSocket updates (dummy polling only).
+Fill out with real dummy data from `dummyHotels.ts`.
 
-## Rollout order
-1. Shell + sidebar + top bar + command palette skeleton.
-2. Dashboard + reusable `DataTable`/badges.
-3. Work Queue + dummy cases dataset.
-4. Case Review Workspace + `RequestedChangesDiff`.
-5. Hotels list + Hotel Workspace tabs.
-6. Catalog pages + Platform Settings.
-7. Redirects + polish pass (keyboard, dark mode, empty states).
+**Overview tab cards:** Hotel Status, Verification Status, Pending Draft (link to case), Owner, Hotel Admin, Today's Bookings, Revenue Today, Health Score, Latest Activity, Documents Expiring, Quick Actions.
+
+**Property tab sections** (General, Business, Location, Contacts, Amenities, Policies, Gallery) — each rendered from live hotel data with an **Edit** button opening a shadcn `Sheet` (Drawer) that saves directly (no approval).
+
+**Draft banner** at top of Property tab when a pending draft exists: "Pending Draft · Modified Fields: N · Submitted {rel} · Last Updated {rel}. Hotel editing locked until review completes." with "Review Draft" link.
+
+**Bookings tab:** hotel-scoped bookings table (Booking ID · Guest · Rooms · Check In · Check Out · Payment · Status · Amount), rows link to Booking Details.
+
+Keep Staff / Commercial / Activity tabs but populated with real data slices.
+
+---
+
+## 6. Bookings page (`AdminBookings.tsx` / new `OpsBookings.tsx`)
+
+Completely redesign.
+
+- **Top cards:** Today's Bookings · Today's Revenue · Check-ins Today · Check-outs Today · Pending Payments · Cancelled Today.
+- **Recent Bookings table:** Booking ID · Guest · Hotel · Room · Check In · Check Out · Guests · Payment · Booking Status · Amount · Created.
+- **Filters:** Hotel, Booking Status, Payment Status, Date, City, Search.
+- Row click → Booking Details page (reuse existing `AdminBookingDetail` shape, populate sections: Summary, Guest Info, Booked Rooms, Payment Timeline, Booking Timeline, Special Requests, Invoices, Refunds, Cancellation Logs, System Logs).
+
+Clicking a hotel from the previous hotel-list flow opens Hotel Workspace → Bookings tab (already covered).
+
+---
+
+## 7. Hotels CRM (`OpsHotels.tsx`)
+
+Rework columns: Hotel · City · Owner · Hotel Admin · Pending Draft (badge if exists) · Health Score · Bookings · Revenue · Status.
+
+Health score util (0–100) subtracting for: missing gallery, missing description, pending draft, expired documents, disabled rooms.
+
+---
+
+## 8. Platform Settings (`OpsPlatformSettings.tsx`)
+
+Trim to supported sections only:
+
+- **General:** Platform Name, Support Email, Support Phone, Default Currency, Timezone.
+- **Hotel Registration:** Allow Hotel Registration, Require Manual Approval, Maximum Pending Drafts (1, disabled), Draft Cooldown (24h).
+- **Authentication:** Session Timeout, Password Policy, Max Login Attempts.
+- **Booking Rules:** Reservation Hold Duration, Max Active Reservations, Auto Cancel Timeout.
+- **Email:** Sender Name, Sender Email.
+
+Remove: Commission, Advertisements, Feature Flags, Branding editor, anything else.
+
+---
+
+## 9. New Activity Log page
+
+- Route: `/admin/activity` (add to sidebar in `OpsShell.tsx`).
+- File: `src/pages/admin/ops/OpsActivityLog.tsx`.
+- Read-only dense table: Timestamp · System Admin · Action · Target · Description.
+- Filters: Admin, Action type, Date, Search.
+
+---
+
+## 10. Routing & shell
+
+- `src/App.tsx`: add `/admin/activity`, `/admin/bookings/:id` (booking details), ensure hotel row → workspace, workspace booking row → details.
+- `OpsShell.tsx` sidebar: add "Activity Log" entry; nothing else changes.
+
+---
+
+## Technical notes
+
+- No backend; everything is dummy data plus local helpers.
+- Reuse `ConfirmDialog` for approve-remaining / reject-entire / edit-save-live actions.
+- Reuse existing `OpsCard`, `OpsTable`, `StatusBadge`, `WaitingCell`, `Kbd`, `DiffSection`, `FieldDiffRow` — extend them, don't restyle.
+- Keep aesthetics (tokens, radii, density) identical.
+
+## Files touched
+
+Created:
+
+- `src/data/adminDrafts.ts`, `src/data/adminActivityLog.ts`, `src/data/adminBookings.ts`
+- `src/pages/admin/ops/OpsActivityLog.tsx`
+- `src/pages/admin/ops/OpsBookings.tsx` (or repurpose existing)
+
+Modified:
+
+- `src/data/adminCases.ts` (strip priority/assignee/SLA; add field states)
+- `src/components/admin/ops/RequestedChangesDiff.tsx` (reject-only per-field UI)
+- `src/components/admin/ops/OpsShell.tsx` (sidebar entry)
+- `src/pages/admin/ops/OpsWorkQueue.tsx` (tabs, filters, columns)
+- `src/pages/admin/ops/OpsCaseReview.tsx` (remove assignment/priority, bottom action bar)
+- `src/pages/admin/ops/OpsHotelWorkspace.tsx` (populate tabs, drawers, draft banner)
+- `src/pages/admin/ops/OpsHotels.tsx` (CRM columns, health score)
+- `src/pages/admin/ops/OpsPlatformSettings.tsx` (trim)
+
+`src/App.tsx` (routes)
+
+In navbar also add "add hotel" in that +new dorpdown,  and clicking on it will go to hotel creation page that will contain form:  
+  
+**Basic information:**  
+Hotel name, hotel type, city, full address, zip code, official gmail, Reciption no 1, Reciption no 2, website  
+  
+**owner's information:**  
+full name, date of birth, nid no, passport, email, phone, address, photo upload,  
+(another uploadable button for owner's information document)  
+  
+**Hotel admin account:**  
+hotel admin name, email, phone, emergency phone,password, confirm password, date of birth, Nid no, passport, address, photo upload button  
+ (another uploadable button for hotel admin information document)  
+  
+**Hotel (business information):**  
+trade license no, issue date, expiry date, issue by, tin number, vat reg, tax certificate upload, and another uploadable button for document upload.  
+  
+**emergency contact:**  
+name, relation, phone 1, phone 2, email.

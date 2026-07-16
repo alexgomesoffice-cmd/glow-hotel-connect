@@ -67,7 +67,7 @@ export const FieldDiffRow = ({
       <div className="border-r border-border/40 bg-secondary/30 px-3 py-2 text-[11px] uppercase tracking-wider text-muted-foreground">
         <div className="flex items-center gap-1.5">
           {field.label}
-          {field.protected && <ShieldAlert className="h-3 w-3 text-amber-400" title="Protected field" />}
+          {field.protected && <ShieldAlert className="h-3 w-3 text-amber-400" />}
         </div>
         {rejected && <div className="mt-1"><RejectedTag /></div>}
       </div>

@@ -31,6 +31,10 @@ import OpsHotels from "./pages/admin/ops/OpsHotels";
 import OpsHotelWorkspace from "./pages/admin/ops/OpsHotelWorkspace";
 import OpsCatalog from "./pages/admin/ops/OpsCatalog";
 import OpsPlatformSettings from "./pages/admin/ops/OpsPlatformSettings";
+import OpsBookings from "./pages/admin/ops/OpsBookings";
+import OpsBookingDetail from "./pages/admin/ops/OpsBookingDetail";
+import OpsActivityLog from "./pages/admin/ops/OpsActivityLog";
+import OpsCreateHotel from "./pages/admin/ops/OpsCreateHotel";
 import AdminClientList from "./pages/admin/AdminClientList";
 import AdminUpdateClient from "./pages/admin/AdminUpdateClient";
 import AdminClientHistory from "./pages/admin/AdminClientHistory";
@@ -86,11 +90,14 @@ const App = () => (
               <Route path="work-queue" element={<OpsWorkQueue />} />
               <Route path="cases/:id" element={<OpsCaseReview />} />
               <Route path="hotels" element={<OpsHotels />} />
+              <Route path="hotels/new" element={<OpsCreateHotel />} />
               <Route path="hotels/:id" element={<OpsHotelWorkspace />} />
-              <Route path="all-bookings" element={<OpsWorkQueue />} />
-              <Route path="bookings" element={<OpsWorkQueue />} />
+              <Route path="bookings" element={<OpsBookings />} />
+              <Route path="all-bookings" element={<OpsBookings />} />
               <Route path="bookings/hotel/:hotelId" element={<AdminHotelBookings />} />
-              <Route path="booking/:bookingId" element={<AdminBookingDetail />} />
+              <Route path="booking/:id" element={<OpsBookingDetail />} />
+              <Route path="booking/:bookingId/legacy" element={<AdminBookingDetail />} />
+              <Route path="activity" element={<OpsActivityLog />} />
               <Route path="clients" element={<AdminClientList />} />
               <Route path="update-client/:id" element={<AdminUpdateClient />} />
               <Route path="client-history/:id" element={<AdminClientHistory />} />

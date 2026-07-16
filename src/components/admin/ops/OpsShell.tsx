@@ -1,6 +1,5 @@
 // Enterprise CMS shell: collapsible sidebar + sticky top bar + content region.
-// Replaces the old marketing-style AdminLayout for /admin/*.
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard,
@@ -22,6 +21,7 @@ import {
   ChevronsRight,
   LogOut,
   Command as CommandIcon,
+  Activity,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
@@ -57,8 +57,9 @@ const primaryNav: NavItem[] = [
   { label: "Dashboard", to: "/admin", icon: LayoutDashboard },
   { label: "Work Queue", to: "/admin/work-queue", icon: Inbox },
   { label: "Hotels", to: "/admin/hotels", icon: Building2 },
-  { label: "Bookings", to: "/admin/all-bookings", icon: CalendarDays },
+  { label: "Bookings", to: "/admin/bookings", icon: CalendarDays },
   { label: "Users", to: "/admin/clients", icon: Users },
+  { label: "Activity Log", to: "/admin/activity", icon: Activity },
 ];
 
 const catalogNav: NavItem[] = [
@@ -77,8 +78,10 @@ const routeCrumbs: Record<string, string> = {
   "/admin": "Dashboard",
   "/admin/work-queue": "Work Queue",
   "/admin/hotels": "Hotels",
-  "/admin/all-bookings": "Bookings",
+  "/admin/hotels/new": "Hotels · Create",
+  "/admin/bookings": "Bookings",
   "/admin/clients": "Users",
+  "/admin/activity": "Activity Log",
   "/admin/catalog/cities": "Catalog · Cities",
   "/admin/catalog/hotel-types": "Catalog · Hotel Types",
   "/admin/catalog/amenities": "Catalog · Amenities",
@@ -94,7 +97,7 @@ const OpsShell = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  const openCases = useMemo(() => CASES.filter((c) => c.status === "open" || c.status === "in_review").length, []);
+  const pendingCount = CASES.filter((c) => c.status === "pending").length;
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -121,24 +124,24 @@ const OpsShell = () => {
     navigate("/");
   };
 
-  const crumb = routeCrumbs[location.pathname]
-    ?? (location.pathname.startsWith("/admin/cases/") ? `Work Queue · ${location.pathname.split("/").pop()}` : null)
-    ?? (location.pathname.startsWith("/admin/hotels/") ? "Hotels · Workspace" : null)
-    ?? "Admin";
+  const crumb =
+    routeCrumbs[location.pathname] ??
+    (location.pathname.startsWith("/admin/cases/") ? `Work Queue · ${location.pathname.split("/").pop()}` : null) ??
+    (location.pathname.startsWith("/admin/hotels/") ? "Hotels · Workspace" : null) ??
+    (location.pathname.startsWith("/admin/bookings/") ? "Bookings · Detail" : null) ??
+    "Admin";
 
   const renderNav = (items: NavItem[]) =>
     items.map((item) => {
       const active = isActive(item.to);
-      const badge = item.label === "Work Queue" ? openCases : item.badge;
+      const badge = item.label === "Work Queue" ? pendingCount : item.badge;
       return (
         <Link
           key={item.to}
           to={item.to}
           className={cn(
             "group flex items-center gap-2.5 rounded-sm px-2 py-1.5 text-[13px] transition-colors",
-            active
-              ? "bg-secondary text-foreground"
-              : "text-muted-foreground hover:bg-secondary/60 hover:text-foreground",
+            active ? "bg-secondary text-foreground" : "text-muted-foreground hover:bg-secondary/60 hover:text-foreground",
             collapsed && "justify-center",
           )}
           title={collapsed ? item.label : undefined}
@@ -148,9 +151,7 @@ const OpsShell = () => {
             <>
               <span className="flex-1 truncate">{item.label}</span>
               {badge !== undefined && badge > 0 && (
-                <span className="rounded-sm bg-primary/15 px-1.5 py-0.5 font-mono text-[10px] tabular-nums text-primary">
-                  {badge}
-                </span>
+                <span className="rounded-sm bg-primary/15 px-1.5 py-0.5 font-mono text-[10px] tabular-nums text-primary">{badge}</span>
               )}
             </>
           )}
@@ -160,7 +161,6 @@ const OpsShell = () => {
 
   return (
     <div className="flex min-h-screen w-full bg-background text-foreground">
-      {/* Sidebar */}
       <aside
         className={cn(
           "sticky top-0 flex h-screen shrink-0 flex-col border-r border-border/60 bg-card/40 transition-[width] duration-200",
@@ -175,10 +175,7 @@ const OpsShell = () => {
               <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Ops</span>
             </div>
           )}
-          <button
-            onClick={() => setCollapsed((c) => !c)}
-            className="rounded-sm p-1 text-muted-foreground hover:bg-secondary hover:text-foreground"
-          >
+          <button onClick={() => setCollapsed((c) => !c)} className="rounded-sm p-1 text-muted-foreground hover:bg-secondary hover:text-foreground">
             {collapsed ? <ChevronsRight className="h-3.5 w-3.5" /> : <ChevronsLeft className="h-3.5 w-3.5" />}
           </button>
         </div>
@@ -186,19 +183,11 @@ const OpsShell = () => {
         <nav className="flex-1 overflow-y-auto px-2 py-3 space-y-4">
           <div className="space-y-0.5">{renderNav(primaryNav)}</div>
           <div className="space-y-0.5">
-            {!collapsed && (
-              <div className="px-2 pb-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70">
-                Catalog
-              </div>
-            )}
+            {!collapsed && <div className="px-2 pb-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70">Catalog</div>}
             {renderNav(catalogNav)}
           </div>
           <div className="space-y-0.5">
-            {!collapsed && (
-              <div className="px-2 pb-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70">
-                Platform
-              </div>
-            )}
+            {!collapsed && <div className="px-2 pb-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70">Platform</div>}
             {renderNav(platformNav)}
           </div>
         </nav>
@@ -217,9 +206,7 @@ const OpsShell = () => {
         </div>
       </aside>
 
-      {/* Main column */}
       <div className="flex min-w-0 flex-1 flex-col">
-        {/* Top bar */}
         <header className="sticky top-0 z-30 flex h-12 items-center gap-3 border-b border-border/60 bg-background/95 px-4 backdrop-blur">
           <div className="flex items-center gap-1.5 text-[13px] text-muted-foreground">
             <span>Admin</span>
@@ -245,12 +232,11 @@ const OpsShell = () => {
               <ChevronDown className="h-3 w-3 opacity-60" />
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
-              <DropdownMenuLabel className="text-[10px] uppercase tracking-wider text-muted-foreground">
-                Quick Create
-              </DropdownMenuLabel>
-              <DropdownMenuItem onClick={() => navigate("/admin/system-admins?new=1")}>
-                System Admin
+              <DropdownMenuLabel className="text-[10px] uppercase tracking-wider text-muted-foreground">Quick Create</DropdownMenuLabel>
+              <DropdownMenuItem onClick={() => navigate("/admin/hotels/new")}>
+                <Building2 className="mr-2 h-3.5 w-3.5" /> Add Hotel
               </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => navigate("/admin/system-admins?new=1")}>System Admin</DropdownMenuItem>
               <DropdownMenuItem onClick={() => navigate("/admin/catalog/cities?new=1")}>City</DropdownMenuItem>
               <DropdownMenuItem onClick={() => navigate("/admin/catalog/amenities?new=1")}>Amenity</DropdownMenuItem>
               <DropdownMenuSeparator />

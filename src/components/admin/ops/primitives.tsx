@@ -1,8 +1,7 @@
 // Reusable enterprise UI primitives for the Ops admin.
-// Deliberately dense, low-radius, minimal color usage.
 import { ReactNode } from "react";
 import { cn } from "@/lib/utils";
-import { CasePriority, CaseStatus, CaseVersionBadge, STATUS_LABEL } from "@/data/adminCases";
+import { CaseStatus, CaseVersionBadge, STATUS_LABEL } from "@/data/adminCases";
 
 export const OpsSectionHeader = ({
   title,
@@ -24,25 +23,9 @@ export const OpsSectionHeader = ({
   </div>
 );
 
-export const PriorityDot = ({ priority, showLabel = true }: { priority: CasePriority; showLabel?: boolean }) => {
-  const map: Record<CasePriority, string> = {
-    P1: "bg-red-500",
-    P2: "bg-amber-500",
-    P3: "bg-sky-500",
-  };
-  return (
-    <span className="inline-flex items-center gap-1.5 text-xs font-medium">
-      <span className={cn("h-2 w-2 rounded-full", map[priority])} />
-      {showLabel && <span className="font-mono tabular-nums text-muted-foreground">{priority}</span>}
-    </span>
-  );
-};
-
 export const StatusBadge = ({ status }: { status: CaseStatus }) => {
   const map: Record<CaseStatus, string> = {
-    open: "border-sky-500/40 bg-sky-500/10 text-sky-400",
-    in_review: "border-amber-500/40 bg-amber-500/10 text-amber-400",
-    waiting_info: "border-violet-500/40 bg-violet-500/10 text-violet-400",
+    pending: "border-amber-500/40 bg-amber-500/10 text-amber-400",
     approved: "border-emerald-500/40 bg-emerald-500/10 text-emerald-400",
     rejected: "border-red-500/40 bg-red-500/10 text-red-400",
   };
@@ -68,10 +51,9 @@ export const VersionBadge = ({ v }: { v: CaseVersionBadge }) => {
   );
 };
 
-export const WaitingCell = ({ label, breached }: { label: string; breached: boolean }) => (
-  <span className={cn("font-mono text-xs tabular-nums", breached ? "text-red-400" : "text-muted-foreground")}>
-    {breached ? `-${label}` : label}
-  </span>
+// Waiting time is informational only — no SLA / breach concept.
+export const WaitingCell = ({ label }: { label: string }) => (
+  <span className="font-mono text-xs tabular-nums text-muted-foreground">{label}</span>
 );
 
 export const OpsCard = ({ children, className }: { children: ReactNode; className?: string }) => (
@@ -130,3 +112,8 @@ export const OpsTh = ({ children, className }: { children?: ReactNode; className
 export const OpsTd = ({ children, className }: { children?: ReactNode; className?: string }) => (
   <td className={cn("border-b border-border/40 px-3 py-2.5 align-middle", className)}>{children}</td>
 );
+
+export const HealthBadge = ({ score }: { score: number }) => {
+  const tone = score >= 80 ? "text-emerald-400" : score >= 60 ? "text-amber-400" : "text-red-400";
+  return <span className={cn("font-mono text-xs tabular-nums", tone)}>{score}</span>;
+};

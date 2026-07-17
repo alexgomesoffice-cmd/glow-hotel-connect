@@ -1,134 +1,147 @@
-import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Mail, Phone, Calendar, MapPin, Globe, BedDouble, DollarSign } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Link, useNavigate, useParams } from "react-router-dom";
+import { ArrowLeft, Crown, User, Calendar, Star, CreditCard, FileText, Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-
-const guests: Record<string, any> = {
-  g1: { name: "Alice Martin", email: "alice@email.com", phone: "+1 555 0101", dob: "1992-03-15", gender: "Female", address: "45 Park Ave, New York", country: "USA", totalStays: 5, totalSpent: "$4,200" },
-  g2: { name: "Robert Kim", email: "robert@email.com", phone: "+1 555 0102", dob: "1988-07-22", gender: "Male", address: "12 Ocean Dr, Miami", country: "USA", totalStays: 3, totalSpent: "$1,800" },
-  g3: { name: "Sophie Chen", email: "sophie@email.com", phone: "+1 555 0103", dob: "1995-11-08", gender: "Female", address: "88 Dragon St, San Francisco", country: "USA", totalStays: 2, totalSpent: "$960" },
-  g4: { name: "James Wilson", email: "james@email.com", phone: "+1 555 0104", dob: "1985-01-30", gender: "Male", address: "7 King's Rd, London", country: "UK", totalStays: 7, totalSpent: "$8,400" },
-  g5: { name: "Emma Davis", email: "emma@email.com", phone: "+1 555 0105", dob: "1993-06-12", gender: "Female", address: "23 Elm St, Boston", country: "USA", totalStays: 1, totalSpent: "$500" },
-};
+import { SectionCard, StatusPill } from "@/components/hotel-admin/primitives";
+import { useHotelStore, formatDate, formatMoney, findGuest } from "@/data/hotelAdminStore";
 
 const HotelAdminGuestProfile = () => {
-  const { id } = useParams();
+  const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const guest = guests[id || ""];
+  const guest = useHotelStore((s) => s.guests.find((g) => g.id === id));
+  const reservations = useHotelStore((s) => s.reservations.filter((r) => r.guestId === id));
+  const reviews = useHotelStore((s) => s.reviews.filter((r) => r.guestId === id));
+  const transactions = useHotelStore((s) => s.transactions.filter((t) => reservations.some((r) => r.id === t.bookingId)));
 
-  if (!guest) return (
-    <div className="text-center py-20">
-      <div className="w-16 h-16 mx-auto rounded-2xl bg-secondary/50 flex items-center justify-center mb-4">
-        <Mail className="h-8 w-8 text-muted-foreground" />
-      </div>
-      <h2 className="text-xl font-bold mb-2">Guest not found</h2>
-      <Button variant="outline" onClick={() => navigate(-1)}>Go Back</Button>
-    </div>
-  );
+  if (!guest) {
+    return <div className="text-center py-16"><p className="text-muted-foreground">Guest not found.</p></div>;
+  }
+
+  const current = reservations.find((r) => r.status === "checked_in");
+  const past = reservations.filter((r) => r.status === "checked_out" || r.status === "cancelled");
+  const totalSpent = reservations.reduce((s, r) => s + r.roomCharge, 0);
 
   return (
-    <div className="space-y-8 max-w-4xl">
-      {/* Header */}
-      <div className="flex items-center gap-4 animate-fade-in-up">
-        <Button variant="outline" size="icon" className="shrink-0 hover:border-primary/50 transition-colors" onClick={() => navigate(-1)}>
-          <ArrowLeft className="h-4 w-4" />
-        </Button>
-        <div className="flex items-center gap-4">
-          <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center shrink-0">
-            <span className="text-lg font-bold text-primary-foreground">{guest.name.split(" ").map((n: string) => n[0]).join("")}</span>
+    <div className="space-y-6">
+      <Button variant="ghost" size="sm" onClick={() => navigate(-1)}><ArrowLeft className="h-4 w-4 mr-2" /> Back</Button>
+
+      {/* Hero */}
+      <div className="rounded-2xl border border-border bg-gradient-to-r from-green-500/5 via-transparent to-emerald-500/5 p-6 flex items-center gap-5">
+        <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center text-primary-foreground text-lg font-bold shrink-0">
+          {guest.name.split(" ").map((n) => n[0]).join("").slice(0, 2)}
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2">
+            <h1 className="text-2xl font-bold">{guest.name}</h1>
+            {guest.vip && <StatusPill label="VIP" tone="amber" icon={Crown} />}
           </div>
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-bold">{guest.name}</h1>
-            <p className="text-muted-foreground">Guest Profile</p>
-          </div>
+          <p className="text-sm text-muted-foreground">{guest.email} · {guest.phone} · {guest.nationality}</p>
+        </div>
+        <div className="text-right hidden sm:block">
+          <p className="text-xs text-muted-foreground">Lifetime Value</p>
+          <p className="text-xl font-bold">{formatMoney(totalSpent)}</p>
         </div>
       </div>
 
-      {/* Stats row */}
-      <div className="grid grid-cols-2 gap-4 animate-fade-in-up" style={{ animationDelay: "100ms" }}>
-        <Card className="relative overflow-hidden hover-lift">
-          <CardContent className="p-5">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Total Stays</p>
-                <p className="text-2xl font-bold mt-1">{guest.totalStays}</p>
-              </div>
-              <div className="p-2.5 rounded-xl bg-gradient-to-br from-primary to-accent">
-                <BedDouble className="h-4 w-4 text-primary-foreground" />
-              </div>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2 space-y-6">
+          <SectionCard title="Personal Information" icon={User}>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
+              <Field label="Date of Birth" value={guest.dob} />
+              <Field label="NID" value={guest.nid} />
+              <Field label="Nationality" value={guest.nationality} />
+              <Field label="Address" value={guest.address} />
+              <Field label="Member Since" value={formatDate(guest.createdAt)} />
+              <Field label="Preferences" value={guest.preferences.join(", ") || "—"} />
             </div>
-            <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-primary to-accent" />
-          </CardContent>
-        </Card>
-        <Card className="relative overflow-hidden hover-lift">
-          <CardContent className="p-5">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Total Spent</p>
-                <p className="text-2xl font-bold mt-1">{guest.totalSpent}</p>
-              </div>
-              <div className="p-2.5 rounded-xl bg-gradient-to-br from-green-500 to-emerald-500">
-                <DollarSign className="h-4 w-4 text-primary-foreground" />
-              </div>
-            </div>
-            <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-green-500 to-emerald-500" />
-          </CardContent>
-        </Card>
-      </div>
+          </SectionCard>
 
-      {/* Detail cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card className="animate-fade-in-up" style={{ animationDelay: "200ms" }}>
-          <CardHeader className="border-b border-border/50">
-            <CardTitle className="flex items-center gap-2">
-              <div className="p-2 rounded-xl bg-gradient-to-br from-primary to-accent">
-                <Mail className="h-4 w-4 text-primary-foreground" />
-              </div>
-              Personal Information
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3 pt-5">
-            <div className="flex justify-between"><span className="text-sm text-muted-foreground">Name</span><span className="text-sm font-medium">{guest.name}</span></div>
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-muted-foreground">Email</span>
-              <span className="text-sm font-medium flex items-center gap-1.5"><Mail className="h-3 w-3 text-primary" />{guest.email}</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-muted-foreground">Phone</span>
-              <span className="text-sm font-medium flex items-center gap-1.5"><Phone className="h-3 w-3 text-green-500" />{guest.phone}</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-muted-foreground">Date of Birth</span>
-              <span className="text-sm font-medium flex items-center gap-1.5"><Calendar className="h-3 w-3 text-amber-500" />{guest.dob}</span>
-            </div>
-            <div className="flex justify-between"><span className="text-sm text-muted-foreground">Gender</span><Badge variant="secondary">{guest.gender}</Badge></div>
-          </CardContent>
-        </Card>
+          {current && (
+            <SectionCard title="Current Booking" icon={Calendar}
+              action={<Button variant="outline" size="sm" asChild><Link to={`/hotel-admin/reservations/${current.id}`}>Open</Link></Button>}>
+              <p className="font-medium">{current.code} · {formatDate(current.checkIn)} → {formatDate(current.checkOut)}</p>
+              <p className="text-sm text-muted-foreground">{formatMoney(current.roomCharge)}</p>
+            </SectionCard>
+          )}
 
-        <Card className="animate-fade-in-up" style={{ animationDelay: "300ms" }}>
-          <CardHeader className="border-b border-border/50">
-            <CardTitle className="flex items-center gap-2">
-              <div className="p-2 rounded-xl bg-gradient-to-br from-green-500 to-emerald-500">
-                <MapPin className="h-4 w-4 text-primary-foreground" />
+          <SectionCard title="Booking History" icon={Calendar}>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead className="text-xs uppercase text-muted-foreground border-b border-border">
+                  <tr><th className="text-left py-2 pr-4">Booking</th><th className="text-left py-2 pr-4">Dates</th><th className="text-left py-2 pr-4">Status</th><th className="text-right py-2">Amount</th></tr>
+                </thead>
+                <tbody>
+                  {reservations.map((r) => (
+                    <tr key={r.id} className="border-b border-border/40">
+                      <td className="py-2 pr-4"><Link to={`/hotel-admin/reservations/${r.id}`} className="font-mono text-xs hover:text-green-600">{r.code}</Link></td>
+                      <td className="py-2 pr-4">{formatDate(r.checkIn)} → {formatDate(r.checkOut)}</td>
+                      <td className="py-2 pr-4"><StatusPill label={r.status.replace("_", " ")} tone={r.status === "checked_in" ? "green" : r.status === "cancelled" ? "red" : "blue"} /></td>
+                      <td className="py-2 text-right font-medium">{formatMoney(r.roomCharge)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </SectionCard>
+
+          <SectionCard title="Past Reviews" icon={Star}>
+            {reviews.length === 0 ? <p className="text-sm text-muted-foreground">No reviews yet.</p> : (
+              <ul className="space-y-3">
+                {reviews.map((rv) => (
+                  <li key={rv.id} className="rounded-xl border border-border/50 p-3">
+                    <div className="flex items-center justify-between mb-1">
+                      <div className="flex items-center gap-1">
+                        {Array.from({ length: rv.rating }).map((_, i) => <Star key={i} className="h-3 w-3 fill-amber-400 text-amber-400" />)}
+                      </div>
+                      <span className="text-xs text-muted-foreground">{formatDate(rv.createdAt)}</span>
+                    </div>
+                    <p className="text-sm">{rv.comment}</p>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </SectionCard>
+        </div>
+
+        <aside className="space-y-6">
+          <SectionCard title="Payment History" icon={CreditCard}>
+            <ul className="space-y-2 text-sm">
+              {transactions.map((t) => (
+                <li key={t.id} className="flex justify-between">
+                  <div><p className="font-medium">{t.method}</p><p className="text-xs text-muted-foreground">{formatDate(t.createdAt)}</p></div>
+                  <p className="font-semibold">{formatMoney(t.amount)}</p>
+                </li>
+              ))}
+              {transactions.length === 0 && <p className="text-xs text-muted-foreground">No transactions.</p>}
+            </ul>
+          </SectionCard>
+
+          <SectionCard title="Invoices" icon={FileText}>
+            <ul className="space-y-2 text-sm">
+              {reservations.map((r) => (
+                <li key={r.id} className="flex justify-between items-center">
+                  <span>Invoice {r.code}</span>
+                  <Button variant="ghost" size="sm">Download</Button>
+                </li>
+              ))}
+            </ul>
+          </SectionCard>
+
+          <SectionCard title="Notes & Preferences" icon={Heart}>
+            <p className="text-sm text-muted-foreground">{guest.notes || "No notes yet."}</p>
+            {guest.preferences.length > 0 && (
+              <div className="flex flex-wrap gap-1.5 mt-3">
+                {guest.preferences.map((p) => <StatusPill key={p} label={p} tone="green" />)}
               </div>
-              Location
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3 pt-5">
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-muted-foreground">Address</span>
-              <span className="text-sm font-medium flex items-center gap-1.5"><MapPin className="h-3 w-3 text-destructive" />{guest.address}</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-muted-foreground">Country</span>
-              <span className="text-sm font-medium flex items-center gap-1.5"><Globe className="h-3 w-3 text-primary" />{guest.country}</span>
-            </div>
-          </CardContent>
-        </Card>
+            )}
+          </SectionCard>
+        </aside>
       </div>
     </div>
   );
 };
+
+const Field = ({ label, value }: { label: string; value: string }) => (
+  <div><p className="text-xs text-muted-foreground">{label}</p><p className="font-medium">{value}</p></div>
+);
 
 export default HotelAdminGuestProfile;

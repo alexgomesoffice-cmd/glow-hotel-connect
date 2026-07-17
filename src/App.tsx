@@ -51,11 +51,15 @@ import HotelAdminEditRoom from "./pages/hotel-admin/HotelAdminEditRoom";
 import HotelAdminReservations from "./pages/hotel-admin/HotelAdminReservations";
 import HotelAdminReservationDetail from "./pages/hotel-admin/HotelAdminReservationDetail";
 import HotelAdminAddSubAdmin from "./pages/hotel-admin/HotelAdminAddSubAdmin";
+import HotelAdminGuests from "./pages/hotel-admin/HotelAdminGuests";
 import HotelAdminGuestProfile from "./pages/hotel-admin/HotelAdminGuestProfile";
+import HotelAdminPropertyListing from "./pages/hotel-admin/HotelAdminPropertyListing";
+import HotelAdminDraftCenter from "./pages/hotel-admin/HotelAdminDraftCenter";
+import HotelAdminDocuments from "./pages/hotel-admin/HotelAdminDocuments";
+import { HotelAdminTeam, HotelAdminTeamDetail } from "./pages/hotel-admin/HotelAdminTeam";
 import HotelAdminRevenue from "./pages/hotel-admin/HotelAdminRevenue";
 import HotelAdminReviews from "./pages/hotel-admin/HotelAdminReviews";
 import HotelAdminSettings from "./pages/hotel-admin/HotelAdminSettings";
-import HotelAdminHotelEdit from "./pages/hotel-admin/HotelAdminHotelEdit";
 
 const queryClient = new QueryClient();
 

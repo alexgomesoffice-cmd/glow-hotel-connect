@@ -1,152 +1,198 @@
-import { useParams, useNavigate, Link } from "react-router-dom";
-import { useState } from "react";
-import { ArrowLeft, User, Calendar, BedDouble, CreditCard, XCircle } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useMemo, useState } from "react";
+import { Link, useNavigate, useParams } from "react-router-dom";
+import {
+  ArrowLeft, Calendar, User, BedDouble, DollarSign, Clock, MessageSquare,
+  Ban, Printer, LogIn, LogOut, RotateCcw, FileText, ShieldCheck,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { toast } from "@/hooks/use-toast";
 import ConfirmDialog from "@/components/ConfirmDialog";
-
-const allReservations = [
-  { id: "RES-001", guest: "Alice Martin", guestId: "g1", room: "Suite 301", roomType: "Suite", checkIn: "2025-02-20", checkOut: "2025-02-24", status: "confirmed", total: "$1,400", nights: 4, guests: 2, email: "alice@email.com", phone: "+1 555 0101", paymentMethod: "Visa •••• 4242", bookedAt: "2025-02-10" },
-  { id: "RES-002", guest: "Robert Kim", guestId: "g2", room: "Deluxe 205", roomType: "Deluxe", checkIn: "2025-02-21", checkOut: "2025-02-23", status: "checked-in", total: "$440", nights: 2, guests: 1, email: "robert@email.com", phone: "+1 555 0102", paymentMethod: "Mastercard •••• 1234", bookedAt: "2025-02-15" },
-  { id: "RES-003", guest: "Sophie Chen", guestId: "g3", room: "Standard 112", roomType: "Standard", checkIn: "2025-02-18", checkOut: "2025-02-21", status: "checked-out", total: "$360", nights: 3, guests: 2, email: "sophie@email.com", phone: "+1 555 0103", paymentMethod: "Visa •••• 5678", bookedAt: "2025-02-12" },
-  { id: "RES-004", guest: "James Wilson", guestId: "g4", room: "Suite 402", roomType: "Suite", checkIn: "2025-02-22", checkOut: "2025-02-26", status: "pending", total: "$1,600", nights: 4, guests: 3, email: "james@email.com", phone: "+1 555 0104", paymentMethod: "Amex •••• 9012", bookedAt: "2025-02-18" },
-  { id: "RES-005", guest: "Emma Davis", guestId: "g5", room: "Deluxe 310", roomType: "Deluxe", checkIn: "2025-02-23", checkOut: "2025-02-25", status: "confirmed", total: "$500", nights: 2, guests: 2, email: "emma@email.com", phone: "+1 555 0105", paymentMethod: "Visa •••• 3456", bookedAt: "2025-02-19" },
-];
-
-const statusConfig: Record<string, { bg: string; dot: string }> = {
-  confirmed: { bg: "bg-green-500/10 text-green-500 border-green-500/20", dot: "bg-green-500" },
-  "checked-in": { bg: "bg-blue-500/10 text-blue-500 border-blue-500/20", dot: "bg-blue-500" },
-  "checked-out": { bg: "bg-muted text-muted-foreground border-border", dot: "bg-muted-foreground" },
-  pending: { bg: "bg-amber-500/10 text-amber-500 border-amber-500/20", dot: "bg-amber-500" },
-  cancelled: { bg: "bg-destructive/10 text-destructive border-destructive/20", dot: "bg-destructive" },
-};
+import { SectionCard, StatusPill, Timeline } from "@/components/hotel-admin/primitives";
+import {
+  useHotelStore, findGuest, findRoom, findRoomType, formatMoney, formatDate, formatDateTime,
+  updateStore,
+} from "@/data/hotelAdminStore";
 
 const HotelAdminReservationDetail = () => {
-  const { id } = useParams();
+  const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const [showCancel, setShowCancel] = useState(false);
-  const reservation = allReservations.find((r) => r.id === id);
+  const reservation = useHotelStore((s) => s.reservations.find((r) => r.id === id));
+  const [confirm, setConfirm] = useState<null | "cancel" | "refund" | "checkin" | "checkout">(null);
 
-  if (!reservation) return (
-    <div className="text-center py-20">
-      <div className="w-16 h-16 mx-auto rounded-2xl bg-secondary/50 flex items-center justify-center mb-4">
-        <Calendar className="h-8 w-8 text-muted-foreground" />
+  const guest = reservation ? findGuest(reservation.guestId) : null;
+  const room = reservation ? findRoom(reservation.roomIds[0]) : null;
+  const rt = reservation ? findRoomType(reservation.roomTypeId) : null;
+
+  const totals = useMemo(() => {
+    if (!reservation) return { subtotal: 0, extras: 0, discount: 0, tax: 0, total: 0 };
+    const extras = reservation.extras.reduce((s, e) => s + e.amount, 0);
+    const discount = reservation.discounts.reduce((s, e) => s + e.amount, 0);
+    const tax = reservation.taxes.reduce((s, e) => s + e.amount, 0);
+    return {
+      subtotal: reservation.roomCharge, extras, discount, tax,
+      total: reservation.roomCharge + extras + tax - discount,
+    };
+  }, [reservation]);
+
+  if (!reservation || !guest) {
+    return (
+      <div className="text-center py-16">
+        <p className="text-muted-foreground">Reservation not found.</p>
+        <Button asChild variant="outline" className="mt-4"><Link to="/hotel-admin/reservations">Back to reservations</Link></Button>
       </div>
-      <h2 className="text-xl font-bold mb-2">Reservation not found</h2>
-      <Button variant="outline" onClick={() => navigate("/hotel-admin/reservations")}>Back to Reservations</Button>
-    </div>
-  );
+    );
+  }
 
-  const config = statusConfig[reservation.status];
+  const updateStatus = (status: any, timelineLabel: string) => {
+    updateStore((s) => ({
+      ...s,
+      reservations: s.reservations.map((r) => r.id === id ? {
+        ...r, status, timeline: [...r.timeline, { at: new Date().toISOString(), label: timelineLabel }],
+      } : r),
+    }));
+  };
 
-  const handleCancel = () => {
-    toast({ title: "Reservation Cancelled", description: `${reservation.id} has been cancelled.` });
-    setShowCancel(false);
-    navigate("/hotel-admin/reservations");
+  const handleAction = () => {
+    if (confirm === "cancel") { updateStatus("cancelled", "Booking cancelled by hotel"); toast({ title: "Booking cancelled" }); }
+    if (confirm === "refund") { toast({ title: "Refund initiated", description: "Guest will be notified." }); }
+    if (confirm === "checkin") { updateStatus("checked_in", "Guest checked in"); toast({ title: "Guest checked in" }); }
+    if (confirm === "checkout") { updateStatus("checked_out", "Guest checked out"); toast({ title: "Guest checked out" }); }
+    setConfirm(null);
   };
 
   return (
-    <div className="space-y-6 max-w-4xl">
-      <div className="flex items-center gap-4 animate-fade-in-up">
-        <Button variant="outline" size="icon" className="shrink-0 hover:border-primary/50 transition-colors" onClick={() => navigate("/hotel-admin/reservations")}>
-          <ArrowLeft className="h-4 w-4" />
-        </Button>
-        <div className="flex-1">
-          <div className="flex items-center gap-3">
-            <h1 className="text-2xl sm:text-3xl font-bold">{reservation.id}</h1>
-            <Badge className={`border text-sm px-3 py-1 ${config?.bg}`}>
-              <span className={`w-1.5 h-1.5 rounded-full mr-1.5 ${config?.dot}`} />
-              {reservation.status}
-            </Badge>
+    <div className="space-y-6 pb-24">
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <Button variant="ghost" size="sm" onClick={() => navigate(-1)}><ArrowLeft className="h-4 w-4 mr-2" /> Back</Button>
+          <div>
+            <h1 className="text-2xl font-bold font-mono">{reservation.code}</h1>
+            <div className="flex items-center gap-2 mt-1">
+              <StatusPill label={reservation.status.replace("_", " ")} tone={reservation.status === "checked_in" ? "green" : reservation.status === "cancelled" ? "red" : "blue"} />
+              <StatusPill label={`Payment: ${reservation.payment}`} tone={reservation.payment === "paid" ? "green" : "amber"} />
+              <span className="text-xs text-muted-foreground">Created {formatDate(reservation.createdAt)}</span>
+            </div>
           </div>
-          <p className="text-muted-foreground">Booked on {reservation.bookedAt}</p>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card className="animate-fade-in-up" style={{ animationDelay: "100ms" }}>
-          <CardHeader className="border-b border-border/50">
-            <CardTitle className="flex items-center gap-2">
-              <div className="p-2 rounded-xl bg-gradient-to-br from-primary to-accent"><User className="h-4 w-4 text-primary-foreground" /></div>
-              Guest Information
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3 pt-5">
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-muted-foreground">Name</span>
-              <Link to={`/hotel-admin/guest/${reservation.guestId}`} className="font-medium text-primary hover:underline">{reservation.guest}</Link>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2 space-y-6">
+          <SectionCard title="Booking Summary" icon={Calendar}>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+              <div><p className="text-xs text-muted-foreground">Check-in</p><p className="font-medium">{formatDate(reservation.checkIn)}</p></div>
+              <div><p className="text-xs text-muted-foreground">Check-out</p><p className="font-medium">{formatDate(reservation.checkOut)}</p></div>
+              <div><p className="text-xs text-muted-foreground">Guests</p><p className="font-medium">{reservation.adults} adults · {reservation.children} children</p></div>
+              <div><p className="text-xs text-muted-foreground">Source</p><p className="font-medium">{reservation.source}</p></div>
             </div>
-            <div className="flex justify-between"><span className="text-sm text-muted-foreground">Email</span><span className="text-sm font-medium">{reservation.email}</span></div>
-            <div className="flex justify-between"><span className="text-sm text-muted-foreground">Phone</span><span className="text-sm font-medium">{reservation.phone}</span></div>
-            <div className="flex justify-between"><span className="text-sm text-muted-foreground">Guests</span><span className="text-sm font-medium">{reservation.guests}</span></div>
-          </CardContent>
-        </Card>
+          </SectionCard>
 
-        <Card className="animate-fade-in-up" style={{ animationDelay: "200ms" }}>
-          <CardHeader className="border-b border-border/50">
-            <CardTitle className="flex items-center gap-2">
-              <div className="p-2 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500"><BedDouble className="h-4 w-4 text-primary-foreground" /></div>
-              Room Details
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3 pt-5">
-            <div className="flex justify-between"><span className="text-sm text-muted-foreground">Room</span><span className="text-sm font-medium">{reservation.room}</span></div>
-            <div className="flex justify-between"><span className="text-sm text-muted-foreground">Type</span><span className="text-sm font-medium">{reservation.roomType}</span></div>
-            <div className="flex justify-between"><span className="text-sm text-muted-foreground">Nights</span><span className="text-sm font-medium">{reservation.nights}</span></div>
-          </CardContent>
-        </Card>
-
-        <Card className="animate-fade-in-up" style={{ animationDelay: "300ms" }}>
-          <CardHeader className="border-b border-border/50">
-            <CardTitle className="flex items-center gap-2">
-              <div className="p-2 rounded-xl bg-gradient-to-br from-green-500 to-emerald-500"><Calendar className="h-4 w-4 text-primary-foreground" /></div>
-              Stay Period
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3 pt-5">
-            <div className="flex justify-between"><span className="text-sm text-muted-foreground">Check-in</span><span className="text-sm font-medium">{reservation.checkIn}</span></div>
-            <div className="flex justify-between"><span className="text-sm text-muted-foreground">Check-out</span><span className="text-sm font-medium">{reservation.checkOut}</span></div>
-          </CardContent>
-        </Card>
-
-        <Card className="animate-fade-in-up" style={{ animationDelay: "400ms" }}>
-          <CardHeader className="border-b border-border/50">
-            <CardTitle className="flex items-center gap-2">
-              <div className="p-2 rounded-xl bg-gradient-to-br from-amber-500 to-orange-500"><CreditCard className="h-4 w-4 text-primary-foreground" /></div>
-              Payment
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3 pt-5">
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-muted-foreground">Total</span>
-              <span className="text-xl font-bold text-gradient">{reservation.total}</span>
+          <SectionCard title="Guest Information" icon={User}
+            action={<Button variant="outline" size="sm" asChild><Link to={`/hotel-admin/guests/${guest.id}`}>Open profile</Link></Button>}>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
+              <div><p className="text-xs text-muted-foreground">Name</p><p className="font-medium">{guest.name}</p></div>
+              <div><p className="text-xs text-muted-foreground">Email</p><p className="font-medium">{guest.email}</p></div>
+              <div><p className="text-xs text-muted-foreground">Phone</p><p className="font-medium">{guest.phone}</p></div>
+              <div><p className="text-xs text-muted-foreground">Nationality</p><p className="font-medium">{guest.nationality}</p></div>
+              <div><p className="text-xs text-muted-foreground">NID</p><p className="font-medium">{guest.nid}</p></div>
+              <div><p className="text-xs text-muted-foreground">VIP</p><p className="font-medium">{guest.vip ? "Yes" : "No"}</p></div>
             </div>
-            <div className="flex justify-between"><span className="text-sm text-muted-foreground">Method</span><span className="text-sm font-medium">{reservation.paymentMethod}</span></div>
-          </CardContent>
-        </Card>
+          </SectionCard>
+
+          <SectionCard title="Booked Rooms" icon={BedDouble}>
+            <div className="rounded-xl border border-border/50 p-4 flex items-center justify-between">
+              <div>
+                <p className="font-medium">Room {room?.number} · {rt?.name}</p>
+                <p className="text-xs text-muted-foreground">{rt?.bedType} · Max {rt?.maxOccupancy} guests · {rt?.size} m²</p>
+              </div>
+              <p className="text-sm font-semibold">{formatMoney(reservation.roomCharge)}</p>
+            </div>
+          </SectionCard>
+
+          <SectionCard title="Charges" icon={DollarSign}>
+            <div className="space-y-2 text-sm">
+              <Row label="Room charges" value={formatMoney(totals.subtotal)} />
+              {reservation.extras.map((e, i) => <Row key={i} label={e.label} value={formatMoney(e.amount)} muted />)}
+              {reservation.discounts.map((e, i) => <Row key={i} label={e.label} value={`- ${formatMoney(e.amount)}`} muted />)}
+              {reservation.taxes.map((e, i) => <Row key={i} label={e.label} value={formatMoney(e.amount)} muted />)}
+              <div className="border-t border-border/50 pt-2 flex justify-between font-semibold">
+                <span>Total</span><span>{formatMoney(totals.total)}</span>
+              </div>
+            </div>
+          </SectionCard>
+
+          <SectionCard title="Special Requests" icon={MessageSquare}>
+            <p className="text-sm text-muted-foreground">{reservation.specialRequests || "No special requests."}</p>
+          </SectionCard>
+
+          <SectionCard title="Invoices & Documents" icon={FileText}>
+            <div className="flex items-center justify-between text-sm">
+              <div className="flex items-center gap-2"><FileText className="h-4 w-4 text-muted-foreground" /> Invoice {reservation.code}.pdf</div>
+              <Button variant="outline" size="sm" onClick={() => window.print()}><Printer className="h-4 w-4 mr-2" /> Print</Button>
+            </div>
+          </SectionCard>
+        </div>
+
+        <aside className="space-y-6">
+          <SectionCard title="Payment Timeline" icon={DollarSign}>
+            <Timeline items={reservation.paymentTimeline.map((p) => ({ at: p.at, label: `${p.label} · ${formatMoney(p.amount)} · ${p.method}`, tone: "green" as const }))} />
+          </SectionCard>
+
+          <SectionCard title="Booking Timeline" icon={Clock}>
+            <Timeline items={reservation.timeline.slice().reverse()} />
+          </SectionCard>
+
+          <SectionCard title="System Logs" icon={ShieldCheck}>
+            <ul className="text-xs text-muted-foreground space-y-1">
+              <li>Booking created via {reservation.source}</li>
+              <li>Payment method: card</li>
+              <li>Confirmation email sent to {guest.email}</li>
+            </ul>
+          </SectionCard>
+        </aside>
       </div>
 
-      {reservation.status !== "cancelled" && reservation.status !== "checked-out" && (
-        <div className="flex justify-end animate-fade-in-up" style={{ animationDelay: "500ms" }}>
-          <Button variant="destructive" onClick={() => setShowCancel(true)} className="hover:shadow-lg transition-shadow">
-            <XCircle className="h-4 w-4 mr-2" /> Cancel Reservation
-          </Button>
+      {/* Sticky actions */}
+      <div className="fixed bottom-0 left-0 right-0 lg:left-64 border-t border-border bg-card/95 backdrop-blur px-4 sm:px-6 py-3 flex items-center justify-between gap-3 z-20">
+        <p className="text-xs text-muted-foreground hidden sm:block">Actions</p>
+        <div className="flex flex-wrap gap-2 justify-end w-full sm:w-auto">
+          {reservation.status !== "checked_in" && reservation.status !== "checked_out" && (
+            <Button variant="outline" size="sm" onClick={() => setConfirm("checkin")}><LogIn className="h-4 w-4 mr-2" /> Check In</Button>
+          )}
+          {reservation.status === "checked_in" && (
+            <Button variant="outline" size="sm" onClick={() => setConfirm("checkout")}><LogOut className="h-4 w-4 mr-2" /> Check Out</Button>
+          )}
+          <Button variant="outline" size="sm" onClick={() => setConfirm("refund")}><RotateCcw className="h-4 w-4 mr-2" /> Refund</Button>
+          <Button variant="outline" size="sm" onClick={() => window.print()}><Printer className="h-4 w-4 mr-2" /> Invoice</Button>
+          <Button variant="destructive" size="sm" onClick={() => setConfirm("cancel")}><Ban className="h-4 w-4 mr-2" /> Cancel</Button>
         </div>
-      )}
+      </div>
 
       <ConfirmDialog
-        open={showCancel}
-        onOpenChange={setShowCancel}
-        title="Cancel this reservation?"
-        description={`Are you sure you want to cancel reservation ${reservation.id} for ${reservation.guest}? This action cannot be undone.`}
-        confirmLabel="Yes, Cancel Reservation"
-        onConfirm={handleCancel}
-        variant="destructive"
+        open={confirm !== null}
+        onOpenChange={(v) => !v && setConfirm(null)}
+        title={
+          confirm === "cancel" ? "Cancel this booking?" :
+          confirm === "refund" ? "Refund guest?" :
+          confirm === "checkin" ? "Check guest in?" : "Check guest out?"
+        }
+        description={
+          confirm === "cancel" ? `Are you sure you want to cancel booking ${reservation.code}? This cannot be undone.` :
+          confirm === "refund" ? `Are you sure you want to refund ${formatMoney(totals.total)} to ${guest.name}?` :
+          `Are you sure you want to ${confirm === "checkin" ? "check in" : "check out"} ${guest.name}?`
+        }
+        variant={confirm === "cancel" ? "destructive" : "default"}
+        confirmLabel={confirm === "cancel" ? "Cancel booking" : "Confirm"}
+        onConfirm={handleAction}
       />
     </div>
   );
 };
+
+const Row = ({ label, value, muted }: { label: string; value: string; muted?: boolean }) => (
+  <div className={`flex justify-between ${muted ? "text-muted-foreground" : ""}`}>
+    <span>{label}</span><span>{value}</span>
+  </div>
+);
 
 export default HotelAdminReservationDetail;

@@ -140,6 +140,8 @@ export interface PropertyListing {
     propertySize: number;
     establishedYear: number;
     floors: number;
+    totalRooms: number;
+    category: string;
     summary: string;
     businessStatus: "active" | "paused";
   };
@@ -153,9 +155,28 @@ export interface PropertyListing {
     email: string;
     phone: string;
     website: string;
+    businessAddress: string;
+  };
+  owner: {
+    fullName: string;
+    email: string;
+    phone: string;
+    nid: string;
+    passport: string;
+    address: string;
+    emergencyContact: string;
+  };
+  bank: {
+    accountName: string;
+    bankName: string;
+    branch: string;
+    routing: string;
+    accountNumber: string;
   };
   location: {
     address: string;
+    division: string;
+    area: string;
     city: string;
     country: string;
     postalCode: string;
@@ -191,6 +212,43 @@ export interface PropertyListing {
   nearbyAttractions: { name: string; distance: string }[];
   seo: { title: string; description: string; keywords: string };
 }
+
+// Fields that can NEVER be edited via a Draft — they require a Verification Request.
+export const PROTECTED_PATHS: readonly string[] = [
+  "general.type",
+  "business.businessName",
+  "business.tradeLicense",
+  "business.businessRegistration",
+  "business.tin",
+  "business.vat",
+  "owner.fullName",
+  "owner.nid",
+  "owner.passport",
+  "bank.accountName",
+  "bank.bankName",
+  "bank.branch",
+  "bank.routing",
+  "bank.accountNumber",
+  "location.country",
+];
+
+export const isProtectedField = (path: string) =>
+  PROTECTED_PATHS.some((p) => path === p || path.startsWith(p + "."));
+
+export interface VerificationRequest {
+  id: string;
+  scope: "business" | "owner" | "bank" | "document" | "location" | "general";
+  field: string;
+  label: string;
+  currentValue: string;
+  requestedValue: string;
+  reason: string;
+  status: "pending" | "approved" | "rejected";
+  submittedAt: string;
+  reviewedAt?: string;
+  reviewNote?: string;
+}
+
 
 export interface DraftField {
   path: string;
@@ -239,6 +297,7 @@ export interface HotelAdminStore {
   draft: PendingDraft | null;
   documents: HotelDocument[];
   updateRequests: UpdateRequest[];
+  verificationRequests: VerificationRequest[];
   guests: Guest[];
   reservations: Reservation[];
   roomTypes: RoomType[];
@@ -250,6 +309,7 @@ export interface HotelAdminStore {
   amenities: Amenity[];
   activity: { id: string; at: string; actor: string; action: string; target: string }[];
 }
+
 
 // -------------------- Seed --------------------
 const iso = (d: Date) => d.toISOString();
@@ -353,10 +413,13 @@ const seed = (): HotelAdminStore => {
   ];
 
   const live: PropertyListing = {
-    general: { name: "The Grand Miami Hotel", type: "Luxury Resort", starRating: 5, propertySize: 8200, establishedYear: 1998, floors: 12, summary: "Beachfront luxury resort in the heart of Miami.", businessStatus: "active" },
-    business: { ownerName: "Elena Martinez", businessName: "Grand Miami Hospitality LLC", tradeLicense: "TL-2024-77123", businessRegistration: "REG-991823", tin: "TIN-449281", vat: "VAT-118293", email: "owner@grandhotel.com", phone: "+1 305 555 1200", website: "https://grandmiami.example" },
-    location: { address: "1200 Ocean Drive", city: "Miami", country: "USA", postalCode: "33139", latitude: 25.7825, longitude: -80.1300 },
+    general: { name: "The Grand Miami Hotel", type: "Luxury Resort", starRating: 5, propertySize: 8200, establishedYear: 1998, floors: 12, totalRooms: 214, category: "Beachfront Resort", summary: "Beachfront luxury resort in the heart of Miami.", businessStatus: "active" },
+    business: { ownerName: "Elena Martinez", businessName: "Grand Miami Hospitality LLC", tradeLicense: "TL-2024-77123", businessRegistration: "REG-991823", tin: "TIN-449281", vat: "VAT-118293", email: "owner@grandhotel.com", phone: "+1 305 555 1200", website: "https://grandmiami.example", businessAddress: "1200 Ocean Drive, Miami, FL 33139" },
+    owner: { fullName: "Elena Martinez", email: "owner@grandhotel.com", phone: "+1 305 555 1200", nid: "NID-OWN-8821", passport: "P-778821", address: "88 Star Island, Miami, FL", emergencyContact: "+1 305 555 9911 (Carlos Martinez)" },
+    bank: { accountName: "Grand Miami Hospitality LLC", bankName: "First Atlantic Bank", branch: "South Beach Branch", routing: "067014822", accountNumber: "•••• •••• 4488" },
+    location: { address: "1200 Ocean Drive", division: "Florida", area: "South Beach", city: "Miami", country: "USA", postalCode: "33139", latitude: 25.7825, longitude: -80.1300 },
     contacts: { reservationPhone: "+1 305 555 0100", receptionPhone: "+1 305 555 0101", emergencyPhone: "+1 305 555 0911", email: "hello@grandmiami.example", website: "https://grandmiami.example", social: [{ platform: "Instagram", url: "@grandmiami" }, { platform: "Facebook", url: "grandmiami" }] },
+
     description: { long: "The Grand Miami Hotel is a beachfront destination combining timeless art-deco style with modern comfort. Our 214 rooms and suites overlook the Atlantic, and our spa, rooftop pool, and three restaurants set the standard for the South Beach experience.", short: "Timeless beachfront luxury in South Beach.", languages: ["English", "Spanish"] },
     amenities: ["wifi", "ac", "tv", "safe", "minibar", "pool", "gym", "spa", "restaurant", "bar", "parking", "airport", "laundry", "concierge"],
     gallery: [],
@@ -405,6 +468,9 @@ const seed = (): HotelAdminStore => {
     draft,
     documents,
     updateRequests: [],
+    verificationRequests: [
+      { id: "vr1", scope: "owner", field: "owner.phone", label: "Owner Phone", currentValue: "+1 305 555 1200", requestedValue: "+1 305 555 1250", reason: "Owner switched to a new business line.", status: "pending", submittedAt: daysAgo(2) },
+    ],
     guests,
     reservations,
     roomTypes,
@@ -493,3 +559,14 @@ export const useHotelStore = <T>(selector: (s: HotelAdminStore) => T): T => {
   }, []);
   return value;
 };
+
+export const submitVerificationRequest = (input: Omit<VerificationRequest, "id" | "status" | "submittedAt">) => {
+  updateStore((s) => ({
+    ...s,
+    verificationRequests: [
+      { ...input, id: `vr-${Date.now()}`, status: "pending", submittedAt: new Date().toISOString() },
+      ...s.verificationRequests,
+    ],
+  }));
+};
+

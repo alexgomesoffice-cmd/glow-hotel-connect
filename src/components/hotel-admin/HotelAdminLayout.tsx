@@ -71,9 +71,9 @@ const HotelAdminLayout = () => {
       ],
     },
     {
-      label: "Listing",
+      label: "Property",
       items: [
-        { icon: Hotel, label: "Property Listing", path: "/hotel-admin/listing" },
+        { icon: Hotel, label: "Property", path: "/hotel-admin/listing" },
         { icon: ClipboardList, label: "Draft Center", path: "/hotel-admin/drafts", badge: draftBadge },
         { icon: ShieldCheck, label: "Documents", path: "/hotel-admin/documents" },
       ],

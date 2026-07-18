@@ -297,6 +297,7 @@ export interface HotelAdminStore {
   draft: PendingDraft | null;
   documents: HotelDocument[];
   updateRequests: UpdateRequest[];
+  verificationRequests: VerificationRequest[];
   guests: Guest[];
   reservations: Reservation[];
   roomTypes: RoomType[];
@@ -308,6 +309,7 @@ export interface HotelAdminStore {
   amenities: Amenity[];
   activity: { id: string; at: string; actor: string; action: string; target: string }[];
 }
+
 
 // -------------------- Seed --------------------
 const iso = (d: Date) => d.toISOString();

@@ -468,6 +468,9 @@ const seed = (): HotelAdminStore => {
     draft,
     documents,
     updateRequests: [],
+    verificationRequests: [
+      { id: "vr1", scope: "owner", field: "owner.phone", label: "Owner Phone", currentValue: "+1 305 555 1200", requestedValue: "+1 305 555 1250", reason: "Owner switched to a new business line.", status: "pending", submittedAt: daysAgo(2) },
+    ],
     guests,
     reservations,
     roomTypes,

@@ -140,6 +140,8 @@ export interface PropertyListing {
     propertySize: number;
     establishedYear: number;
     floors: number;
+    totalRooms: number;
+    category: string;
     summary: string;
     businessStatus: "active" | "paused";
   };
@@ -153,9 +155,28 @@ export interface PropertyListing {
     email: string;
     phone: string;
     website: string;
+    businessAddress: string;
+  };
+  owner: {
+    fullName: string;
+    email: string;
+    phone: string;
+    nid: string;
+    passport: string;
+    address: string;
+    emergencyContact: string;
+  };
+  bank: {
+    accountName: string;
+    bankName: string;
+    branch: string;
+    routing: string;
+    accountNumber: string;
   };
   location: {
     address: string;
+    division: string;
+    area: string;
     city: string;
     country: string;
     postalCode: string;
@@ -191,6 +212,43 @@ export interface PropertyListing {
   nearbyAttractions: { name: string; distance: string }[];
   seo: { title: string; description: string; keywords: string };
 }
+
+// Fields that can NEVER be edited via a Draft — they require a Verification Request.
+export const PROTECTED_PATHS: readonly string[] = [
+  "general.type",
+  "business.businessName",
+  "business.tradeLicense",
+  "business.businessRegistration",
+  "business.tin",
+  "business.vat",
+  "owner.fullName",
+  "owner.nid",
+  "owner.passport",
+  "bank.accountName",
+  "bank.bankName",
+  "bank.branch",
+  "bank.routing",
+  "bank.accountNumber",
+  "location.country",
+];
+
+export const isProtectedField = (path: string) =>
+  PROTECTED_PATHS.some((p) => path === p || path.startsWith(p + "."));
+
+export interface VerificationRequest {
+  id: string;
+  scope: "business" | "owner" | "bank" | "document" | "location" | "general";
+  field: string;
+  label: string;
+  currentValue: string;
+  requestedValue: string;
+  reason: string;
+  status: "pending" | "approved" | "rejected";
+  submittedAt: string;
+  reviewedAt?: string;
+  reviewNote?: string;
+}
+
 
 export interface DraftField {
   path: string;

@@ -1,17 +1,19 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ClipboardList, Send, Trash2, Clock, Check, X, RefreshCw } from "lucide-react";
+import { ClipboardList, Send, Trash2, Clock, Check, X, RefreshCw, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { KPI, SectionCard, StatusPill, Timeline, FieldReviewBadge, EmptyState } from "@/components/hotel-admin/primitives";
 import ConfirmDialog from "@/components/ConfirmDialog";
 import { toast } from "@/hooks/use-toast";
-import { useHotelStore, cooldownRemainingMs, updateStore, formatDate } from "@/data/hotelAdminStore";
+import { useHotelStore, cooldownRemainingMs, updateStore, formatDate, formatDateTime } from "@/data/hotelAdminStore";
 
 const HotelAdminDraftCenter = () => {
   const navigate = useNavigate();
   const draft = useHotelStore((s) => s.draft);
+  const verificationRequests = useHotelStore((s) => s.verificationRequests);
   const [confirm, setConfirm] = useState<null | "discard" | "submit">(null);
+
 
   const cd = cooldownRemainingMs(draft);
   const hrs = Math.floor(cd / 3600000);

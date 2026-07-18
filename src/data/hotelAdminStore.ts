@@ -559,3 +559,14 @@ export const useHotelStore = <T>(selector: (s: HotelAdminStore) => T): T => {
   }, []);
   return value;
 };
+
+export const submitVerificationRequest = (input: Omit<VerificationRequest, "id" | "status" | "submittedAt">) => {
+  updateStore((s) => ({
+    ...s,
+    verificationRequests: [
+      { ...input, id: `vr-${Date.now()}`, status: "pending", submittedAt: new Date().toISOString() },
+      ...s.verificationRequests,
+    ],
+  }));
+};
+

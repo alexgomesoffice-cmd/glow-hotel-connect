@@ -121,7 +121,12 @@ const App = () => (
               <Route path="add-room" element={<HotelAdminAddRoom />} />
               <Route path="edit-room/:roomDetailsId" element={<HotelAdminEditRoom />} />
               <Route path="add-sub-admin" element={<HotelAdminAddSubAdmin />} />
-              <Route path="update-hotel" element={<HotelAdminHotelEdit />} />
+              <Route path="listing" element={<HotelAdminPropertyListing />} />
+              <Route path="drafts" element={<HotelAdminDraftCenter />} />
+              <Route path="documents" element={<HotelAdminDocuments />} />
+              <Route path="guests" element={<HotelAdminGuests />} />
+              <Route path="team" element={<HotelAdminTeam />} />
+              <Route path="team/:id" element={<HotelAdminTeamDetail />} />
               <Route path="reservations" element={<HotelAdminReservations />} />
               <Route path="reservations/:id" element={<HotelAdminReservationDetail />} />
               <Route path="guest/:id" element={<HotelAdminGuestProfile />} />

@@ -1,12 +1,17 @@
+import { useState } from "react";
 import { Eye, Download, FileText, ShieldCheck, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { StatusPill } from "@/components/hotel-admin/primitives";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { StatusPill, EditDrawer } from "@/components/hotel-admin/primitives";
 import { toast } from "@/hooks/use-toast";
-import { useHotelStore, formatDate, DocStatus } from "@/data/hotelAdminStore";
+import { useHotelStore, formatDate, DocStatus, submitVerificationRequest, HotelDocument } from "@/data/hotelAdminStore";
 
 const statusTone = (s: DocStatus) =>
   s === "verified" ? "green" : s === "pending" ? "amber" : s === "expired" ? "red" : "red";
+
 
 const HotelAdminDocuments = () => {
   const documents = useHotelStore((s) => s.documents);

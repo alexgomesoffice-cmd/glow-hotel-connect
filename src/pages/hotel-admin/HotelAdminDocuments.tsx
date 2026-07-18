@@ -15,25 +15,47 @@ const statusTone = (s: DocStatus) =>
 
 const HotelAdminDocuments = () => {
   const documents = useHotelStore((s) => s.documents);
+  const verificationRequests = useHotelStore((s) => s.verificationRequests);
+  const [request, setRequest] = useState<HotelDocument | null>(null);
+  const [note, setNote] = useState("");
+  const [newValue, setNewValue] = useState("");
+
+  const pendingDocReqs = verificationRequests.filter((r) => r.scope === "document" && r.status === "pending");
+
+  const submit = () => {
+    if (!request) return;
+    submitVerificationRequest({
+      scope: "document",
+      field: request.kind,
+      label: request.label,
+      currentValue: request.status,
+      requestedValue: newValue || "New document uploaded",
+      reason: note,
+    });
+    toast({ title: "Update request submitted", description: `${request.label} queued for re-verification.` });
+    setRequest(null); setNote(""); setNewValue("");
+  };
 
   return (
     <div className="space-y-6">
       <div className="animate-fade-in-up">
         <h1 className="text-2xl sm:text-3xl font-bold">Documents</h1>
-        <p className="text-muted-foreground text-sm">Verified property and business documents. Updates require a request.</p>
+        <p className="text-muted-foreground text-sm">Verified property and business documents. Updates require a verification request.</p>
       </div>
 
       <div className="rounded-xl border border-purple-500/30 bg-purple-500/5 p-4 flex items-start gap-3 text-sm">
         <ShieldCheck className="h-5 w-5 text-purple-600 shrink-0" />
-        <div>
+        <div className="flex-1">
           <p className="font-medium text-purple-700">Documents are protected</p>
           <p className="text-xs text-muted-foreground">You cannot edit documents directly. Use "Request Update" and system admin will re-verify.</p>
         </div>
+        {pendingDocReqs.length > 0 && <StatusPill label={`${pendingDocReqs.length} pending`} tone="amber" />}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
         {documents.map((d) => {
           const expiringSoon = d.expiryDate && new Date(d.expiryDate).getTime() - Date.now() < 30 * 86400000;
+          const hasPending = pendingDocReqs.some((r) => r.field === d.kind);
           return (
             <Card key={d.id} className="hover-lift">
               <CardContent className="p-5 space-y-4">
@@ -47,7 +69,10 @@ const HotelAdminDocuments = () => {
                       <p className="text-xs text-muted-foreground">{d.kind.replace(/_/g, " ")}</p>
                     </div>
                   </div>
-                  <StatusPill label={d.status} tone={statusTone(d.status)} />
+                  <div className="flex flex-col items-end gap-1">
+                    <StatusPill label={d.status} tone={statusTone(d.status)} />
+                    {hasPending && <StatusPill label="update pending" tone="amber" />}
+                  </div>
                 </div>
 
                 <div className="space-y-1.5 text-xs text-muted-foreground">
@@ -70,7 +95,7 @@ const HotelAdminDocuments = () => {
                 <div className="flex gap-2 pt-1">
                   <Button variant="outline" size="sm" className="flex-1"><Eye className="h-3 w-3 mr-1" /> View</Button>
                   <Button variant="outline" size="sm"><Download className="h-3 w-3" /></Button>
-                  <Button variant="outline" size="sm" onClick={() => toast({ title: "Update request sent", description: `${d.label} update queued for review.` })}>
+                  <Button variant="outline" size="sm" disabled={hasPending} onClick={() => { setRequest(d); setNote(""); setNewValue(""); }}>
                     Request
                   </Button>
                 </div>
@@ -79,8 +104,36 @@ const HotelAdminDocuments = () => {
           );
         })}
       </div>
+
+      <EditDrawer
+        open={!!request}
+        onOpenChange={(v) => !v && setRequest(null)}
+        title={request ? `Request Update — ${request.label}` : ""}
+        description="Submit a verification request. System admin will review your updated document."
+        saveLabel="Submit Request"
+        disabled={!note.trim()}
+        onSave={submit}
+      >
+        {request && (
+          <>
+            <div>
+              <Label className="text-xs">Document</Label>
+              <div className="mt-1 text-sm bg-muted/50 rounded-md px-3 py-2 border border-border">{request.label}</div>
+            </div>
+            <div>
+              <Label className="text-xs">Reference / Number (optional)</Label>
+              <Input value={newValue} onChange={(e) => setNewValue(e.target.value)} placeholder="Updated document reference…" />
+            </div>
+            <div>
+              <Label className="text-xs">Reason for update</Label>
+              <Textarea rows={4} value={note} onChange={(e) => setNote(e.target.value)} placeholder="Explain why this document needs to be re-verified…" />
+            </div>
+          </>
+        )}
+      </EditDrawer>
     </div>
   );
 };
 
 export default HotelAdminDocuments;
+
